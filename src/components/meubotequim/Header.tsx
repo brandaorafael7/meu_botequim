@@ -1,0 +1,201 @@
+import React, { useState } from 'react';
+import {
+  Store,
+  ChevronDown,
+  Bell,
+  User as UserIcon,
+  CheckCircle2,
+  AlertCircle,
+} from 'lucide-react';
+import type { BarProfile } from '../../types/meubotequim';
+
+interface HeaderProps {
+  profile: BarProfile;
+  criticalAlertCount?: number;
+  onOpenNotifications?: () => void;
+  onSelectBranch?: (branch: string) => void;
+  availableBranches?: string[];
+}
+
+export const Header: React.FC<HeaderProps> = ({
+  profile,
+  criticalAlertCount = 0,
+  onOpenNotifications,
+  onSelectBranch,
+  availableBranches = [
+    'Boteco Central - Salão & Balcão',
+    'Unidade Praia - Quiosque 04',
+    'Unidade Rooftop - Lounge',
+  ],
+}) => {
+  const [branchDropdownOpen, setBranchDropdownOpen] = useState(false);
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+
+  return (
+    <header className="sticky top-0 z-40 w-full border-b border-[#EFE8DE] bg-[#FFFFFF]/90 backdrop-blur-md transition-all">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        {/* Lado Esquerdo: Logotipo MeuBotequim */}
+        <div className="flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl border border-[#EFE8DE] bg-[#F4EDE4] shadow-soft transition-transform hover:scale-105">
+            <img
+              src="/logo.png"
+              alt="MeuBotequim Logo"
+              className="h-full w-full object-cover"
+            />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-xl font-extrabold tracking-tight text-[#2C221E]">
+                Meu<span className="text-[#C87A5B]">Botequim</span>
+              </span>
+              <span className="hidden sm:inline-flex items-center rounded-full bg-[#FAF6F0] px-2 py-0.5 text-[10px] font-semibold text-[#70625B] border border-[#EFE8DE]">
+                v2.4
+              </span>
+            </div>
+            <p className="hidden text-[11px] font-medium text-[#70625B] sm:block">
+              Gestão de Estoque & Balcão
+            </p>
+          </div>
+        </div>
+
+        {/* Lado Direito: Identificação do Bar Atual & Avatar do Usuário */}
+        <div className="flex items-center gap-2 sm:gap-4">
+          {/* Seletor do Bar Atual */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => {
+                setBranchDropdownOpen(!branchDropdownOpen);
+                setProfileDropdownOpen(false);
+              }}
+              className="flex items-center gap-2 rounded-xl border border-[#EFE8DE] bg-[#FAF6F0] px-2.5 py-1.5 text-xs font-semibold text-[#2C221E] transition-colors hover:bg-[#EFE8DE]/60 focus:outline-none focus:ring-2 focus:ring-[#C87A5B]/20 sm:px-3 sm:py-2"
+            >
+              <Store className="h-4 w-4 text-[#C87A5B]" />
+              <div className="text-left">
+                <span className="hidden text-[10px] font-normal uppercase tracking-wider text-[#70625B] md:block">
+                  Bar Selecionado
+                </span>
+                <span className="max-w-[130px] truncate sm:max-w-[180px] md:max-w-[220px] block">
+                  {profile.branch}
+                </span>
+              </div>
+              <ChevronDown className="h-3.5 w-3.5 text-[#70625B]" />
+            </button>
+
+            {/* Dropdown de Filiais */}
+            {branchDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-64 rounded-xl border border-[#EFE8DE] bg-[#FFFFFF] p-1.5 shadow-soft-lg z-50 animate-in fade-in slide-in-from-top-1">
+                <div className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#70625B]">
+                  Alternar Estabelecimento
+                </div>
+                {availableBranches.map((branch) => (
+                  <button
+                    key={branch}
+                    type="button"
+                    onClick={() => {
+                      onSelectBranch?.(branch);
+                      setBranchDropdownOpen(false);
+                    }}
+                    className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-xs transition-colors ${
+                      branch === profile.branch
+                        ? 'bg-[#FAF6F0] font-semibold text-[#C87A5B]'
+                        : 'text-[#2C221E] hover:bg-[#FAF6F0]'
+                    }`}
+                  >
+                    <span className="truncate">{branch}</span>
+                    {branch === profile.branch && (
+                      <CheckCircle2 className="h-3.5 w-3.5 text-[#C87A5B] shrink-0 ml-2" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Sino de Notificações / Alertas Críticos */}
+          <button
+            type="button"
+            onClick={onOpenNotifications}
+            aria-label="Ver alertas"
+            className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-[#EFE8DE] bg-[#FAF6F0] text-[#70625B] transition-colors hover:bg-[#EFE8DE]/60 hover:text-[#2C221E]"
+          >
+            <Bell className="h-4 w-4" />
+            {criticalAlertCount > 0 && (
+              <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#C24E48] px-1 text-[10px] font-bold text-white shadow-soft">
+                {criticalAlertCount}
+              </span>
+            )}
+          </button>
+
+          {/* Divisória Vertical Sutil */}
+          <div className="h-6 w-px bg-[#EFE8DE]" />
+
+          {/* Indicador de Perfil / Avatar */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => {
+                setProfileDropdownOpen(!profileDropdownOpen);
+                setBranchDropdownOpen(false);
+              }}
+              className="flex items-center gap-2.5 rounded-xl p-1 transition-colors hover:bg-[#FAF6F0] focus:outline-none focus:ring-2 focus:ring-[#C87A5B]/20"
+            >
+              <div className="relative flex h-9 w-9 items-center justify-center rounded-full bg-[#DDA76A]/30 text-xs font-bold text-[#2C221E] ring-2 ring-[#EFE8DE]">
+                {profile.user.avatar ? (
+                  <img
+                    src={profile.user.avatar}
+                    alt={profile.user.name}
+                    className="h-full w-full rounded-full object-cover"
+                  />
+                ) : (
+                  profile.user.initials
+                )}
+                {/* Ponto de status online (Verde Sálvia) */}
+                <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-[#5B8A62]" />
+              </div>
+              <div className="hidden text-left lg:block">
+                <p className="text-xs font-bold leading-tight text-[#2C221E]">
+                  {profile.user.name}
+                </p>
+                <p className="text-[11px] font-medium leading-tight text-[#70625B]">
+                  {profile.user.role}
+                </p>
+              </div>
+              <ChevronDown className="hidden h-3.5 w-3.5 text-[#70625B] sm:block" />
+            </button>
+
+            {/* Menu Dropdown do Perfil */}
+            {profileDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-56 rounded-xl border border-[#EFE8DE] bg-[#FFFFFF] p-2 shadow-soft-lg z-50 animate-in fade-in slide-in-from-top-1">
+                <div className="border-b border-[#EFE8DE] px-3 py-2 text-left">
+                  <p className="text-xs font-bold text-[#2C221E]">{profile.user.name}</p>
+                  <p className="text-[11px] text-[#70625B]">{profile.user.role}</p>
+                  <p className="mt-1 text-[10px] text-[#5B8A62] font-semibold flex items-center gap-1">
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#5B8A62]" />
+                    Operação em tempo real
+                  </p>
+                </div>
+                <div className="py-1">
+                  <a
+                    href="#config"
+                    className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs text-[#2C221E] hover:bg-[#FAF6F0]"
+                  >
+                    <UserIcon className="h-3.5 w-3.5 text-[#70625B]" />
+                    Meu Cadastro & Turno
+                  </a>
+                  <a
+                    href="#ajuda"
+                    className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs text-[#2C221E] hover:bg-[#FAF6F0]"
+                  >
+                    <AlertCircle className="h-3.5 w-3.5 text-[#70625B]" />
+                    Central de Ajuda
+                  </a>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+};
