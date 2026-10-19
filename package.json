@@ -4,6 +4,7 @@
   "private": true,
   "description": "MeuBotequim - Gestão de Estoque e Reposição para Bares e Restaurantes",
   "scripts": {
+    "build": "npm --prefix frontend run build",
     "dev:frontend": "npm --prefix frontend run dev",
     "dev:backend": "npm --prefix backend run start:dev",
     "build:frontend": "npm --prefix frontend run build",
