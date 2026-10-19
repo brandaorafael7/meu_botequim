@@ -20,7 +20,7 @@ import {
   RegisterLossModal,
   BlindAuditModal,
 } from '../components/meubotequim/QuickActionModals';
-import { inventoryService } from '../services/api';
+import { inventoryService, tenantService } from '../services/api';
 import {
   MovementType,
   type BarProfile,
@@ -177,9 +177,10 @@ export const MeuBotequimDashboard: React.FC = () => {
   // Carrega dados da API MeuBotequim
   const loadData = useCallback(async () => {
     try {
-      const [prods, mets] = await Promise.all([
+      const [prods, mets, tenant] = await Promise.all([
         inventoryService.getReplenishmentProducts(),
         inventoryService.getDashboardMetrics(),
+        tenantService.getCurrentTenant().catch(() => null),
       ]);
 
       if (prods && prods.length > 0) {
@@ -187,6 +188,14 @@ export const MeuBotequimDashboard: React.FC = () => {
       }
       if (mets) {
         setMetrics(mets);
+      }
+      if (tenant) {
+        setProfile((prev) => ({
+          ...prev,
+          name: tenant.name,
+          branch: tenant.settings?.branchName || `${tenant.name} - Matriz`,
+          tenantId: tenant.id,
+        }));
       }
       setIsApiConnected(true);
       return true;

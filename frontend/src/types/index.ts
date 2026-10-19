@@ -31,12 +31,52 @@ export interface KpiMetric {
   icon: 'package-value' | 'alert-critical' | 'loss-waste' | 'projected-turnover';
 }
 
+export const UserRole = {
+  SUPER_ADMIN: 'SUPER_ADMIN',
+  OWNER: 'OWNER',
+  MANAGER: 'MANAGER',
+  BARTENDER: 'BARTENDER',
+  ADMIN: 'ADMIN',
+  EMPLOYEE: 'EMPLOYEE',
+} as const;
+
+export type UserRole = (typeof UserRole)[keyof typeof UserRole];
+
+export interface Tenant {
+  id: string;
+  name: string;
+  slug: string;
+  plan: 'TRIAL' | 'STARTER' | 'PRO' | 'ENTERPRISE';
+  cnpj?: string;
+  phone?: string;
+  address?: string;
+  settings?: {
+    primaryColor?: string;
+    branchName?: string;
+    logoUrl?: string;
+  };
+}
+
+export interface AuthSession {
+  accessToken: string;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    role: UserRole;
+    tenantId?: string;
+  };
+  tenant?: Tenant;
+}
+
 export interface BarProfile {
   name: string;
   branch: string;
+  tenantId?: string;
   user: {
     name: string;
     role: string;
+    roleCode?: UserRole;
     avatar?: string;
     initials: string;
   };

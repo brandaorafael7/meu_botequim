@@ -4,6 +4,8 @@ import type {
   DashboardMetrics,
   CreateStockMovementDto,
   StockMovement,
+  AuthSession,
+  Tenant,
 } from '../types';
 
 export const api = axios.create({
@@ -16,8 +18,54 @@ api.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  const tenantId = localStorage.getItem('tenantId');
+  if (tenantId && !config.params?.tenantId) {
+    config.params = { ...config.params, tenantId };
+  }
   return config;
 });
+
+export const authService = {
+  async registerEstablishment(data: {
+    establishmentName: string;
+    name: string;
+    email: string;
+    password: string;
+    phone?: string;
+  }): Promise<AuthSession> {
+    const res = await api.post<AuthSession>('/auth/register-establishment', data);
+    if (res.data.accessToken) {
+      localStorage.setItem('token', res.data.accessToken);
+      if (res.data.tenant?.id) {
+        localStorage.setItem('tenantId', res.data.tenant.id);
+      }
+    }
+    return res.data;
+  },
+
+  async login(email: string, pass: string): Promise<AuthSession> {
+    const res = await api.post<AuthSession>('/auth/login', { email, password: pass });
+    if (res.data.accessToken) {
+      localStorage.setItem('token', res.data.accessToken);
+      if (res.data.tenant?.id) {
+        localStorage.setItem('tenantId', res.data.tenant.id);
+      }
+    }
+    return res.data;
+  },
+
+  logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('tenantId');
+  },
+};
+
+export const tenantService = {
+  async getCurrentTenant(): Promise<Tenant> {
+    const res = await api.get<Tenant>('/tenants/current');
+    return res.data;
+  },
+};
 
 export const inventoryService = {
   async getReplenishmentProducts(): Promise<ReplenishmentProduct[]> {
