@@ -20,6 +20,7 @@ interface HeaderProps {
   isAuthenticated?: boolean;
   onOpenAuthModal?: (mode?: 'login' | 'register') => void;
   onLogout?: () => void;
+  onNavigateToLanding?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -35,6 +36,7 @@ export const Header: React.FC<HeaderProps> = ({
   isAuthenticated = false,
   onOpenAuthModal,
   onLogout,
+  onNavigateToLanding,
 }) => {
   const [branchDropdownOpen, setBranchDropdownOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
@@ -43,7 +45,11 @@ export const Header: React.FC<HeaderProps> = ({
     <header className="sticky top-0 z-40 w-full border-b border-[#EFE8DE] bg-[#FFFFFF]/90 backdrop-blur-md transition-all">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Lado Esquerdo: Logotipo MeuBotequim */}
-        <div className="flex items-center gap-3">
+        <div
+          className={`flex items-center gap-3 ${onNavigateToLanding ? 'cursor-pointer' : ''}`}
+          onClick={onNavigateToLanding}
+          title={onNavigateToLanding ? 'Voltar para a Página Inicial' : undefined}
+        >
           <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl border border-[#EFE8DE] bg-[#F4EDE4] shadow-soft transition-transform hover:scale-105">
             <img
               src="/logo.png"

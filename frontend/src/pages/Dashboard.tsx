@@ -201,7 +201,13 @@ const getInitialProfile = (): BarProfile => {
   };
 };
 
-export const MeuBotequimDashboard: React.FC = () => {
+interface MeuBotequimDashboardProps {
+  onNavigateToLanding?: () => void;
+}
+
+export const MeuBotequimDashboard: React.FC<MeuBotequimDashboardProps> = ({
+  onNavigateToLanding,
+}) => {
   const [profile, setProfile] = useState<BarProfile>(getInitialProfile);
   const [products, setProducts] = useState<ReplenishmentProduct[]>(INITIAL_PRODUCTS);
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
@@ -420,6 +426,7 @@ export const MeuBotequimDashboard: React.FC = () => {
         isAuthenticated={isAuthenticated}
         onOpenAuthModal={handleOpenAuthModal}
         onLogout={handleLogout}
+        onNavigateToLanding={onNavigateToLanding}
         onSelectBranch={(branch) => setProfile((p) => ({ ...p, branch }))}
         onOpenNotifications={() => {
           showToast(`Você possui ${criticalItemsCount} itens em nível crítico requerendo atenção.`);
