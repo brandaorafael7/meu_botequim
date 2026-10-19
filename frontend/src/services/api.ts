@@ -39,6 +39,12 @@ export const authService = {
       if (res.data.tenant?.id) {
         localStorage.setItem('tenantId', res.data.tenant.id);
       }
+      if (res.data.user) {
+        localStorage.setItem('user', JSON.stringify(res.data.user));
+      }
+      if (res.data.tenant) {
+        localStorage.setItem('tenant', JSON.stringify(res.data.tenant));
+      }
     }
     return res.data;
   },
@@ -50,6 +56,12 @@ export const authService = {
       if (res.data.tenant?.id) {
         localStorage.setItem('tenantId', res.data.tenant.id);
       }
+      if (res.data.user) {
+        localStorage.setItem('user', JSON.stringify(res.data.user));
+      }
+      if (res.data.tenant) {
+        localStorage.setItem('tenant', JSON.stringify(res.data.tenant));
+      }
     }
     return res.data;
   },
@@ -57,6 +69,8 @@ export const authService = {
   logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('tenantId');
+    localStorage.removeItem('user');
+    localStorage.removeItem('tenant');
   },
 };
 

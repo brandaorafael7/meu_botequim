@@ -3,11 +3,13 @@ import {
   Store,
   ChevronDown,
   Bell,
-  User as UserIcon,
+  LogOut,
+  Sparkles,
+  PlusCircle,
+  LogIn,
   CheckCircle2,
-  AlertCircle,
 } from 'lucide-react';
-import type { BarProfile } from '../../types/meubotequim';
+import type { BarProfile } from '../../types';
 
 interface HeaderProps {
   profile: BarProfile;
@@ -15,6 +17,9 @@ interface HeaderProps {
   onOpenNotifications?: () => void;
   onSelectBranch?: (branch: string) => void;
   availableBranches?: string[];
+  isAuthenticated?: boolean;
+  onOpenAuthModal?: (mode?: 'login' | 'register') => void;
+  onLogout?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -27,6 +32,9 @@ export const Header: React.FC<HeaderProps> = ({
     'Unidade Praia - Quiosque 04',
     'Unidade Rooftop - Lounge',
   ],
+  isAuthenticated = false,
+  onOpenAuthModal,
+  onLogout,
 }) => {
   const [branchDropdownOpen, setBranchDropdownOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
@@ -130,6 +138,18 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Divisória Vertical Sutil */}
           <div className="h-6 w-px bg-[#EFE8DE]" />
 
+          {/* Botão Rápido de Login / Cadastro se não autenticado */}
+          {!isAuthenticated && (
+            <button
+              type="button"
+              onClick={() => onOpenAuthModal?.('login')}
+              className="hidden sm:flex items-center gap-1.5 rounded-xl border border-[#C87A5B]/30 bg-[#C87A5B]/10 px-3 py-1.5 text-xs font-bold text-[#C87A5B] hover:bg-[#C87A5B] hover:text-white transition-all shadow-soft"
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              <span>Acessar / Criar Bar</span>
+            </button>
+          )}
+
           {/* Indicador de Perfil / Avatar */}
           <div className="relative">
             <button
@@ -166,30 +186,58 @@ export const Header: React.FC<HeaderProps> = ({
 
             {/* Menu Dropdown do Perfil */}
             {profileDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-56 rounded-xl border border-[#EFE8DE] bg-[#FFFFFF] p-2 shadow-soft-lg z-50 animate-in fade-in slide-in-from-top-1">
+              <div className="absolute right-0 mt-2 w-60 rounded-xl border border-[#EFE8DE] bg-[#FFFFFF] p-2 shadow-soft-lg z-50 animate-in fade-in slide-in-from-top-1">
                 <div className="border-b border-[#EFE8DE] px-3 py-2 text-left">
-                  <p className="text-xs font-bold text-[#2C221E]">{profile.user.name}</p>
-                  <p className="text-[11px] text-[#70625B]">{profile.user.role}</p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-bold text-[#2C221E]">{profile.user.name}</p>
+                    <span className="rounded-full bg-[#C87A5B]/15 px-2 py-0.5 text-[9px] font-bold text-[#C87A5B]">
+                      {profile.user.roleCode || profile.user.role}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-[#70625B]">{profile.branch}</p>
                   <p className="mt-1 text-[10px] text-[#5B8A62] font-semibold flex items-center gap-1">
                     <span className="h-1.5 w-1.5 rounded-full bg-[#5B8A62]" />
-                    Operação em tempo real
+                    {isAuthenticated ? 'Sessão SaaS Conectada' : 'Modo Demonstração'}
                   </p>
                 </div>
-                <div className="py-1">
-                  <a
-                    href="#config"
-                    className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs text-[#2C221E] hover:bg-[#FAF6F0]"
+                <div className="py-1 space-y-0.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onOpenAuthModal?.('register');
+                      setProfileDropdownOpen(false);
+                    }}
+                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs text-[#2C221E] hover:bg-[#FAF6F0] text-left transition-colors"
                   >
-                    <UserIcon className="h-3.5 w-3.5 text-[#70625B]" />
-                    Meu Cadastro & Turno
-                  </a>
-                  <a
-                    href="#ajuda"
-                    className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs text-[#2C221E] hover:bg-[#FAF6F0]"
-                  >
-                    <AlertCircle className="h-3.5 w-3.5 text-[#70625B]" />
-                    Central de Ajuda
-                  </a>
+                    <PlusCircle className="h-3.5 w-3.5 text-[#C87A5B]" />
+                    <span>Cadastrar Novo Bar (SaaS)</span>
+                  </button>
+
+                  {isAuthenticated ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onLogout?.();
+                        setProfileDropdownOpen(false);
+                      }}
+                      className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs text-[#C24E48] hover:bg-[#C24E48]/10 text-left font-semibold transition-colors"
+                    >
+                      <LogOut className="h-3.5 w-3.5" />
+                      <span>Sair da Conta</span>
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onOpenAuthModal?.('login');
+                        setProfileDropdownOpen(false);
+                      }}
+                      className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs text-[#2C221E] hover:bg-[#FAF6F0] text-left font-semibold transition-colors"
+                    >
+                      <LogIn className="h-3.5 w-3.5 text-[#5B8A62]" />
+                      <span>Acessar com E-mail</span>
+                    </button>
+                  )}
                 </div>
               </div>
             )}

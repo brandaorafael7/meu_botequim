@@ -5,4 +5,5 @@ export * from './meubotequim/KpiCard';
 export * from './meubotequim/QuickActionModals';
 export * from './meubotequim/ShoppingListDrawer';
 export * from './meubotequim/StatusBadge';
+export * from './meubotequim/AuthModal';
 

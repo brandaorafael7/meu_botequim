@@ -20,13 +20,15 @@ import {
   RegisterLossModal,
   BlindAuditModal,
 } from '../components/meubotequim/QuickActionModals';
-import { inventoryService, tenantService } from '../services/api';
+import { AuthModal } from '../components/meubotequim/AuthModal';
+import { authService, inventoryService, tenantService } from '../services/api';
 import {
   MovementType,
   type BarProfile,
   type ReplenishmentProduct,
   type ShoppingCartItem,
   type DashboardMetrics,
+  type AuthSession,
 } from '../types';
 
 // Mock de dados representativos para Bar & Botequim (fallback inicial)
@@ -151,8 +153,56 @@ const INITIAL_PROFILE: BarProfile = {
   },
 };
 
+const getInitialProfile = (): BarProfile => {
+  const storedUser = localStorage.getItem('user');
+  const storedTenant = localStorage.getItem('tenant');
+  let userObj = INITIAL_PROFILE.user;
+  let barName = INITIAL_PROFILE.name;
+  let branchName = INITIAL_PROFILE.branch;
+
+  if (storedUser) {
+    try {
+      const parsed = JSON.parse(storedUser);
+      userObj = {
+        name: parsed.name || INITIAL_PROFILE.user.name,
+        role:
+          parsed.role === 'OWNER'
+            ? 'Proprietário'
+            : parsed.role === 'MANAGER'
+            ? 'Gerente Operacional'
+            : 'Bartender / Operação',
+        initials: (parsed.name || 'MB')
+          .split(' ')
+          .map((n: string) => n[0])
+          .slice(0, 2)
+          .join('')
+          .toUpperCase(),
+        roleCode: parsed.role,
+      };
+    } catch {
+      // ignore
+    }
+  }
+
+  if (storedTenant) {
+    try {
+      const parsedTenant = JSON.parse(storedTenant);
+      barName = parsedTenant.name || barName;
+      branchName = parsedTenant.settings?.branchName || `${barName} - Matriz`;
+    } catch {
+      // ignore
+    }
+  }
+
+  return {
+    name: barName,
+    branch: branchName,
+    user: userObj,
+  };
+};
+
 export const MeuBotequimDashboard: React.FC = () => {
-  const [profile, setProfile] = useState<BarProfile>(INITIAL_PROFILE);
+  const [profile, setProfile] = useState<BarProfile>(getInitialProfile);
   const [products, setProducts] = useState<ReplenishmentProduct[]>(INITIAL_PRODUCTS);
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [shoppingCart, setShoppingCart] = useState<ShoppingCartItem[]>([]);
@@ -160,6 +210,11 @@ export const MeuBotequimDashboard: React.FC = () => {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
   const [isApiConnected, setIsApiConnected] = useState(false);
+
+  // Autenticação SaaS & Modal
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => !!localStorage.getItem('token'));
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
 
   // Modais de ações rápidas
   const [isEntryModalOpen, setIsEntryModalOpen] = useState(false);
@@ -183,7 +238,7 @@ export const MeuBotequimDashboard: React.FC = () => {
         tenantService.getCurrentTenant().catch(() => null),
       ]);
 
-      if (prods && prods.length > 0) {
+      if (Array.isArray(prods)) {
         setProducts(prods);
       }
       if (mets) {
@@ -205,6 +260,53 @@ export const MeuBotequimDashboard: React.FC = () => {
       return false;
     }
   }, []);
+
+  const handleAuthSuccess = (session: AuthSession) => {
+    setIsAuthenticated(true);
+    const roleLabel =
+      session.user.role === 'OWNER'
+        ? 'Proprietário'
+        : session.user.role === 'MANAGER'
+        ? 'Gerente Operacional'
+        : 'Bartender / Operação';
+
+    const establishmentName = session.tenant?.name || 'MeuBotequim';
+    const branchName =
+      session.tenant?.settings?.branchName || `${establishmentName} - Matriz`;
+
+    setProfile({
+      name: establishmentName,
+      branch: branchName,
+      tenantId: session.tenant?.id,
+      user: {
+        name: session.user.name,
+        role: roleLabel,
+        initials: session.user.name
+          .split(' ')
+          .map((n) => n[0])
+          .slice(0, 2)
+          .join('')
+          .toUpperCase(),
+        roleCode: session.user.role,
+      },
+    });
+
+    showToast(`Bem-vindo, ${session.user.name}! Estabelecimento: ${establishmentName}`);
+    void loadData();
+  };
+
+  const handleLogout = () => {
+    authService.logout();
+    setIsAuthenticated(false);
+    setProfile(INITIAL_PROFILE);
+    showToast('Sessão encerrada com sucesso.');
+    void loadData();
+  };
+
+  const handleOpenAuthModal = (mode: 'login' | 'register' = 'login') => {
+    setAuthModalMode(mode);
+    setIsAuthModalOpen(true);
+  };
 
   const handleManualSync = async () => {
     setIsSyncing(true);
@@ -315,6 +417,9 @@ export const MeuBotequimDashboard: React.FC = () => {
       <Header
         profile={profile}
         criticalAlertCount={criticalItemsCount}
+        isAuthenticated={isAuthenticated}
+        onOpenAuthModal={handleOpenAuthModal}
+        onLogout={handleLogout}
         onSelectBranch={(branch) => setProfile((p) => ({ ...p, branch }))}
         onOpenNotifications={() => {
           showToast(`Você possui ${criticalItemsCount} itens em nível crítico requerendo atenção.`);
@@ -519,6 +624,13 @@ export const MeuBotequimDashboard: React.FC = () => {
         onSuccess={showToast}
         products={products}
         onConfirmAudit={handleConfirmAudit}
+      />
+      <AuthModal
+        key={`${authModalMode}-${isAuthModalOpen}`}
+        isOpen={isAuthModalOpen}
+        initialMode={authModalMode}
+        onClose={() => setIsAuthModalOpen(false)}
+        onSuccess={handleAuthSuccess}
       />
 
       {/* Toast de Notificação Suave */}
