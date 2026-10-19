@@ -1,72 +1,90 @@
-# 🍻 MeuBotequim — Bar & Botequim Inventory Suite
+# 🍻 MeuBotequim
 
-Sistema web moderno e especializado para controle de estoque, alertas de reposição, auditoria e lista de compras para bares, botecos e restaurantes.
+Sistema de Gestão de Estoque, Reposição de Balcão e Indicadores em Tempo Real para Bares e Restaurantes.
+
+---
+
+## 📁 Estrutura do Projeto
+
+O repositório está organizado como um monorepo com separação clara entre **Frontend** e **Backend**:
+
+```text
+meubotequim/
+├── frontend/             # Aplicação Web (React 19 + TypeScript + Vite + Tailwind CSS)
+│   ├── src/              # Componentes, Páginas, Serviços de API e Tipagens
+│   ├── public/           # Logos e assets estáticos
+│   ├── package.json
+│   ├── vite.config.ts
+│   └── .env
+│
+├── backend/              # API REST (NestJS 11 + Mongoose + MongoDB + Swagger)
+│   ├── src/              # Módulos: Products, StockMovements, Categories, Dashboard, Users
+│   ├── package.json
+│   ├── nest-cli.json
+│   └── .env
+│
+├── package.json          # Scripts utilitários da raiz
+├── .gitignore            # Regras de ignore consolidadas
+└── README.md
+```
 
 ---
 
 ## 🚀 Como Rodar Localmente
 
-### 1. Pré-requisitos
-- **Node.js** (v18 ou superior recomendado, testado com v24+)
-- **npm** (v9 ou superior)
-
-### 2. Iniciar o Servidor de Desenvolvimento
-No terminal, na pasta do projeto:
-
-```bash
-npm run dev
-```
-
-O Vite iniciará o servidor local. Basta abrir o link indicado no navegador (geralmente [http://localhost:5173](http://localhost:5173)).
+### Pré-requisitos
+* **Node.js**: v18+ (recomendado v20 ou v24)
+* **MongoDB**: Instância local rodando em `mongodb://127.0.0.1:27017` (ou cluster MongoDB Atlas)
 
 ---
 
-## 🛠️ Scripts Disponíveis
+### Opção 1: Rodando a partir da Raiz (`meubotequim`)
 
-| Comando | Descrição |
-|---|---|
-| `npm run dev` | Inicia o servidor local de desenvolvimento (Hot Reload) |
-| `npm run build` | Compila o TypeScript e gera o bundle de produção na pasta `dist/` |
-| `npm run preview` | Executa o build de produção localmente para pré-visualização |
-| `npm run lint` | Executa a verificação estática de código com o ESLint |
+Abra dois terminais na pasta raiz `meubotequim`:
 
----
+* **Terminal 1 — Backend:**
+  ```powershell
+  npm run dev:backend
+  ```
+  > API disponível em: `http://localhost:3000`  
+  > Documentação Swagger em: `http://localhost:3000/docs`
 
-## 📂 Estrutura do Projeto
-
-```text
-meubotequim/
-├── public/                 # Arquivos estáticos
-├── src/
-│   ├── components/         # Componentes modulares
-│   │   └── meubotequim/    # Componentes principais da interface:
-│   │       ├── ActionButtons.tsx       # Ações rápidas (Entrada, Perda, Auditoria)
-│   │       ├── AlertTable.tsx          # Tabela de alertas críticos e filtro de reposição
-│   │       ├── Header.tsx              # Cabeçalho com perfil, alertas e seleção de filial
-│   │       ├── KpiCard.tsx             # Cards de indicadores de estoque e custo
-│   │       ├── QuickActionModals.tsx   # Modais interativos de cadastro e auditoria
-│   │       ├── ShoppingListDrawer.tsx  # Gaveta lateral com carrinho/lista de compras
-│   │       └── StatusBadge.tsx         # Badges visuais de status (Crítico, Alerta, Normal)
-│   ├── pages/
-│   │   └── Dashboard.tsx   # Painel principal integrado MeuBotequim
-│   ├── types/              # Definições TypeScript
-│   ├── App.tsx             # Componente raiz da aplicação
-│   ├── main.tsx            # Ponto de entrada React 19
-│   └── index.css           # Estilos globais e Tailwind CSS
-├── index.html              # HTML base
-├── tailwind.config.js      # Configuração de temas e paleta de tons terrosos pastel
-├── tsconfig.json           # Configurações TypeScript
-└── vite.config.ts          # Configuração do Vite e empacotamento
-```
+* **Terminal 2 — Frontend:**
+  ```powershell
+  npm run dev:frontend
+  ```
+  > Frontend Web disponível em: `http://localhost:5173`
 
 ---
 
-## 🎨 Design System
-O projeto utiliza uma paleta com **tons terrosos pastel** inspirada na atmosfera de bares tradicionais:
-- **Terracota Pastel (`#C87A5B`)**: Cor primária para ações e botões em destaque
-- **Areia / Off-white (`#FAF6F0`)**: Fundo quente e confortável para os olhos
-- **Café Espresso (`#2C221E`)**: Tipografia principal de alta legibilidade
-- **Verde Sálvia (`#5B8A62`)**: Estoque regular e confirmações
-- **Mostarda Pastel (`#DF9B42`)**: Alertas e atenção
-- **Tijolo Queimado (`#C24E48`)**: Níveis críticos e risco de ruptura
+### Opção 2: Entrando em cada pasta individualmente
 
+* **Backend:**
+  ```powershell
+  cd backend
+  npm run start:dev
+  ```
+
+* **Frontend:**
+  ```powershell
+  cd frontend
+  npm run dev
+  ```
+
+---
+
+## 💾 Banco de Dados & Scripts
+
+No backend (`backend/`):
+* **`npm run seed`**: Popula o banco com itens padrão de botequim, categorias e usuário admin inicial (`admin@meubotequim.com.br` / `admin123`).
+* **`npm run migrate`**: Sincroniza e migra produtos, histórico e movimentações a partir do Bar Inventory.
+
+---
+
+## 🌐 Deploy na Vercel (Frontend)
+
+Ao conectar este repositório na **Vercel**:
+1. No campo **Root Directory**, selecione: `frontend`
+2. Framework Preset: **Vite**
+3. Em **Environment Variables**, adicione `VITE_API_URL` com a URL do seu backend em produção.
+4. Conecte seu domínio do Registro.br em **Settings ➜ Domains**.
