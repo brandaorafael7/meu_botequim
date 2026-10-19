@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, isValidObjectId } from 'mongoose';
+import { Model, isValidObjectId, Types } from 'mongoose';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { Category, CategoryDocument } from './schemas/category.schema';
@@ -32,8 +32,12 @@ export class CategoriesService {
     return createdCategory.save();
   }
 
-  async findAll(): Promise<Category[]> {
-    return this.categoryModel.find({ isActive: true }).exec();
+  async findAll(tenantId?: string): Promise<Category[]> {
+    const filter: Record<string, unknown> = { isActive: true };
+    if (tenantId && isValidObjectId(tenantId)) {
+      filter.$or = [{ tenantId: new Types.ObjectId(tenantId) }, { tenantId: null }];
+    }
+    return this.categoryModel.find(filter).sort({ name: 1 }).exec();
   }
 
   async findOne(id: string): Promise<Category> {

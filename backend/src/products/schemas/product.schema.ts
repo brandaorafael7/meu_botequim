@@ -9,6 +9,9 @@ export class Product {
   @Prop({ required: true, trim: true })
   name: string;
 
+  @Prop({ type: Types.ObjectId, ref: 'Tenant', index: true, default: null })
+  tenantId?: Types.ObjectId;
+
   @Prop({ trim: true })
   brand?: string;
 

@@ -25,8 +25,18 @@ export class CreateUserDto {
   @MinLength(6, { message: 'A senha deve ter no mínimo 6 caracteres.' })
   password!: string;
 
-  @ApiPropertyOptional({ enum: Role, default: Role.EMPLOYEE })
+  @ApiPropertyOptional({ enum: Role, default: Role.BARTENDER })
   @IsOptional()
-  @IsEnum(Role, { message: 'A role deve ser ADMIN ou EMPLOYEE.' })
+  @IsEnum(Role, { message: 'A role deve ser OWNER, MANAGER, BARTENDER, ADMIN ou EMPLOYEE.' })
   role?: Role;
+
+  @ApiPropertyOptional({ example: '6a8793259eb11f3117cb4c10' })
+  @IsOptional()
+  @IsString()
+  tenantId?: string;
+
+  @ApiPropertyOptional({ example: '(11) 99999-9999' })
+  @IsOptional()
+  @IsString()
+  phone?: string;
 }

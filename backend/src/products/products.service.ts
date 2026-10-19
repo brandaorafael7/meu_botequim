@@ -30,17 +30,25 @@ export class ProductsService {
     return createdProduct.save();
   }
 
-  async findAll(): Promise<Product[]> {
+  async findAll(tenantId?: string): Promise<Product[]> {
+    const filter: Record<string, unknown> = { isActive: true };
+    if (tenantId && Types.ObjectId.isValid(tenantId)) {
+      filter.$or = [{ tenantId: new Types.ObjectId(tenantId) }, { tenantId: null }];
+    }
     return this.productModel
-      .find({ isActive: true })
+      .find(filter)
       .populate('category')
       .sort({ name: 1 })
       .exec();
   }
 
-  async getReplenishmentList() {
+  async getReplenishmentList(tenantId?: string) {
+    const filter: Record<string, unknown> = { isActive: true };
+    if (tenantId && Types.ObjectId.isValid(tenantId)) {
+      filter.$or = [{ tenantId: new Types.ObjectId(tenantId) }, { tenantId: null }];
+    }
     const products = await this.productModel
-      .find({ isActive: true })
+      .find(filter)
       .populate('category')
       .sort({ currentStock: 1 })
       .exec();

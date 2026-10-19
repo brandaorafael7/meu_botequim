@@ -1,5 +1,5 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { DashboardService } from './dashboard.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Public } from '../auth/decorators/public.decorator';
@@ -16,7 +16,8 @@ export class DashboardController {
   @ApiOperation({
     summary: 'Obtém métricas agregadas para o painel de controle',
   })
-  getMetrics() {
-    return this.dashboardService.getMetrics();
+  @ApiQuery({ name: 'tenantId', required: false })
+  getMetrics(@Query('tenantId') tenantId?: string) {
+    return this.dashboardService.getMetrics(tenantId);
   }
 }

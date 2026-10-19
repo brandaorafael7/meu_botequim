@@ -1,7 +1,8 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
+  ApiQuery,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
@@ -44,8 +45,9 @@ export class StockMovementsController {
   @Get()
   @Public()
   @ApiOperation({ summary: 'Lista todas as movimentações de estoque' })
-  findAll() {
-    return this.stockMovementsService.findAll();
+  @ApiQuery({ name: 'tenantId', required: false })
+  findAll(@Query('tenantId') tenantId?: string) {
+    return this.stockMovementsService.findAll(tenantId);
   }
 
   @Get('product/:productId')

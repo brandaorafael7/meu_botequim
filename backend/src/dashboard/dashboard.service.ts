@@ -31,8 +31,16 @@ export class DashboardService {
     private readonly movementModel: Model<StockMovementDocument>,
   ) {}
 
-  async getMetrics() {
-    const allProducts = await this.productModel.find({ isActive: true }).exec();
+  async getMetrics(tenantId?: string) {
+    const productFilter: Record<string, unknown> = { isActive: true };
+    const movementTenantFilter: Record<string, unknown> = {};
+
+    if (tenantId && Types.ObjectId.isValid(tenantId)) {
+      productFilter.$or = [{ tenantId: new Types.ObjectId(tenantId) }, { tenantId: null }];
+      movementTenantFilter.$or = [{ tenantId: new Types.ObjectId(tenantId) }, { tenantId: null }];
+    }
+
+    const allProducts = await this.productModel.find(productFilter).exec();
     const totalProducts = allProducts.length;
 
     let stockValue = 0;
@@ -59,6 +67,7 @@ export class DashboardService {
       .find({
         type: MovementType.PERDA,
         createdAt: { $gte: thirtyDaysAgo },
+        ...movementTenantFilter,
       })
       .populate('productId', 'name costPrice')
       .exec()) as unknown as { productId?: { costPrice?: number }; quantity: number }[];
@@ -76,6 +85,7 @@ export class DashboardService {
       .find({
         type: MovementType.SAIDA,
         createdAt: { $gte: sevenDaysAgo },
+        ...movementTenantFilter,
       })
       .populate('productId', 'name dayPrice')
       .exec()) as unknown as PopulatedDashboardMovement[];

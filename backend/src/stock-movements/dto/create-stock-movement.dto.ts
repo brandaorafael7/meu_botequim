@@ -34,4 +34,9 @@ export class CreateStockMovementDto {
   @IsOptional()
   @IsString({ message: 'O motivo deve ser um texto.' })
   reason?: string;
+
+  @ApiPropertyOptional({ example: '6a8793259eb11f3117cb4c10' })
+  @IsOptional()
+  @IsString()
+  tenantId?: string;
 }

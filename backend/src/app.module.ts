@@ -8,6 +8,7 @@ import { ProductsModule } from './products/products.module';
 import { StockMovementsModule } from './stock-movements/stock-movements.module';
 import { SettingsModule } from './settings/settings.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { TenantsModule } from './tenants/tenants.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
     MongooseModule.forRoot(
       process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/meu-botequim',
     ),
+    TenantsModule,
     AuthModule,
     UsersModule,
     CategoriesModule,

@@ -29,6 +29,15 @@ export class StockMovement {
   })
   userId?: Types.ObjectId;
 
+  @Prop({
+    type: MongooseSchema.Types.ObjectId,
+    ref: 'Tenant',
+    required: false,
+    default: null,
+    index: true,
+  })
+  tenantId?: Types.ObjectId;
+
   @Prop({ type: String, enum: MovementType, required: true })
   type!: MovementType;
 

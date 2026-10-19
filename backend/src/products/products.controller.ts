@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
   UseGuards,
   HttpStatus,
   HttpCode,
@@ -15,6 +16,7 @@ import {
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -34,8 +36,8 @@ export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Post()
-  @Roles(Role.ADMIN)
-  @ApiOperation({ summary: 'Cadastra um novo produto (Apenas ADMIN)' })
+  @Roles(Role.OWNER, Role.MANAGER, Role.ADMIN)
+  @ApiOperation({ summary: 'Cadastra um novo produto (OWNER, MANAGER ou ADMIN)' })
   @ApiResponse({ status: 201, description: 'Produto cadastrado com sucesso.' })
   create(@Body() createProductDto: CreateProductDto) {
     return this.productsService.create(createProductDto);
@@ -44,8 +46,9 @@ export class ProductsController {
   @Get()
   @Public()
   @ApiOperation({ summary: 'Lista todos os produtos ativos' })
-  findAll() {
-    return this.productsService.findAll();
+  @ApiQuery({ name: 'tenantId', required: false })
+  findAll(@Query('tenantId') tenantId?: string) {
+    return this.productsService.findAll(tenantId);
   }
 
   @Get('replenishment')
@@ -53,8 +56,9 @@ export class ProductsController {
   @ApiOperation({
     summary: 'Lista produtos formatados com status de reposição (CRITICO, ALERTA, NORMAL) para MeuBotequim',
   })
-  getReplenishment() {
-    return this.productsService.getReplenishmentList();
+  @ApiQuery({ name: 'tenantId', required: false })
+  getReplenishment(@Query('tenantId') tenantId?: string) {
+    return this.productsService.getReplenishmentList(tenantId);
   }
 
   @Get('low-stock')

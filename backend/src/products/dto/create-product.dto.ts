@@ -23,6 +23,11 @@ export class CreateProductDto {
   @IsOptional()
   barcode?: string;
 
+  @ApiPropertyOptional({ example: '6a8793259eb11f3117cb4c10' })
+  @IsString()
+  @IsOptional()
+  tenantId?: string;
+
   @ApiPropertyOptional({ example: '64b1f2e8...' })
   @IsString()
   @IsOptional()

@@ -77,9 +77,14 @@ export class StockMovementsService {
       }
     }
 
+    const tenantObjectId = dto.tenantId && isValidObjectId(dto.tenantId)
+      ? new Types.ObjectId(dto.tenantId)
+      : product.tenantId || null;
+
     const movement = new this.stockMovementModel({
       productId: new Types.ObjectId(dto.productId),
       userId: userObjectId,
+      tenantId: tenantObjectId,
       type: dto.type,
       quantity: dto.quantity,
       previousStock,
@@ -90,9 +95,13 @@ export class StockMovementsService {
     return movement.save();
   }
 
-  async findAll(): Promise<StockMovement[]> {
+  async findAll(tenantId?: string): Promise<StockMovement[]> {
+    const filter: Record<string, unknown> = {};
+    if (tenantId && isValidObjectId(tenantId)) {
+      filter.$or = [{ tenantId: new Types.ObjectId(tenantId) }, { tenantId: null }];
+    }
     return this.stockMovementModel
-      .find()
+      .find(filter)
       .populate('productId', 'name barcode currentStock')
       .populate('userId', 'name email role')
       .sort({ createdAt: -1 })

@@ -8,11 +8,13 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
+  ApiQuery,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
@@ -34,8 +36,8 @@ export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
 
   @Post()
-  @Roles(Role.ADMIN)
-  @ApiOperation({ summary: 'Cria uma nova categoria (Apenas ADMIN)' })
+  @Roles(Role.OWNER, Role.MANAGER, Role.ADMIN)
+  @ApiOperation({ summary: 'Cria uma nova categoria (OWNER, MANAGER ou ADMIN)' })
   @ApiResponse({ status: 201, description: 'Categoria criada com sucesso' })
   @ApiResponse({ status: 409, description: 'Nome de categoria duplicado' })
   create(@Body() createCategoryDto: CreateCategoryDto) {
@@ -45,8 +47,9 @@ export class CategoriesController {
   @Get()
   @Public()
   @ApiOperation({ summary: 'Lista todas as categorias ativas' })
-  findAll() {
-    return this.categoriesService.findAll();
+  @ApiQuery({ name: 'tenantId', required: false })
+  findAll(@Query('tenantId') tenantId?: string) {
+    return this.categoriesService.findAll(tenantId);
   }
 
   @Get(':id')
