@@ -4,7 +4,7 @@
 
 @layer base {
   body {
-    @apply bg-[#09090B] text-zinc-100 font-sans;
+    @apply bg-[#FAF6F0] text-[#2C221E] font-sans;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 
@@ -13,21 +13,21 @@
   }
 }
 
-/* Scrollbar refinada e discreta */
+/* Scrollbar refinada e discreta com paleta MeuBotequim */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #09090B;
+  background: #FAF6F0;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #27272A;
+  background: #EFE8DE;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #3F3F46;
+  background: #DDA76A;
 }
