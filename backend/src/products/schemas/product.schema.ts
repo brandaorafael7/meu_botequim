@@ -25,6 +25,9 @@ export class Product {
   dayPrice: number;
 
   @Prop({ default: 0, min: 0 })
+  nightPrice?: number; // Preço Noturno para vendas pós meia-noite (00h às 06h)
+
+  @Prop({ default: 0, min: 0 })
   eventPrice: number;
 
   @Prop({ default: 0, min: 0 })

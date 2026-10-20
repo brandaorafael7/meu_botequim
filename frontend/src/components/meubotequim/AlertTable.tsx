@@ -5,9 +5,11 @@ import {
   ShoppingCart,
   Check,
   Package,
+  Moon,
+  Sun,
 } from 'lucide-react';
 import { StatusBadge } from './StatusBadge';
-import type { ReplenishmentProduct, StockStatus } from '../../types/meubotequim';
+import type { ReplenishmentProduct, StockStatus } from '../../types';
 
 interface AlertTableProps {
   products: ReplenishmentProduct[];
@@ -25,6 +27,10 @@ export const AlertTable: React.FC<AlertTableProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | StockStatus>('ALL');
   const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
+  const [isNightShiftActive, setIsNightShiftActive] = useState<boolean>(() => {
+    const hour = new Date().getHours();
+    return hour >= 0 && hour < 6; // Automático entre meia-noite e 6h
+  });
 
   // Categorias disponíveis para filtro
   const categories = useMemo(() => {
@@ -65,16 +71,40 @@ export const AlertTable: React.FC<AlertTableProps> = ({
                 <AlertTriangle className="h-4 w-4" />
               </div>
               <h2 className="text-lg font-bold tracking-tight text-[#2C221E] sm:text-xl">
-                Atenção para o Fim de Semana
+                Atenção para o Fim de Semana & Balcão
               </h2>
             </div>
             <p className="mt-1 text-xs text-[#70625B] sm:text-sm">
-              Itens com saldo próximo ou abaixo da margem de segurança. Evite rupturas no pico de movimento.
+              Itens com saldo próximo da ruptura e tabela de preços diurna vs. noturna pós 00:00.
             </p>
           </div>
 
-          {/* Badges de contagem rápida */}
-          <div className="flex items-center gap-2">
+          {/* Badges de contagem rápida e Alternador de Turno Noturno */}
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsNightShiftActive(!isNightShiftActive)}
+              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold border transition-all ${
+                isNightShiftActive
+                  ? 'bg-[#2C221E] text-white border-[#2C221E] shadow-soft'
+                  : 'bg-[#FAF6F0] text-[#70625B] border-[#EFE8DE] hover:text-[#2C221E]'
+              }`}
+              title="Clique para alternar e simular a tabela de Preço Noturno pós 00:00"
+            >
+              {isNightShiftActive ? (
+                <>
+                  <Moon className="h-3.5 w-3.5 text-[#DDA76A]" />
+                  <span>Preço Noturno Ativo (Pós 00h)</span>
+                  <span className="h-2 w-2 rounded-full bg-[#5B8A62] animate-pulse" />
+                </>
+              ) : (
+                <>
+                  <Sun className="h-3.5 w-3.5 text-[#DF9B42]" />
+                  <span>Preço Diurno (Padrão)</span>
+                </>
+              )}
+            </button>
+
             <span className="inline-flex items-center gap-1.5 rounded-full border border-[#C24E48]/25 bg-[#C24E48]/10 px-3 py-1 text-xs font-semibold text-[#C24E48]">
               <span className="h-2 w-2 rounded-full bg-[#C24E48]" />
               {criticalCount} Críticos
@@ -88,7 +118,6 @@ export const AlertTable: React.FC<AlertTableProps> = ({
 
         {/* Barra de Controles: Busca e Filtros */}
         <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          {/* Campo de Busca com Linho Suave e Filtro de Categoria */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-1 max-w-lg">
             <div className="relative flex-1">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#70625B]" />
@@ -113,7 +142,7 @@ export const AlertTable: React.FC<AlertTableProps> = ({
             </select>
           </div>
 
-          {/* Filtros de Status (Tabs Pílula) */}
+          {/* Filtros de Status */}
           <div className="flex flex-wrap items-center gap-1.5">
             <span className="text-[11px] font-semibold uppercase tracking-wider text-[#70625B] mr-1 hidden sm:inline">
               Filtrar:
@@ -123,10 +152,10 @@ export const AlertTable: React.FC<AlertTableProps> = ({
                 key={st}
                 type="button"
                 onClick={() => setStatusFilter(st)}
-                className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition-all ${
+                className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition-all ${
                   statusFilter === st
-                    ? 'bg-[#C87A5B] text-white shadow-soft'
-                    : 'bg-[#FAF6F0] text-[#70625B] hover:bg-[#EFE8DE] hover:text-[#2C221E]'
+                    ? 'bg-[#2C221E] text-white shadow-soft'
+                    : 'bg-[#FAF6F0] text-[#70625B] hover:bg-[#EFE8DE]/60 hover:text-[#2C221E]'
                 }`}
               >
                 {st === 'ALL'
@@ -142,7 +171,7 @@ export const AlertTable: React.FC<AlertTableProps> = ({
         </div>
       </div>
 
-      {/* Conteúdo: Tabela (Desktop/Tablet) e Cards (Mobile-First) */}
+      {/* Conteúdo: Tabela e Cards */}
       {isLoading ? (
         <div className="flex flex-col items-center justify-center p-12 text-[#70625B]">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#C87A5B] border-t-transparent" />
@@ -162,13 +191,14 @@ export const AlertTable: React.FC<AlertTableProps> = ({
         </div>
       ) : (
         <>
-          {/* Visualização em Tabela para Telas Médias e Grandes (md:) */}
+          {/* Tabela para Desktop */}
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-[#EFE8DE] bg-[#FAF6F0]/60 text-[11px] font-bold uppercase tracking-wider text-[#70625B]">
                   <th className="py-3.5 pl-6 pr-4">Nome do Produto</th>
                   <th className="py-3.5 px-4">Categoria</th>
+                  <th className="py-3.5 px-4 text-center">Preço Balcão (Diurno / Noturno)</th>
                   <th className="py-3.5 px-4 text-center">Saldo Atual</th>
                   <th className="py-3.5 px-4 text-center">Saldo Mínimo</th>
                   <th className="py-3.5 px-4 text-center">Status</th>
@@ -183,6 +213,8 @@ export const AlertTable: React.FC<AlertTableProps> = ({
                     100,
                     Math.round((product.currentStock / product.minStock) * 100)
                   );
+                  const effectiveNightPrice =
+                    product.nightPrice || Number(((product.dayPrice || 0) * 1.2).toFixed(2));
 
                   return (
                     <tr
@@ -209,6 +241,36 @@ export const AlertTable: React.FC<AlertTableProps> = ({
                         </span>
                       </td>
 
+                      {/* Preço de Balcão (Diurno vs. Noturno Pós 00h) */}
+                      <td className="py-4 px-4 text-center">
+                        <div className="inline-flex flex-col items-center">
+                          <div className="flex items-center gap-1.5">
+                            <span
+                              className={`text-xs font-bold ${
+                                isNightShiftActive
+                                  ? 'text-[#70625B] line-through opacity-70'
+                                  : 'text-[#2C221E]'
+                              }`}
+                            >
+                              R$ {(product.dayPrice || 0).toFixed(2)}
+                            </span>
+                            <span
+                              className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-extrabold border ${
+                                isNightShiftActive
+                                  ? 'bg-[#2C221E] text-white border-[#2C221E] shadow-soft'
+                                  : 'bg-[#FAF6F0] text-[#C87A5B] border-[#EFE8DE]'
+                              }`}
+                              title="Preço Noturno para vendas pós-meia-noite (00h às 06h)"
+                            >
+                              🌙 R$ {effectiveNightPrice.toFixed(2)}
+                            </span>
+                          </div>
+                          <span className="text-[9px] text-[#70625B] mt-0.5">
+                            {isNightShiftActive ? 'Cobrança Noturna' : 'Diurno / Pós 00h'}
+                          </span>
+                        </div>
+                      </td>
+
                       {/* Saldo Atual */}
                       <td className="py-4 px-4 text-center">
                         <div className="inline-flex flex-col items-center">
@@ -222,7 +284,6 @@ export const AlertTable: React.FC<AlertTableProps> = ({
                               {product.unit}
                             </span>
                           </span>
-                          {/* Barra de progresso visual fina */}
                           <div className="mt-1 h-1.5 w-16 overflow-hidden rounded-full bg-[#EFE8DE]">
                             <div
                               className={`h-full rounded-full transition-all ${
@@ -258,18 +319,18 @@ export const AlertTable: React.FC<AlertTableProps> = ({
                           className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition-all duration-150 focus:outline-none focus:ring-2 ${
                             isAdded
                               ? 'bg-[#5B8A62]/15 text-[#5B8A62] border border-[#5B8A62]/30 hover:bg-[#5B8A62]/25'
-                              : 'bg-[#FAF6F0] text-[#2C221E] border border-[#EFE8DE] hover:bg-[#C87A5B] hover:text-white hover:border-[#C87A5B]'
+                              : 'bg-[#FAF6F0] text-[#2C221E] border border-[#EFE8DE] hover:bg-[#C87A5B] hover:text-white hover:border-[#C87A5B] shadow-soft'
                           }`}
                         >
                           {isAdded ? (
                             <>
                               <Check className="h-3.5 w-3.5" />
-                              <span>Adicionado</span>
+                              <span>Na Lista</span>
                             </>
                           ) : (
                             <>
                               <ShoppingCart className="h-3.5 w-3.5" />
-                              <span>Adicionar à Lista</span>
+                              <span>Repor</span>
                             </>
                           )}
                         </button>
@@ -281,7 +342,7 @@ export const AlertTable: React.FC<AlertTableProps> = ({
             </table>
           </div>
 
-          {/* Visualização Mobile-First (Cards Compactos e Touch-Friendly) */}
+          {/* Cards para Mobile */}
           <div className="divide-y divide-[#EFE8DE] md:hidden">
             {filteredProducts.map((product) => {
               const isAdded = addedProductIds.has(product.id);
@@ -290,12 +351,13 @@ export const AlertTable: React.FC<AlertTableProps> = ({
                 100,
                 Math.round((product.currentStock / product.minStock) * 100)
               );
+              const effectiveNightPrice =
+                product.nightPrice || Number(((product.dayPrice || 0) * 1.2).toFixed(2));
 
               return (
-                <div key={product.id} className="p-4 transition-colors hover:bg-[#FAF6F0]/30">
-                  {/* Topo do Card Mobile: Nome e Status */}
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1">
+                <div key={product.id} className="p-4 space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
                       <h3 className="text-sm font-bold text-[#2C221E]">
                         {product.name}
                       </h3>
@@ -306,8 +368,27 @@ export const AlertTable: React.FC<AlertTableProps> = ({
                     <StatusBadge status={product.status} size="sm" />
                   </div>
 
-                  {/* Detalhes de Saldo com Barra Visual */}
-                  <div className="mt-3 rounded-xl border border-[#EFE8DE] bg-[#FAF6F0] p-3">
+                  {/* Preços Diurno e Noturno */}
+                  <div className="flex items-center justify-between text-xs px-1">
+                    <span className="text-[#70625B]">
+                      Diurno:{' '}
+                      <strong className={isNightShiftActive ? 'text-[#70625B] line-through' : 'text-[#2C221E]'}>
+                        R$ {(product.dayPrice || 0).toFixed(2)}
+                      </strong>
+                    </span>
+                    <span
+                      className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-extrabold border ${
+                        isNightShiftActive
+                          ? 'bg-[#2C221E] text-white border-[#2C221E]'
+                          : 'bg-[#FAF6F0] text-[#C87A5B] border-[#EFE8DE]'
+                      }`}
+                    >
+                      🌙 Pós 00h: R$ {effectiveNightPrice.toFixed(2)}
+                    </span>
+                  </div>
+
+                  {/* Detalhes de Saldo */}
+                  <div className="rounded-xl border border-[#EFE8DE] bg-[#FAF6F0] p-3">
                     <div className="flex items-center justify-between text-xs">
                       <div>
                         <span className="text-[#70625B]">Saldo Atual: </span>
@@ -327,7 +408,6 @@ export const AlertTable: React.FC<AlertTableProps> = ({
                       </div>
                     </div>
 
-                    {/* Barra de Progresso do Estoque */}
                     <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-[#EFE8DE]">
                       <div
                         className={`h-full rounded-full transition-all ${
@@ -342,8 +422,8 @@ export const AlertTable: React.FC<AlertTableProps> = ({
                     </div>
                   </div>
 
-                  {/* Botão de Ação Mobile (Área de toque de 44px+) */}
-                  <div className="mt-3">
+                  {/* Botão de Ação Mobile */}
+                  <div>
                     <button
                       type="button"
                       onClick={() => onAddToShoppingList(product)}
@@ -379,7 +459,7 @@ export const AlertTable: React.FC<AlertTableProps> = ({
           Exibindo <strong>{filteredProducts.length}</strong> de <strong>{products.length}</strong> itens monitorados
         </span>
         <span className="text-[11px] text-[#70625B]/90">
-          Atualização de saldo sincronizada com o PDV em tempo real
+          Modo Preço Noturno pós 00:00 {isNightShiftActive ? 'ATIVADO' : 'em espera'}
         </span>
       </div>
     </section>

@@ -92,6 +92,12 @@ export class ProductsService {
         unit: prod.unit || 'un',
         costPrice: prod.costPrice || 0,
         dayPrice: prod.dayPrice || 0,
+        nightPrice:
+          prod.nightPrice && prod.nightPrice > 0
+            ? prod.nightPrice
+            : prod.eventPrice && prod.eventPrice > 0
+              ? prod.eventPrice
+              : Number(((prod.dayPrice || 0) * 1.2).toFixed(2)),
         status,
         suggestedOrder,
       };

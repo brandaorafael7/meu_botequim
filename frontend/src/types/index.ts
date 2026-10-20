@@ -12,6 +12,7 @@ export interface ReplenishmentProduct {
   suggestedOrder?: number;
   brand?: string;
   dayPrice?: number;
+  nightPrice?: number;
 }
 
 export interface KpiMetric {
@@ -51,6 +52,10 @@ export interface TenantSettings {
   safetyMarginDays?: number;
   whatsappSupplier?: string;
   shiftNames?: string[];
+  nightPricingEnabled?: boolean;
+  nightPricingStartHour?: number;
+  nightPricingEndHour?: number;
+  nightPricingAutoMarkupPercent?: number;
 }
 
 export interface Tenant {

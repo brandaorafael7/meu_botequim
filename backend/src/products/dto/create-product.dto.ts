@@ -33,10 +33,19 @@ export class CreateProductDto {
   @IsOptional()
   category?: string;
 
-  @ApiProperty({ example: 130.0 })
+  @ApiProperty({ example: 130.0, description: 'Preço Diurno / Regular' })
   @IsNumber()
   @Min(0)
   dayPrice: number;
+
+  @ApiPropertyOptional({
+    example: 155.0,
+    description: 'Preço Noturno praticado pós-meia-noite (00:00 - 06:00)',
+  })
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  nightPrice?: number;
 
   @ApiPropertyOptional({ example: 140.0 })
   @IsNumber()

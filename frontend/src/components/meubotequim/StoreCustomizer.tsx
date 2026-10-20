@@ -9,6 +9,7 @@ import {
   Building,
   MapPin,
   MessageSquare,
+  Moon,
 } from 'lucide-react';
 import type { Tenant, TenantSettings } from '../../types';
 
@@ -39,6 +40,13 @@ export const StoreCustomizer: React.FC<StoreCustomizerProps> = ({
   const [cnpj, setCnpj] = useState('');
   const [primaryColor, setPrimaryColor] = useState('#C87A5B');
   const [safetyMarginDays, setSafetyMarginDays] = useState(3);
+
+  // Configurações de Preço Noturno pós 00:00
+  const [nightPricingEnabled, setNightPricingEnabled] = useState(true);
+  const [nightPricingStartHour, setNightPricingStartHour] = useState(0);
+  const [nightPricingEndHour, setNightPricingEndHour] = useState(6);
+  const [nightPricingAutoMarkupPercent, setNightPricingAutoMarkupPercent] = useState(20);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -52,6 +60,19 @@ export const StoreCustomizer: React.FC<StoreCustomizerProps> = ({
       setCnpj(currentTenant.cnpj || '');
       setPrimaryColor(currentTenant.settings?.primaryColor || '#C87A5B');
       setSafetyMarginDays(currentTenant.settings?.safetyMarginDays || 3);
+
+      if (currentTenant.settings?.nightPricingEnabled !== undefined) {
+        setNightPricingEnabled(currentTenant.settings.nightPricingEnabled);
+      }
+      if (currentTenant.settings?.nightPricingStartHour !== undefined) {
+        setNightPricingStartHour(currentTenant.settings.nightPricingStartHour);
+      }
+      if (currentTenant.settings?.nightPricingEndHour !== undefined) {
+        setNightPricingEndHour(currentTenant.settings.nightPricingEndHour);
+      }
+      if (currentTenant.settings?.nightPricingAutoMarkupPercent !== undefined) {
+        setNightPricingAutoMarkupPercent(currentTenant.settings.nightPricingAutoMarkupPercent);
+      }
     }
   }, [currentTenant]);
 
@@ -72,6 +93,10 @@ export const StoreCustomizer: React.FC<StoreCustomizerProps> = ({
         safetyMarginDays: Number(safetyMarginDays),
         phone: phone.trim(),
         address: address.trim(),
+        nightPricingEnabled,
+        nightPricingStartHour: Number(nightPricingStartHour),
+        nightPricingEndHour: Number(nightPricingEndHour),
+        nightPricingAutoMarkupPercent: Number(nightPricingAutoMarkupPercent),
       };
 
       await onSaveTenant({
@@ -82,7 +107,7 @@ export const StoreCustomizer: React.FC<StoreCustomizerProps> = ({
         settings: updatedSettings,
       });
 
-      showToast('Configurações do bar salvas com sucesso!');
+      showToast('Configurações e Preço Noturno salvos com sucesso!');
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Erro ao salvar personalização.';
       showToast(msg);
@@ -98,10 +123,10 @@ export const StoreCustomizer: React.FC<StoreCustomizerProps> = ({
         <div>
           <h2 className="text-xl font-extrabold text-[#2C221E] flex items-center gap-2">
             <Store className="h-5 w-5 text-[#C87A5B]" />
-            <span>Personalização do Bar & Estabelecimento</span>
+            <span>Personalização do Bar & Tabela de Preços</span>
           </h2>
           <p className="text-xs text-[#70625B] mt-1">
-            Configure o nome do seu bar, a filial de balcão, a paleta visual e os dados para disparo de pedidos aos fornecedores.
+            Configure dados operacionais, a identidade visual do estabelecimento e as regras de cobrança noturna pós-meia-noite.
           </p>
         </div>
         <button
@@ -110,12 +135,12 @@ export const StoreCustomizer: React.FC<StoreCustomizerProps> = ({
           className="inline-flex items-center gap-2 rounded-xl bg-[#C87A5B] hover:bg-[#B2684B] px-5 py-2.5 text-xs font-bold text-white shadow-soft transition-all active:scale-95 disabled:opacity-50 self-start sm:self-auto"
         >
           <Save className="h-4 w-4" />
-          <span>{isSubmitting ? 'Salvando...' : 'Salvar Personalização'}</span>
+          <span>{isSubmitting ? 'Salvando...' : 'Salvar Configurações'}</span>
         </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Coluna 1 & 2: Identificação do Estabelecimento */}
+        {/* Coluna 1 & 2: Identificação do Estabelecimento & Preço Noturno */}
         <div className="lg:col-span-2 space-y-6">
           <div className="rounded-2xl border border-[#EFE8DE] bg-white p-6 shadow-soft space-y-4">
             <h3 className="text-sm font-bold text-[#2C221E] flex items-center gap-2 border-b border-[#EFE8DE] pb-2">
@@ -192,6 +217,84 @@ export const StoreCustomizer: React.FC<StoreCustomizerProps> = ({
                   className="w-full rounded-xl border border-[#EFE8DE] bg-[#FAF6F0] px-3.5 py-2.5 text-xs text-[#2C221E] focus:border-[#C87A5B] focus:bg-white focus:outline-none transition-all"
                 />
               </div>
+            </div>
+          </div>
+
+          {/* Configuração da Função Preço Noturno pós 00:00 */}
+          <div className="rounded-2xl border border-[#EFE8DE] bg-white p-6 shadow-soft space-y-4">
+            <div className="flex items-center justify-between border-b border-[#EFE8DE] pb-2">
+              <h3 className="text-sm font-bold text-[#2C221E] flex items-center gap-2">
+                <Moon className="h-4 w-4 text-[#C87A5B]" />
+                <span>Função Preço Noturno (Pós-Meia-Noite)</span>
+              </h3>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={nightPricingEnabled}
+                  onChange={(e) => setNightPricingEnabled(e.target.checked)}
+                  className="h-4 w-4 rounded border-[#EFE8DE] text-[#C87A5B] focus:ring-[#C87A5B]"
+                />
+                <span className="text-xs font-bold text-[#2C221E]">
+                  {nightPricingEnabled ? 'Ativado' : 'Desativado'}
+                </span>
+              </label>
+            </div>
+
+            <p className="text-xs text-[#70625B]">
+              Ajuste dinâmico de preços para turnos da madrugada. O MeuBotequim destaca os valores noturnos automaticamente para os garçons e caixas após a meia-noite.
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+              <div>
+                <label className="block text-xs font-bold text-[#2C221E] mb-1">
+                  Início da Tarifa Noturna
+                </label>
+                <select
+                  value={nightPricingStartHour}
+                  onChange={(e) => setNightPricingStartHour(Number(e.target.value))}
+                  className="w-full rounded-xl border border-[#EFE8DE] bg-[#FAF6F0] px-3 py-2 text-xs text-[#2C221E] font-semibold focus:border-[#C87A5B] focus:bg-white focus:outline-none"
+                >
+                  <option value={23}>23:00</option>
+                  <option value={0}>00:00 (Meia-noite)</option>
+                  <option value={1}>01:00</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#2C221E] mb-1">
+                  Término da Tarifa
+                </label>
+                <select
+                  value={nightPricingEndHour}
+                  onChange={(e) => setNightPricingEndHour(Number(e.target.value))}
+                  className="w-full rounded-xl border border-[#EFE8DE] bg-[#FAF6F0] px-3 py-2 text-xs text-[#2C221E] font-semibold focus:border-[#C87A5B] focus:bg-white focus:outline-none"
+                >
+                  <option value={5}>05:00</option>
+                  <option value={6}>06:00 (Abertura matutina)</option>
+                  <option value={7}>07:00</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#2C221E] mb-1">
+                  Acréscimo Padrão Sugerido
+                </label>
+                <div className="flex items-center gap-1.5">
+                  <input
+                    type="number"
+                    min={5}
+                    max={50}
+                    value={nightPricingAutoMarkupPercent}
+                    onChange={(e) => setNightPricingAutoMarkupPercent(Number(e.target.value))}
+                    className="w-20 rounded-xl border border-[#EFE8DE] bg-[#FAF6F0] px-3 py-2 text-xs font-bold text-[#2C221E] text-center focus:border-[#C87A5B] focus:bg-white focus:outline-none"
+                  />
+                  <span className="text-xs font-bold text-[#70625B]">%</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-xl bg-[#FAF6F0] p-3 border border-[#EFE8DE] text-xs text-[#70625B]">
+              <span className="font-bold text-[#2C221E]">💡 Impacto no Balcão:</span> Itens como Chopp 50L, Long Necks e Doses de Destilados receberão o preço noturno configurado, aumentando o ticket médio e a rentabilidade do bar no horário de maior demanda da noite.
             </div>
           </div>
 
