@@ -36,8 +36,18 @@ export class DashboardService {
     const movementTenantFilter: Record<string, unknown> = {};
 
     if (tenantId && Types.ObjectId.isValid(tenantId)) {
-      productFilter.$or = [{ tenantId: new Types.ObjectId(tenantId) }, { tenantId: null }];
-      movementTenantFilter.$or = [{ tenantId: new Types.ObjectId(tenantId) }, { tenantId: null }];
+      productFilter.$or = [
+        { tenantId: new Types.ObjectId(tenantId) },
+        { tenantId: null },
+      ];
+      movementTenantFilter.$or = [
+        { tenantId: new Types.ObjectId(tenantId) },
+        { tenantId: null },
+      ];
+    } else {
+      // Modo visitante/demonstração: exibe apenas os dados do template público (sem vazar dados de outros bares)
+      productFilter.tenantId = null;
+      movementTenantFilter.tenantId = null;
     }
 
     const allProducts = await this.productModel.find(productFilter).exec();
@@ -70,7 +80,10 @@ export class DashboardService {
         ...movementTenantFilter,
       })
       .populate('productId', 'name costPrice')
-      .exec()) as unknown as { productId?: { costPrice?: number }; quantity: number }[];
+      .exec()) as unknown as {
+      productId?: { costPrice?: number };
+      quantity: number;
+    }[];
 
     let monthlyLossValue = 0;
     recentLosses.forEach((loss) => {
@@ -120,9 +133,11 @@ export class DashboardService {
       vendas: Number(vendas.toFixed(2)),
     }));
 
-    const totalMovementsCount = await this.movementModel.countDocuments();
+    const totalMovementsCount =
+      await this.movementModel.countDocuments(movementTenantFilter);
     const totalLossesCount = await this.movementModel.countDocuments({
       type: MovementType.PERDA,
+      ...movementTenantFilter,
     });
 
     const lossRate =

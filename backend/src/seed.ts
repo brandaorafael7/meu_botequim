@@ -5,7 +5,10 @@ import { CategorySchema } from './categories/schemas/category.schema';
 import { ProductSchema } from './products/schemas/product.schema';
 import { UserSchema, Role } from './users/schemas/user.schema';
 import { StoreSettingSchema } from './settings/schemas/store-setting.schema';
-import { StockMovementSchema, MovementType } from './stock-movements/schemas/stock-movement.schema';
+import {
+  StockMovementSchema,
+  MovementType,
+} from './stock-movements/schemas/stock-movement.schema';
 
 dotenv.config();
 
@@ -33,7 +36,9 @@ export async function runSeed() {
       password: passwordHash,
       role: Role.ADMIN,
     });
-    console.log('✅ Usuário admin criado: admin@meubotequim.com.br (senha: admin123)');
+    console.log(
+      '✅ Usuário admin criado: admin@meubotequim.com.br (senha: admin123)',
+    );
   } else {
     console.log('ℹ️ Usuário admin já existe.');
   }
@@ -54,12 +59,27 @@ export async function runSeed() {
   console.log('📂 Verificando categorias...');
   const categoriesData = [
     { name: 'Chopp & Cervejas', description: 'Barris, garrafas e long necks' },
-    { name: 'Destilados Premium', description: 'Gins, vodkas e whiskies importados' },
+    {
+      name: 'Destilados Premium',
+      description: 'Gins, vodkas e whiskies importados',
+    },
     { name: 'Destilados', description: 'Bebidas destiladas padrão' },
-    { name: 'Insumos de Balcão', description: 'Gelo, xaropes, guardanapos e copos' },
-    { name: 'Hortifrúti / Bar', description: 'Limões, hortelã, laranjas e frutas frescas' },
-    { name: 'Não Alcoólicos', description: 'Refrigerantes, águas, tônicas e energéticos' },
-    { name: 'Cachaças & Artesanais', description: 'Cachaças de alambique e artesanais' },
+    {
+      name: 'Insumos de Balcão',
+      description: 'Gelo, xaropes, guardanapos e copos',
+    },
+    {
+      name: 'Hortifrúti / Bar',
+      description: 'Limões, hortelã, laranjas e frutas frescas',
+    },
+    {
+      name: 'Não Alcoólicos',
+      description: 'Refrigerantes, águas, tônicas e energéticos',
+    },
+    {
+      name: 'Cachaças & Artesanais',
+      description: 'Cachaças de alambique e artesanais',
+    },
   ];
 
   const categoryMap = new Map<string, Types.ObjectId>();
@@ -74,7 +94,7 @@ export async function runSeed() {
       });
       console.log(`✅ Categoria criada: ${cat.name}`);
     }
-    categoryMap.set(cat.name, existing._id as Types.ObjectId);
+    categoryMap.set(cat.name, existing._id);
   }
 
   // 4. Produtos Padrão MeuBotequim
@@ -210,7 +230,9 @@ export async function runSeed() {
   }
 
   // 5. Registrar movimentações de amostra (perda e saída) para métricas realistas
-  const sampleProduct = await ProductModel.findOne({ name: 'Cerveja Heineken Long Neck 330ml' });
+  const sampleProduct = await ProductModel.findOne({
+    name: 'Cerveja Heineken Long Neck 330ml',
+  });
   if (sampleProduct) {
     const lossExists = await MovementModel.findOne({
       productId: sampleProduct._id,

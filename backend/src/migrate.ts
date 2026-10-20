@@ -1,3 +1,4 @@
+/* eslint-disable */
 import mongoose from 'mongoose';
 
 const SOURCE_URI =
@@ -5,8 +6,7 @@ const SOURCE_URI =
   'mongodb+srv://admin_bar:A1lMx2PWBp2NHpey@cluster0.rskfl79.mongodb.net/bar-inventory?retryWrites=true&w=majority';
 
 const TARGET_URI =
-  process.env.TARGET_MONGO_URI ||
-  'mongodb://127.0.0.1:27017/meu-botequim';
+  process.env.TARGET_MONGO_URI || 'mongodb://127.0.0.1:27017/meu-botequim';
 
 function inferBrand(name: string, categoryName = ''): string {
   const n = name.toLowerCase();
@@ -19,7 +19,8 @@ function inferBrand(name: string, categoryName = ''): string {
   if (n.includes('heineken')) return 'Heineken';
   if (n.includes('brussels')) return 'Brussels';
   if (n.includes('h2o')) return 'H2OH!';
-  if (n.includes('guarana') || n.includes('guaraná')) return 'Ambev / Antarctica';
+  if (n.includes('guarana') || n.includes('guaraná'))
+    return 'Ambev / Antarctica';
   if (n.includes('smirnoff')) return 'Diageo / Smirnoff';
   if (n.includes('trident')) return 'Trident';
   if (n.includes('papelito')) return 'Papelito';
@@ -32,7 +33,12 @@ function inferBrand(name: string, categoryName = ''): string {
   if (n.includes('chillan')) return 'Chillan';
   if (n.includes('salinas')) return 'Salinas';
   if (n.includes('tanqueray')) return 'Diageo / Tanqueray';
-  if (n.includes('tabaco') || n.includes('seda') || n.includes('isqueiro') || n.includes('charuto')) {
+  if (
+    n.includes('tabaco') ||
+    n.includes('seda') ||
+    n.includes('isqueiro') ||
+    n.includes('charuto')
+  ) {
     return 'Tabacaria';
   }
   return categoryName || 'MeuBotequim';
@@ -52,16 +58,17 @@ async function runMigration() {
 
   // 1. Migração de Categorias
   console.log('\n📂 [1/5] Migrando Categorias...');
-  const sourceCategories = await sourceConn.collection('categories').find({}).toArray();
+  const sourceCategories = await sourceConn
+    .collection('categories')
+    .find({})
+    .toArray();
   const categoryMap = new Map<string, string>();
 
   for (const cat of sourceCategories) {
     categoryMap.set(cat._id.toString(), cat.name);
-    await targetConn.collection('categories').replaceOne(
-      { _id: cat._id },
-      cat,
-      { upsert: true }
-    );
+    await targetConn
+      .collection('categories')
+      .replaceOne({ _id: cat._id }, cat, { upsert: true });
   }
   console.log(`✅ ${sourceCategories.length} categorias sincronizadas.`);
 
@@ -69,17 +76,20 @@ async function runMigration() {
   console.log('\n👥 [2/5] Migrando Usuários...');
   const sourceUsers = await sourceConn.collection('users').find({}).toArray();
   for (const user of sourceUsers) {
-    await targetConn.collection('users').replaceOne(
-      { _id: user._id },
-      user,
-      { upsert: true }
-    );
+    await targetConn
+      .collection('users')
+      .replaceOne({ _id: user._id }, user, { upsert: true });
   }
-  console.log(`✅ ${sourceUsers.length} usuários sincronizados (preservando credenciais e roles).`);
+  console.log(
+    `✅ ${sourceUsers.length} usuários sincronizados (preservando credenciais e roles).`,
+  );
 
   // 3. Migração de Configurações da Loja
   console.log('\n⚙️ [3/5] Migrando Configurações da Loja...');
-  const sourceSettings = await sourceConn.collection('storesettings').find({}).toArray();
+  const sourceSettings = await sourceConn
+    .collection('storesettings')
+    .find({})
+    .toArray();
   for (const setting of sourceSettings) {
     await targetConn.collection('storesettings').replaceOne(
       { _id: setting._id },
@@ -87,19 +97,24 @@ async function runMigration() {
         ...setting,
         storeName: 'MeuBotequim',
       },
-      { upsert: true }
+      { upsert: true },
     );
   }
   console.log(`✅ ${sourceSettings.length} configurações sincronizadas.`);
 
   // 4. Migração de Produtos
   console.log('\n🍾 [4/5] Migrando Produtos...');
-  const sourceProducts = await sourceConn.collection('products').find({}).toArray();
+  const sourceProducts = await sourceConn
+    .collection('products')
+    .find({})
+    .toArray();
   let activeCount = 0;
 
   for (const prod of sourceProducts) {
     const p = prod as any;
-    const catName = p.category ? categoryMap.get(p.category.toString()) || '' : '';
+    const catName = p.category
+      ? categoryMap.get(p.category.toString()) || ''
+      : '';
     const brand = p.brand || inferBrand(p.name, catName);
 
     const adaptedProduct = {
@@ -115,30 +130,39 @@ async function runMigration() {
       activeCount++;
     }
 
-    await targetConn.collection('products').replaceOne(
-      { _id: p._id },
-      adaptedProduct,
-      { upsert: true }
-    );
+    await targetConn
+      .collection('products')
+      .replaceOne({ _id: p._id }, adaptedProduct, { upsert: true });
   }
-  console.log(`✅ ${sourceProducts.length} produtos sincronizados (${activeCount} ativos com cálculo de marca).`);
+  console.log(
+    `✅ ${sourceProducts.length} produtos sincronizados (${activeCount} ativos com cálculo de marca).`,
+  );
 
   // 5. Migração de Movimentações de Estoque
   console.log('\n📊 [5/5] Migrando Movimentações de Estoque...');
-  const sourceMovements = await sourceConn.collection('stockmovements').find({}).toArray();
+  const sourceMovements = await sourceConn
+    .collection('stockmovements')
+    .find({})
+    .toArray();
   for (const mov of sourceMovements) {
-    await targetConn.collection('stockmovements').replaceOne(
-      { _id: mov._id },
-      mov,
-      { upsert: true }
-    );
+    await targetConn
+      .collection('stockmovements')
+      .replaceOne({ _id: mov._id }, mov, { upsert: true });
   }
-  console.log(`✅ ${sourceMovements.length} movimentações de estoque sincronizadas.`);
+  console.log(
+    `✅ ${sourceMovements.length} movimentações de estoque sincronizadas.`,
+  );
 
   // Resumo Final
-  const finalProducts = await targetConn.collection('products').countDocuments();
-  const finalCategories = await targetConn.collection('categories').countDocuments();
-  const finalMovements = await targetConn.collection('stockmovements').countDocuments();
+  const finalProducts = await targetConn
+    .collection('products')
+    .countDocuments();
+  const finalCategories = await targetConn
+    .collection('categories')
+    .countDocuments();
+  const finalMovements = await targetConn
+    .collection('stockmovements')
+    .countDocuments();
 
   console.log('\n==================================================');
   console.log('🎉 MIGRAÇÃO CONCLUÍDA COM SUCESSO!');

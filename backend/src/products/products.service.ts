@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -33,8 +34,15 @@ export class ProductsService {
   async findAll(tenantId?: string): Promise<Product[]> {
     const filter: Record<string, unknown> = { isActive: true };
     if (tenantId && Types.ObjectId.isValid(tenantId)) {
-      filter.$or = [{ tenantId: new Types.ObjectId(tenantId) }, { tenantId: null }];
+      filter.$or = [
+        { tenantId: new Types.ObjectId(tenantId) },
+        { tenantId: null },
+      ];
+    } else {
+      // Isolamento de segurança: visitante não autenticado acessa apenas itens modelo (demo)
+      filter.tenantId = null;
     }
+
     return this.productModel
       .find(filter)
       .populate('category')
@@ -45,8 +53,14 @@ export class ProductsService {
   async getReplenishmentList(tenantId?: string) {
     const filter: Record<string, unknown> = { isActive: true };
     if (tenantId && Types.ObjectId.isValid(tenantId)) {
-      filter.$or = [{ tenantId: new Types.ObjectId(tenantId) }, { tenantId: null }];
+      filter.$or = [
+        { tenantId: new Types.ObjectId(tenantId) },
+        { tenantId: null },
+      ];
+    } else {
+      filter.tenantId = null;
     }
+
     const products = await this.productModel
       .find(filter)
       .populate('category')
@@ -84,7 +98,7 @@ export class ProductsService {
     });
   }
 
-  async findOne(id: string): Promise<Product> {
+  async findOne(id: string, tenantId?: string): Promise<Product> {
     if (!Types.ObjectId.isValid(id)) {
       throw new BadRequestException('ID de produto inválido.');
     }
@@ -98,15 +112,43 @@ export class ProductsService {
       throw new NotFoundException(`Produto com ID ${id} não encontrado.`);
     }
 
+    // Validação estrita de Tenant
+    if (
+      tenantId &&
+      product.tenantId &&
+      product.tenantId.toString() !== tenantId
+    ) {
+      throw new UnauthorizedException('Acesso não autorizado a este produto.');
+    }
+
     return product;
   }
 
   async update(
     id: string,
     updateProductDto: UpdateProductDto,
+    tenantId?: string,
+    isAdmin = false,
   ): Promise<Product> {
     if (!Types.ObjectId.isValid(id)) {
       throw new BadRequestException('ID de produto inválido.');
+    }
+
+    const existingProduct = await this.productModel.findById(id).exec();
+    if (!existingProduct || !existingProduct.isActive) {
+      throw new NotFoundException(`Produto com ID ${id} não encontrado.`);
+    }
+
+    // Verificação de autorização multi-tenant
+    if (
+      !isAdmin &&
+      tenantId &&
+      existingProduct.tenantId &&
+      existingProduct.tenantId.toString() !== tenantId
+    ) {
+      throw new UnauthorizedException(
+        'Você não tem permissão para editar produtos de outro bar.',
+      );
     }
 
     if (updateProductDto.category) {
@@ -128,30 +170,57 @@ export class ProductsService {
     return updatedProduct;
   }
 
-  async remove(id: string): Promise<{ message: string }> {
+  async remove(
+    id: string,
+    tenantId?: string,
+    isAdmin = false,
+  ): Promise<{ message: string }> {
     if (!Types.ObjectId.isValid(id)) {
       throw new BadRequestException('ID de produto inválido.');
     }
 
-    const product = await this.productModel.findByIdAndUpdate(
+    const existingProduct = await this.productModel.findById(id).exec();
+    if (!existingProduct || !existingProduct.isActive) {
+      throw new NotFoundException(`Produto com ID ${id} não encontrado.`);
+    }
+
+    if (
+      !isAdmin &&
+      tenantId &&
+      existingProduct.tenantId &&
+      existingProduct.tenantId.toString() !== tenantId
+    ) {
+      throw new UnauthorizedException(
+        'Você não tem permissão para remover produtos de outro bar.',
+      );
+    }
+
+    await this.productModel.findByIdAndUpdate(
       id,
       { isActive: false },
       { new: true },
     );
 
-    if (!product) {
-      throw new NotFoundException(`Produto com ID ${id} não encontrado.`);
-    }
-
     return { message: 'Produto desativado com sucesso.' };
   }
 
-  async findLowStock(): Promise<Product[]> {
+  async findLowStock(tenantId?: string): Promise<Product[]> {
+    const filter: Record<string, unknown> = {
+      isActive: true,
+      $expr: { $lte: ['$currentStock', '$minStock'] },
+    };
+
+    if (tenantId && Types.ObjectId.isValid(tenantId)) {
+      filter.$or = [
+        { tenantId: new Types.ObjectId(tenantId) },
+        { tenantId: null },
+      ];
+    } else {
+      filter.tenantId = null;
+    }
+
     return this.productModel
-      .find({
-        isActive: true,
-        $expr: { $lte: ['$currentStock', '$minStock'] },
-      })
+      .find(filter)
       .populate('category')
       .sort({ currentStock: 1 })
       .exec();

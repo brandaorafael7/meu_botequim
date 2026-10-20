@@ -12,7 +12,6 @@ import { RegisterDto } from './dto/register.dto';
 import { RegisterEstablishmentDto } from './dto/register-establishment.dto';
 import { TenantDocument } from '../tenants/schemas/tenant.schema';
 import { Role, UserDocument } from '../users/schemas/user.schema';
-import { Types } from 'mongoose';
 
 export interface SafeUser {
   _id: { toString(): string };
@@ -98,19 +97,19 @@ export class AuthService {
       phone: dto.phone,
     });
 
-    const createdUser = (await this.usersService.create({
+    const createdUser = await this.usersService.create({
       name: dto.name,
       email: dto.email,
       password: dto.password,
       role: Role.OWNER,
       tenantId: tenant._id.toString(),
       phone: dto.phone,
-    })) as unknown as UserDocument;
+    });
 
-    const userId = (createdUser as any)._id?.toString() || '';
+    const userId = (createdUser as UserDocument)._id.toString();
 
     await this.tenantsService.update(tenant._id, {
-      ownerId: (createdUser as any)._id as unknown as Types.ObjectId,
+      ownerId: (createdUser as UserDocument)._id,
     });
 
     const payload = {

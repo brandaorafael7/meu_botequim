@@ -35,7 +35,10 @@ export class CategoriesService {
   async findAll(tenantId?: string): Promise<Category[]> {
     const filter: Record<string, unknown> = { isActive: true };
     if (tenantId && isValidObjectId(tenantId)) {
-      filter.$or = [{ tenantId: new Types.ObjectId(tenantId) }, { tenantId: null }];
+      filter.$or = [
+        { tenantId: new Types.ObjectId(tenantId) },
+        { tenantId: null },
+      ];
     }
     return this.categoryModel.find(filter).sort({ name: 1 }).exec();
   }

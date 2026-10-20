@@ -37,7 +37,9 @@ export class CategoriesController {
 
   @Post()
   @Roles(Role.OWNER, Role.MANAGER, Role.ADMIN)
-  @ApiOperation({ summary: 'Cria uma nova categoria (OWNER, MANAGER ou ADMIN)' })
+  @ApiOperation({
+    summary: 'Cria uma nova categoria (OWNER, MANAGER ou ADMIN)',
+  })
   @ApiResponse({ status: 201, description: 'Categoria criada com sucesso' })
   @ApiResponse({ status: 409, description: 'Nome de categoria duplicado' })
   create(@Body() createCategoryDto: CreateCategoryDto) {

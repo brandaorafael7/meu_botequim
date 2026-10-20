@@ -1,4 +1,11 @@
-import { Controller, Get, Patch, Body, UseGuards, UnauthorizedException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Patch,
+  Body,
+  UseGuards,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -23,7 +30,9 @@ export class TenantsController {
   constructor(private readonly tenantsService: TenantsService) {}
 
   @Get('current')
-  @ApiOperation({ summary: 'Obter dados do estabelecimento atual do usuário logado' })
+  @ApiOperation({
+    summary: 'Obter dados do estabelecimento atual do usuário logado',
+  })
   async getCurrent(@CurrentUser() user: AuthenticatedUser) {
     if (!user || !user.tenantId) {
       // Fallback para o tenant padrão caso seja conta legada
@@ -34,7 +43,9 @@ export class TenantsController {
 
   @Patch('current')
   @Roles(Role.OWNER, Role.ADMIN)
-  @ApiOperation({ summary: 'Atualizar dados do estabelecimento atual (apenas Proprietário)' })
+  @ApiOperation({
+    summary: 'Atualizar dados do estabelecimento atual (apenas Proprietário)',
+  })
   async updateCurrent(
     @CurrentUser() user: AuthenticatedUser,
     @Body() dto: UpdateTenantDto,

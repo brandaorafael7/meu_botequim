@@ -27,6 +27,13 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { Role } from '../users/schemas/user.schema';
 import { ParseObjectIdPipe } from '../common/pipes/parse-object-id.pipe';
 import { Public } from '../auth/decorators/public.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+
+interface AuthenticatedUser {
+  userId: string;
+  role: Role;
+  tenantId?: string;
+}
 
 @ApiTags('products')
 @ApiBearerAuth()
@@ -37,28 +44,47 @@ export class ProductsController {
 
   @Post()
   @Roles(Role.OWNER, Role.MANAGER, Role.ADMIN)
-  @ApiOperation({ summary: 'Cadastra um novo produto (OWNER, MANAGER ou ADMIN)' })
+  @ApiOperation({
+    summary: 'Cadastra um novo produto (OWNER, MANAGER ou ADMIN)',
+  })
   @ApiResponse({ status: 201, description: 'Produto cadastrado com sucesso.' })
-  create(@Body() createProductDto: CreateProductDto) {
+  create(
+    @Body() createProductDto: CreateProductDto,
+    @CurrentUser() user?: AuthenticatedUser,
+  ) {
+    if (user?.tenantId && !createProductDto.tenantId) {
+      createProductDto.tenantId = user.tenantId;
+    }
     return this.productsService.create(createProductDto);
   }
 
   @Get()
   @Public()
-  @ApiOperation({ summary: 'Lista todos os produtos ativos' })
+  @ApiOperation({ summary: 'Lista todos os produtos ativos do bar' })
   @ApiQuery({ name: 'tenantId', required: false })
-  findAll(@Query('tenantId') tenantId?: string) {
-    return this.productsService.findAll(tenantId);
+  findAll(
+    @CurrentUser() user?: AuthenticatedUser,
+    @Query('tenantId') queryTenantId?: string,
+  ) {
+    const effectiveTenantId =
+      user?.tenantId || (user ? queryTenantId : undefined);
+    return this.productsService.findAll(effectiveTenantId);
   }
 
   @Get('replenishment')
   @Public()
   @ApiOperation({
-    summary: 'Lista produtos formatados com status de reposição (CRITICO, ALERTA, NORMAL) para MeuBotequim',
+    summary:
+      'Lista produtos formatados com status de reposição (CRITICO, ALERTA, NORMAL) para MeuBotequim',
   })
   @ApiQuery({ name: 'tenantId', required: false })
-  getReplenishment(@Query('tenantId') tenantId?: string) {
-    return this.productsService.getReplenishmentList(tenantId);
+  getReplenishment(
+    @CurrentUser() user?: AuthenticatedUser,
+    @Query('tenantId') queryTenantId?: string,
+  ) {
+    const effectiveTenantId =
+      user?.tenantId || (user ? queryTenantId : undefined);
+    return this.productsService.getReplenishmentList(effectiveTenantId);
   }
 
   @Get('low-stock')
@@ -66,32 +92,54 @@ export class ProductsController {
   @ApiOperation({
     summary: 'Lista produtos que atingiram ou estão abaixo do estoque mínimo',
   })
-  findLowStock() {
-    return this.productsService.findLowStock();
+  @ApiQuery({ name: 'tenantId', required: false })
+  findLowStock(
+    @CurrentUser() user?: AuthenticatedUser,
+    @Query('tenantId') queryTenantId?: string,
+  ) {
+    const effectiveTenantId =
+      user?.tenantId || (user ? queryTenantId : undefined);
+    return this.productsService.findLowStock(effectiveTenantId);
   }
 
   @Get(':id')
   @Public()
   @ApiOperation({ summary: 'Busca os detalhes de um produto pelo ID' })
-  findOne(@Param('id', ParseObjectIdPipe) id: string) {
-    return this.productsService.findOne(id);
+  findOne(
+    @Param('id', ParseObjectIdPipe) id: string,
+    @CurrentUser() user?: AuthenticatedUser,
+  ) {
+    return this.productsService.findOne(id, user?.tenantId);
   }
 
   @Patch(':id')
-  @Roles(Role.ADMIN)
-  @ApiOperation({ summary: 'Atualiza os dados de um produto (Apenas ADMIN)' })
+  @Roles(Role.OWNER, Role.MANAGER, Role.ADMIN)
+  @ApiOperation({
+    summary: 'Atualiza os dados de um produto (OWNER, MANAGER ou ADMIN)',
+  })
   update(
     @Param('id', ParseObjectIdPipe) id: string,
     @Body() updateProductDto: UpdateProductDto,
+    @CurrentUser() user?: AuthenticatedUser,
   ) {
-    return this.productsService.update(id, updateProductDto);
+    const isAdmin = user?.role === Role.ADMIN;
+    return this.productsService.update(
+      id,
+      updateProductDto,
+      user?.tenantId,
+      isAdmin,
+    );
   }
 
   @Delete(':id')
-  @Roles(Role.ADMIN)
+  @Roles(Role.OWNER, Role.ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Desativa um produto do catálogo (Apenas ADMIN)' })
-  remove(@Param('id', ParseObjectIdPipe) id: string) {
-    return this.productsService.remove(id);
+  @ApiOperation({ summary: 'Desativa um produto do catálogo (OWNER ou ADMIN)' })
+  remove(
+    @Param('id', ParseObjectIdPipe) id: string,
+    @CurrentUser() user?: AuthenticatedUser,
+  ) {
+    const isAdmin = user?.role === Role.ADMIN;
+    return this.productsService.remove(id, user?.tenantId, isAdmin);
   }
 }

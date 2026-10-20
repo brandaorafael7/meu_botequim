@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  ConflictException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Tenant, TenantDocument, TenantPlan } from './schemas/tenant.schema';
@@ -28,7 +24,10 @@ export class TenantsService {
     private readonly tenantModel: Model<TenantDocument>,
   ) {}
 
-  async create(dto: CreateTenantDto, ownerId?: Types.ObjectId): Promise<TenantDocument> {
+  async create(
+    dto: CreateTenantDto,
+    ownerId?: Types.ObjectId,
+  ): Promise<TenantDocument> {
     let slug = slugify(dto.name);
     const existing = await this.tenantModel.findOne({ slug });
     if (existing) {

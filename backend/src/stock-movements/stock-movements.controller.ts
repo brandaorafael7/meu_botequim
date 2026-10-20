@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -11,8 +19,12 @@ import { CreateStockMovementDto } from './dto/create-stock-movement.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { ParseObjectIdPipe } from '../common/pipes/parse-object-id.pipe';
-
 import { Public } from '../auth/decorators/public.decorator';
+
+interface AuthenticatedUser {
+  userId: string;
+  tenantId?: string;
+}
 
 @ApiTags('stock-movements')
 @ApiBearerAuth('JWT-auth')
@@ -34,11 +46,15 @@ export class StockMovementsController {
   })
   create(
     @Body() createStockMovementDto: CreateStockMovementDto,
-    @CurrentUser() user?: { userId: string },
+    @CurrentUser() user?: AuthenticatedUser,
   ) {
+    if (user?.tenantId && !createStockMovementDto.tenantId) {
+      createStockMovementDto.tenantId = user.tenantId;
+    }
     return this.stockMovementsService.create(
       createStockMovementDto,
       user?.userId,
+      user?.tenantId,
     );
   }
 
@@ -46,18 +62,27 @@ export class StockMovementsController {
   @Public()
   @ApiOperation({ summary: 'Lista todas as movimentações de estoque' })
   @ApiQuery({ name: 'tenantId', required: false })
-  findAll(@Query('tenantId') tenantId?: string) {
-    return this.stockMovementsService.findAll(tenantId);
+  findAll(
+    @CurrentUser() user?: AuthenticatedUser,
+    @Query('tenantId') queryTenantId?: string,
+  ) {
+    const effectiveTenantId =
+      user?.tenantId || (user ? queryTenantId : undefined);
+    return this.stockMovementsService.findAll(effectiveTenantId);
   }
 
   @Get('product/:productId')
+  @Public()
   @ApiOperation({ summary: 'Lista as movimentações de um determinado produto' })
   @ApiResponse({
     status: 200,
     description: 'Movimentações do produto retornadas.',
   })
   @ApiResponse({ status: 400, description: 'ID de produto inválido.' })
-  findByProduct(@Param('productId', ParseObjectIdPipe) productId: string) {
-    return this.stockMovementsService.findByProduct(productId);
+  findByProduct(
+    @Param('productId', ParseObjectIdPipe) productId: string,
+    @CurrentUser() user?: AuthenticatedUser,
+  ) {
+    return this.stockMovementsService.findByProduct(productId, user?.tenantId);
   }
 }

@@ -1,4 +1,8 @@
-import { ExecutionContext, Injectable } from '@nestjs/common';
+import {
+  ExecutionContext,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
@@ -10,15 +14,34 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
   }
 
   canActivate(context: ExecutionContext) {
+    return super.canActivate(context);
+  }
+
+  handleRequest<TUser = unknown>(
+    err: unknown,
+    user: TUser,
+    _info: unknown,
+    context: ExecutionContext,
+  ): TUser | null {
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
 
+    // Em rotas públicas, se houver token válido, anexa o usuário; se não houver, permite como visitante
     if (isPublic) {
-      return true;
+      return user ? user : null;
     }
 
-    return super.canActivate(context);
+    if (err || !user) {
+      if (err instanceof Error) {
+        throw err;
+      }
+      throw new UnauthorizedException(
+        'Acesso não autorizado ou token expirado.',
+      );
+    }
+
+    return user;
   }
 }

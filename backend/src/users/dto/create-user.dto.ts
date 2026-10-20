@@ -27,7 +27,9 @@ export class CreateUserDto {
 
   @ApiPropertyOptional({ enum: Role, default: Role.BARTENDER })
   @IsOptional()
-  @IsEnum(Role, { message: 'A role deve ser OWNER, MANAGER, BARTENDER, ADMIN ou EMPLOYEE.' })
+  @IsEnum(Role, {
+    message: 'A role deve ser OWNER, MANAGER, BARTENDER, ADMIN ou EMPLOYEE.',
+  })
   role?: Role;
 
   @ApiPropertyOptional({ example: '6a8793259eb11f3117cb4c10' })

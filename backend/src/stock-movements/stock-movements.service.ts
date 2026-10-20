@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types, isValidObjectId } from 'mongoose';
@@ -28,6 +29,7 @@ export class StockMovementsService {
   async create(
     dto: CreateStockMovementDto,
     userId?: string,
+    tenantId?: string,
   ): Promise<StockMovement> {
     if (!isValidObjectId(dto.productId)) {
       throw new BadRequestException('ID de produto inválido.');
@@ -36,6 +38,17 @@ export class StockMovementsService {
     const product = await this.productModel.findById(dto.productId);
     if (!product || !product.isActive) {
       throw new NotFoundException('Produto não encontrado ou inativo.');
+    }
+
+    // Se o usuário está logado em um bar, previne movimentar produtos de outros bares
+    if (
+      tenantId &&
+      product.tenantId &&
+      product.tenantId.toString() !== tenantId
+    ) {
+      throw new UnauthorizedException(
+        'Você não tem permissão para movimentar estoque deste estabelecimento.',
+      );
     }
 
     const previousStock = product.currentStock;
@@ -73,13 +86,15 @@ export class StockMovementsService {
     } else {
       const defaultUser = await this.userModel.findOne().exec();
       if (defaultUser) {
-        userObjectId = defaultUser._id as Types.ObjectId;
+        userObjectId = defaultUser._id;
       }
     }
 
-    const tenantObjectId = dto.tenantId && isValidObjectId(dto.tenantId)
-      ? new Types.ObjectId(dto.tenantId)
-      : product.tenantId || null;
+    const effectiveTenant = tenantId || dto.tenantId;
+    const tenantObjectId =
+      effectiveTenant && isValidObjectId(effectiveTenant)
+        ? new Types.ObjectId(effectiveTenant)
+        : product.tenantId || null;
 
     const movement = new this.stockMovementModel({
       productId: new Types.ObjectId(dto.productId),
@@ -98,8 +113,15 @@ export class StockMovementsService {
   async findAll(tenantId?: string): Promise<StockMovement[]> {
     const filter: Record<string, unknown> = {};
     if (tenantId && isValidObjectId(tenantId)) {
-      filter.$or = [{ tenantId: new Types.ObjectId(tenantId) }, { tenantId: null }];
+      filter.$or = [
+        { tenantId: new Types.ObjectId(tenantId) },
+        { tenantId: null },
+      ];
+    } else {
+      // Isolamento multi-tenant: chamadas não autenticadas só veem movimentações de demonstração
+      filter.tenantId = null;
     }
+
     return this.stockMovementModel
       .find(filter)
       .populate('productId', 'name barcode currentStock')
@@ -108,9 +130,27 @@ export class StockMovementsService {
       .exec();
   }
 
-  async findByProduct(productId: string): Promise<StockMovement[]> {
+  async findByProduct(
+    productId: string,
+    tenantId?: string,
+  ): Promise<StockMovement[]> {
     if (!isValidObjectId(productId)) {
       throw new BadRequestException('ID de produto inválido.');
+    }
+
+    const product = await this.productModel.findById(productId);
+    if (!product) {
+      throw new NotFoundException('Produto não encontrado.');
+    }
+
+    if (
+      tenantId &&
+      product.tenantId &&
+      product.tenantId.toString() !== tenantId
+    ) {
+      throw new UnauthorizedException(
+        'Acesso não autorizado às movimentações deste produto.',
+      );
     }
 
     return this.stockMovementModel

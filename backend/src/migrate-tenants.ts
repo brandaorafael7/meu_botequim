@@ -1,4 +1,4 @@
-import mongoose, { Types } from 'mongoose';
+import mongoose from 'mongoose';
 
 async function migrateTenants() {
   const mongoUri =
@@ -37,41 +37,51 @@ async function migrateTenants() {
   const usersCol = conn.collection('users');
   const userRes = await usersCol.updateMany(
     { $or: [{ tenantId: null }, { tenantId: { $exists: false } }] },
-    { $set: { tenantId: defaultTenantId, role: 'OWNER' } }
+    { $set: { tenantId: defaultTenantId, role: 'OWNER' } },
   );
-  console.log(`👥 Usuários associados ao tenant padrão: ${userRes.modifiedCount}`);
+  console.log(
+    `👥 Usuários associados ao tenant padrão: ${userRes.modifiedCount}`,
+  );
 
   // 3. Atualizar Produtos sem tenantId
   const productsCol = conn.collection('products');
   const prodRes = await productsCol.updateMany(
     { $or: [{ tenantId: null }, { tenantId: { $exists: false } }] },
-    { $set: { tenantId: defaultTenantId } }
+    { $set: { tenantId: defaultTenantId } },
   );
-  console.log(`🍾 Produtos associados ao tenant padrão: ${prodRes.modifiedCount}`);
+  console.log(
+    `🍾 Produtos associados ao tenant padrão: ${prodRes.modifiedCount}`,
+  );
 
   // 4. Atualizar Categorias sem tenantId
   const categoriesCol = conn.collection('categories');
   const catRes = await categoriesCol.updateMany(
     { $or: [{ tenantId: null }, { tenantId: { $exists: false } }] },
-    { $set: { tenantId: defaultTenantId } }
+    { $set: { tenantId: defaultTenantId } },
   );
-  console.log(`📂 Categorias associadas ao tenant padrão: ${catRes.modifiedCount}`);
+  console.log(
+    `📂 Categorias associadas ao tenant padrão: ${catRes.modifiedCount}`,
+  );
 
   // 5. Atualizar Movimentações sem tenantId
   const movCol = conn.collection('stockmovements');
   const movRes = await movCol.updateMany(
     { $or: [{ tenantId: null }, { tenantId: { $exists: false } }] },
-    { $set: { tenantId: defaultTenantId } }
+    { $set: { tenantId: defaultTenantId } },
   );
-  console.log(`📊 Movimentações associadas ao tenant padrão: ${movRes.modifiedCount}`);
+  console.log(
+    `📊 Movimentações associadas ao tenant padrão: ${movRes.modifiedCount}`,
+  );
 
   // 6. Atualizar StoreSettings sem tenantId
   const settingsCol = conn.collection('storesettings');
   const setRes = await settingsCol.updateMany(
     { $or: [{ tenantId: null }, { tenantId: { $exists: false } }] },
-    { $set: { tenantId: defaultTenantId } }
+    { $set: { tenantId: defaultTenantId } },
   );
-  console.log(`⚙️ Configurações associadas ao tenant padrão: ${setRes.modifiedCount}`);
+  console.log(
+    `⚙️ Configurações associadas ao tenant padrão: ${setRes.modifiedCount}`,
+  );
 
   console.log('🎉 Migração Multi-Tenant finalizada com sucesso!');
   await conn.close();
