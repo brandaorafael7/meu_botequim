@@ -6,6 +6,7 @@ import type {
   StockMovement,
   AuthSession,
   Tenant,
+  Category,
 } from '../types';
 
 export const api = axios.create({
@@ -79,6 +80,69 @@ export const tenantService = {
     const res = await api.get<Tenant>('/tenants/current');
     return res.data;
   },
+
+  async updateTenant(data: Partial<Tenant>): Promise<Tenant> {
+    const res = await api.patch<Tenant>('/tenants/current', data);
+    return res.data;
+  },
+};
+
+export const categoryService = {
+  async listCategories(): Promise<Category[]> {
+    const res = await api.get<Category[]>('/categories');
+    return res.data;
+  },
+
+  async createCategory(data: { name: string; description?: string }): Promise<Category> {
+    const res = await api.post<Category>('/categories', data);
+    return res.data;
+  },
+
+  async updateCategory(id: string, data: { name?: string; description?: string }): Promise<Category> {
+    const res = await api.patch<Category>(`/categories/${id}`, data);
+    return res.data;
+  },
+
+  async deleteCategory(id: string): Promise<void> {
+    await api.delete(`/categories/${id}`);
+  },
+};
+
+export const productManagementService = {
+  async createProduct(data: {
+    name: string;
+    brand?: string;
+    category?: string;
+    dayPrice: number;
+    costPrice?: number;
+    currentStock: number;
+    minStock: number;
+    unit?: string;
+  }): Promise<ReplenishmentProduct> {
+    const res = await api.post<ReplenishmentProduct>('/products', data);
+    return res.data;
+  },
+
+  async updateProduct(
+    id: string,
+    data: Partial<{
+      name: string;
+      brand?: string;
+      category?: string;
+      dayPrice: number;
+      costPrice?: number;
+      currentStock: number;
+      minStock: number;
+      unit?: string;
+    }>
+  ): Promise<ReplenishmentProduct> {
+    const res = await api.patch<ReplenishmentProduct>(`/products/${id}`, data);
+    return res.data;
+  },
+
+  async deleteProduct(id: string): Promise<void> {
+    await api.delete(`/products/${id}`);
+  },
 };
 
 export const inventoryService = {
@@ -94,6 +158,11 @@ export const inventoryService = {
 
   async createStockMovement(dto: CreateStockMovementDto): Promise<StockMovement> {
     const res = await api.post<StockMovement>('/stock-movements', dto);
+    return res.data;
+  },
+
+  async listStockMovements(): Promise<StockMovement[]> {
+    const res = await api.get<StockMovement[]>('/stock-movements');
     return res.data;
   },
 

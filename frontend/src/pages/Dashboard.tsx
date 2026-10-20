@@ -9,6 +9,12 @@ import {
   RefreshCw,
   Wifi,
   WifiOff,
+  LayoutDashboard,
+  BarChart3,
+  Tag,
+  Wine,
+  Store,
+  History,
 } from 'lucide-react';
 import { Header } from '../components/meubotequim/Header';
 import { KpiCard } from '../components/meubotequim/KpiCard';
@@ -21,7 +27,17 @@ import {
   BlindAuditModal,
 } from '../components/meubotequim/QuickActionModals';
 import { AuthModal } from '../components/meubotequim/AuthModal';
-import { authService, inventoryService, tenantService } from '../services/api';
+import { CategoriesManager } from '../components/meubotequim/CategoriesManager';
+import { StoreCustomizer } from '../components/meubotequim/StoreCustomizer';
+import { DashboardAnalytics } from '../components/meubotequim/DashboardAnalytics';
+import { DrinkRecipesManager } from '../components/meubotequim/DrinkRecipesManager';
+import { AuditTrailTable } from '../components/meubotequim/AuditTrailTable';
+import {
+  authService,
+  inventoryService,
+  tenantService,
+  categoryService,
+} from '../services/api';
 import {
   MovementType,
   type BarProfile,
@@ -29,7 +45,18 @@ import {
   type ShoppingCartItem,
   type DashboardMetrics,
   type AuthSession,
+  type Category,
+  type Tenant,
+  type StockMovement,
 } from '../types';
+
+type DashboardTab =
+  | 'overview'
+  | 'analytics'
+  | 'categories'
+  | 'recipes'
+  | 'customization'
+  | 'audit';
 
 // Mock de dados representativos para Bar & Botequim (fallback inicial)
 const INITIAL_PRODUCTS: ReplenishmentProduct[] = [
@@ -143,13 +170,89 @@ const INITIAL_PRODUCTS: ReplenishmentProduct[] = [
   },
 ];
 
+const DEFAULT_CATEGORIES: Category[] = [
+  {
+    id: 'cat-1',
+    name: 'Chopp & Cervejas',
+    description: 'Barris de 30L/50L, long necks e garrafas 600ml para giro de balcão',
+  },
+  {
+    id: 'cat-2',
+    name: 'Destilados Premium',
+    description: 'Gins, vodkas importadas, whiskies e cachaças envelhecidas',
+  },
+  {
+    id: 'cat-3',
+    name: 'Vinhos & Espumantes',
+    description: 'Rótulos de mesa, frisantes e espumantes brut para taças e garrafas',
+  },
+  {
+    id: 'cat-4',
+    name: 'Não Alcoólicos & Mixers',
+    description: 'Águas tônicas, refrigerantes, sucos cítricos e energéticos',
+  },
+  {
+    id: 'cat-5',
+    name: 'Insumos de Balcão & Hortifrúti',
+    description: 'Gelo filtrado, limões selecionados, xaropes e especiarias',
+  },
+  {
+    id: 'cat-6',
+    name: 'Petiscos & Cozinha',
+    description: 'Porções tradicionais de boteco, frios e pasteis',
+  },
+];
+
+const INITIAL_MOVEMENTS: StockMovement[] = [
+  {
+    _id: 'mov-1',
+    productId: { _id: 'prod-1', name: 'Chopp Pilsen 50L (Barril)', currentStock: 1 },
+    type: 'SAIDA',
+    quantity: 3,
+    previousStock: 4,
+    newStock: 1,
+    reason: 'Vendas acumuladas turno da noite',
+    createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
+  },
+  {
+    _id: 'mov-2',
+    productId: { _id: 'prod-3', name: 'Cerveja Heineken Long Neck 330ml', currentStock: 14 },
+    type: 'PERDA',
+    quantity: 2,
+    previousStock: 16,
+    newStock: 14,
+    reason: 'Garrafa quebrada durante manuseio no balcão',
+    createdAt: new Date(Date.now() - 3600000 * 5).toISOString(),
+  },
+  {
+    _id: 'mov-3',
+    productId: { _id: 'prod-4', name: 'Gelo em Cubos Filtrado (Pacote 5kg)', currentStock: 3 },
+    type: 'AJUSTE',
+    quantity: 3,
+    previousStock: 6,
+    newStock: 3,
+    reason: 'Balanço Cego de Balcão - Fechamento de Turno',
+    createdAt: new Date(Date.now() - 3600000 * 12).toISOString(),
+  },
+  {
+    _id: 'mov-4',
+    productId: { _id: 'prod-2', name: 'Gin Tanqueray London Dry 750ml', currentStock: 2 },
+    type: 'ENTRADA',
+    quantity: 6,
+    previousStock: 0,
+    newStock: 6,
+    reason: 'Recebimento de pedido da distribuidora Diageo (NF 4892)',
+    createdAt: new Date(Date.now() - 86400000).toISOString(),
+  },
+];
+
 const INITIAL_PROFILE: BarProfile = {
-  name: 'MeuBotequim',
-  branch: 'Boteco da Esquina - Salão Central',
+  name: 'BeerGod',
+  branch: 'Balcão Central & Chopperia',
   user: {
-    name: 'Carlos Drummond',
-    role: 'Gerente Operacional',
-    initials: 'CD',
+    name: 'João Felipe',
+    role: 'Proprietário',
+    initials: 'JF',
   },
 };
 
@@ -171,7 +274,7 @@ const getInitialProfile = (): BarProfile => {
             : parsed.role === 'MANAGER'
             ? 'Gerente Operacional'
             : 'Bartender / Operação',
-        initials: (parsed.name || 'MB')
+        initials: (parsed.name || 'JF')
           .split(' ')
           .map((n: string) => n[0])
           .slice(0, 2)
@@ -208,8 +311,12 @@ interface MeuBotequimDashboardProps {
 export const MeuBotequimDashboard: React.FC<MeuBotequimDashboardProps> = ({
   onNavigateToLanding,
 }) => {
+  const [activeTab, setActiveTab] = useState<DashboardTab>('overview');
   const [profile, setProfile] = useState<BarProfile>(getInitialProfile);
+  const [currentTenant, setCurrentTenant] = useState<Tenant | null>(null);
   const [products, setProducts] = useState<ReplenishmentProduct[]>(INITIAL_PRODUCTS);
+  const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES);
+  const [movements, setMovements] = useState<StockMovement[]>(INITIAL_MOVEMENTS);
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [shoppingCart, setShoppingCart] = useState<ShoppingCartItem[]>([]);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -238,19 +345,22 @@ export const MeuBotequimDashboard: React.FC<MeuBotequimDashboardProps> = ({
   // Carrega dados da API MeuBotequim
   const loadData = useCallback(async () => {
     try {
-      const [prods, mets, tenant] = await Promise.all([
-        inventoryService.getReplenishmentProducts(),
-        inventoryService.getDashboardMetrics(),
+      const [prods, mets, tenant, cats, movs] = await Promise.all([
+        inventoryService.getReplenishmentProducts().catch(() => null),
+        inventoryService.getDashboardMetrics().catch(() => null),
         tenantService.getCurrentTenant().catch(() => null),
+        categoryService.listCategories().catch(() => null),
+        inventoryService.listStockMovements().catch(() => null),
       ]);
 
-      if (Array.isArray(prods)) {
+      if (Array.isArray(prods) && prods.length > 0) {
         setProducts(prods);
       }
       if (mets) {
         setMetrics(mets);
       }
       if (tenant) {
+        setCurrentTenant(tenant);
         setProfile((prev) => ({
           ...prev,
           name: tenant.name,
@@ -258,6 +368,13 @@ export const MeuBotequimDashboard: React.FC<MeuBotequimDashboardProps> = ({
           tenantId: tenant.id,
         }));
       }
+      if (Array.isArray(cats) && cats.length > 0) {
+        setCategories(cats);
+      }
+      if (Array.isArray(movs) && movs.length > 0) {
+        setMovements(movs);
+      }
+
       setIsApiConnected(true);
       return true;
     } catch (err: unknown) {
@@ -276,7 +393,7 @@ export const MeuBotequimDashboard: React.FC<MeuBotequimDashboardProps> = ({
         ? 'Gerente Operacional'
         : 'Bartender / Operação';
 
-    const establishmentName = session.tenant?.name || 'MeuBotequim';
+    const establishmentName = session.tenant?.name || 'BeerGod';
     const branchName =
       session.tenant?.settings?.branchName || `${establishmentName} - Matriz`;
 
@@ -333,13 +450,52 @@ export const MeuBotequimDashboard: React.FC<MeuBotequimDashboardProps> = ({
     void loadData();
   }, [loadData]);
 
+  // Gestão de Categorias
+  const handleCreateCategory = async (name: string, description?: string) => {
+    const newCat = await categoryService.createCategory({ name, description });
+    setCategories((prev) => [...prev, newCat]);
+    showToast(`Categoria "${name}" criada com sucesso!`);
+    await loadData();
+  };
+
+  const handleUpdateCategory = async (id: string, name: string, description?: string) => {
+    const updated = await categoryService.updateCategory(id, { name, description });
+    setCategories((prev) =>
+      prev.map((c) => ((c._id || c.id) === id ? updated : c))
+    );
+    showToast(`Categoria "${name}" atualizada com sucesso!`);
+    await loadData();
+  };
+
+  const handleDeleteCategory = async (id: string) => {
+    await categoryService.deleteCategory(id);
+    setCategories((prev) => prev.filter((c) => (c._id || c.id) !== id));
+    showToast('Categoria desativada com sucesso.');
+    await loadData();
+  };
+
+  // Personalização da Loja (Tenant)
+  const handleSaveTenant = async (updatedData: Partial<Tenant>) => {
+    const updated = await tenantService.updateTenant(updatedData);
+    setCurrentTenant(updated);
+    setProfile((prev) => ({
+      ...prev,
+      name: updated.name,
+      branch: updated.settings?.branchName || prev.branch,
+    }));
+    localStorage.setItem('tenant', JSON.stringify(updated));
+    showToast('Personalização do bar aplicada com sucesso!');
+  };
+
   // Ações de Estoque integradas à API
   const handleConfirmEntry = async (productId: string, quantity: number, invoiceNumber?: string) => {
     await inventoryService.createStockMovement({
       productId,
       quantity,
       type: MovementType.ENTRADA,
-      reason: invoiceNumber ? `NF: ${invoiceNumber}` : 'Entrada manual rápida',
+      reason: invoiceNumber
+        ? `Recebimento NF ${invoiceNumber}`
+        : 'Entrada de mercadoria da distribuidora',
     });
     await loadData();
   };
@@ -440,7 +596,7 @@ export const MeuBotequimDashboard: React.FC<MeuBotequimDashboardProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-2xl font-extrabold tracking-tight text-[#2C221E] sm:text-3xl">
-                Visão Geral do Estoque
+                {profile.name} — Gestão de Balcão
               </h1>
               <span className="inline-flex items-center gap-1 rounded-full bg-[#5B8A62]/15 px-2.5 py-0.5 text-xs font-bold text-[#5B8A62] border border-[#5B8A62]/30">
                 <span className="h-1.5 w-1.5 rounded-full bg-[#5B8A62] animate-pulse" />
@@ -468,7 +624,7 @@ export const MeuBotequimDashboard: React.FC<MeuBotequimDashboardProps> = ({
               </span>
             </div>
             <p className="mt-1 text-xs text-[#70625B] sm:text-sm">
-              Indicadores em tempo real, reposição de balcão e auditoria de insumos.
+              Filial: <strong className="text-[#2C221E]">{profile.branch}</strong> • Indicadores em tempo real, reposição de balcão e auditoria de insumos.
             </p>
           </div>
 
@@ -486,94 +642,210 @@ export const MeuBotequimDashboard: React.FC<MeuBotequimDashboardProps> = ({
           </div>
         </div>
 
-        {/* 2. Cards de KPIs Principais (Grid de 4 cards sincronizados com a API) */}
-        <section aria-label="KPIs Principais">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {/* Card 1: Valor em Estoque (preço de custo consolidado) */}
-            <KpiCard
-              title="Valor em Estoque"
-              value={`R$ ${totalStockValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-              subtitle="Preço de custo consolidado"
-              icon={<DollarSign className="h-5 w-5" />}
-              trend={{
-                text: '+3,2% no mês',
-                direction: 'up',
-                isPositive: true,
-              }}
-              footerNote={`${products.length} SKUs ativos`}
-            />
+        {/* 2. Barra de Navegação de Abas (Tabs) */}
+        <nav
+          aria-label="Abas de Gestão"
+          className="flex items-center gap-1.5 overflow-x-auto pb-1 border-b border-[#EFE8DE]"
+        >
+          <button
+            type="button"
+            onClick={() => setActiveTab('overview')}
+            className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all whitespace-nowrap ${
+              activeTab === 'overview'
+                ? 'bg-[#C87A5B] text-white shadow-soft'
+                : 'bg-white border border-[#EFE8DE] text-[#70625B] hover:text-[#2C221E] hover:bg-[#FAF6F0]'
+            }`}
+          >
+            <LayoutDashboard className="h-4 w-4" />
+            <span>Visão Geral & Balcão</span>
+          </button>
 
-            {/* Card 2: Itens em Nível Crítico (com badge na cor #C24E48) */}
-            <KpiCard
-              title="Itens em Nível Crítico"
-              value={`${criticalItemsCount} itens`}
-              icon={<AlertOctagon className="h-5 w-5 text-[#C24E48]" />}
-              badge={{
-                text: criticalItemsCount > 0 ? 'Ruptura Iminente' : 'Estoque Seguro',
-                variant: criticalItemsCount > 0 ? 'danger' : 'success',
-              }}
-              trend={{
-                text: criticalItemsCount > 0 ? 'Reposição prioritária' : 'Estável',
-                direction: criticalItemsCount > 0 ? 'up' : 'neutral',
-                isPositive: criticalItemsCount === 0,
-              }}
-              footerNote="Monitoramento de estoque mínimo"
-            />
+          <button
+            type="button"
+            onClick={() => setActiveTab('analytics')}
+            className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all whitespace-nowrap ${
+              activeTab === 'analytics'
+                ? 'bg-[#C87A5B] text-white shadow-soft'
+                : 'bg-white border border-[#EFE8DE] text-[#70625B] hover:text-[#2C221E] hover:bg-[#FAF6F0]'
+            }`}
+          >
+            <BarChart3 className="h-4 w-4" />
+            <span>Métricas & Gráficos</span>
+          </button>
 
-            {/* Card 3: Perdas & Desperdício do Mês (valor total de quebras/avarias) */}
-            <KpiCard
-              title="Perdas & Desperdício"
-              value={`R$ ${monthlyLossTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-              subtitle="Quebras, validade e sangrias"
-              icon={<TrendingDown className="h-5 w-5 text-[#C24E48]" />}
-              trend={{
-                text: metrics ? `${metrics.monthlyLossCount} registros no mês` : '-14,5% vs. mês ant.',
-                direction: 'down',
-                isPositive: true,
-              }}
-              footerNote={metrics ? `Taxa de perda: ${metrics.lossRate}` : 'Controle de perdas'}
-            />
+          <button
+            type="button"
+            onClick={() => setActiveTab('categories')}
+            className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all whitespace-nowrap ${
+              activeTab === 'categories'
+                ? 'bg-[#C87A5B] text-white shadow-soft'
+                : 'bg-white border border-[#EFE8DE] text-[#70625B] hover:text-[#2C221E] hover:bg-[#FAF6F0]'
+            }`}
+          >
+            <Tag className="h-4 w-4" />
+            <span>Categorias</span>
+            <span className="rounded-full bg-[#FAF6F0] text-[#70625B] px-1.5 py-0.2 text-[10px] font-bold">
+              {categories.length}
+            </span>
+          </button>
 
-            {/* Card 4: Giro Projetado para o Fim de Semana */}
-            <KpiCard
-              title="Giro Projetado (FDS)"
-              value="R$ 19.350,00"
-              subtitle="Estimativa Sex, Sáb e Dom"
-              icon={<CalendarCheck className="h-5 w-5 text-[#DDA76A]" />}
-              badge={{
-                text: 'Pico Esperado',
-                variant: 'secondary',
-              }}
-              trend={{
-                text: '+18% vs. fds normal',
-                direction: 'up',
-                isPositive: true,
-              }}
-              footerNote="Baseado no histórico de balcão"
-            />
+          <button
+            type="button"
+            onClick={() => setActiveTab('recipes')}
+            className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all whitespace-nowrap ${
+              activeTab === 'recipes'
+                ? 'bg-[#C87A5B] text-white shadow-soft'
+                : 'bg-white border border-[#EFE8DE] text-[#70625B] hover:text-[#2C221E] hover:bg-[#FAF6F0]'
+            }`}
+          >
+            <Wine className="h-4 w-4" />
+            <span>Fichas Técnicas & Drinks</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('customization')}
+            className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all whitespace-nowrap ${
+              activeTab === 'customization'
+                ? 'bg-[#C87A5B] text-white shadow-soft'
+                : 'bg-white border border-[#EFE8DE] text-[#70625B] hover:text-[#2C221E] hover:bg-[#FAF6F0]'
+            }`}
+          >
+            <Store className="h-4 w-4" />
+            <span>Personalização do Bar</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('audit')}
+            className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all whitespace-nowrap ${
+              activeTab === 'audit'
+                ? 'bg-[#C87A5B] text-white shadow-soft'
+                : 'bg-white border border-[#EFE8DE] text-[#70625B] hover:text-[#2C221E] hover:bg-[#FAF6F0]'
+            }`}
+          >
+            <History className="h-4 w-4" />
+            <span>Auditoria & Perdas</span>
+          </button>
+        </nav>
+
+        {/* 3. Renderização Condicional da Aba Ativa */}
+        {activeTab === 'overview' && (
+          <div className="space-y-6 animate-in fade-in duration-200">
+            {/* Cards de KPIs Principais */}
+            <section aria-label="KPIs Principais">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <KpiCard
+                  title="Valor em Estoque"
+                  value={`R$ ${totalStockValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+                  subtitle="Preço de custo consolidado"
+                  icon={<DollarSign className="h-5 w-5" />}
+                  trend={{
+                    text: '+3,2% no mês',
+                    direction: 'up',
+                    isPositive: true,
+                  }}
+                  footerNote={`${products.length} SKUs ativos`}
+                />
+
+                <KpiCard
+                  title="Itens em Nível Crítico"
+                  value={`${criticalItemsCount} itens`}
+                  icon={<AlertOctagon className="h-5 w-5 text-[#C24E48]" />}
+                  badge={{
+                    text: criticalItemsCount > 0 ? 'Ruptura Iminente' : 'Estoque Seguro',
+                    variant: criticalItemsCount > 0 ? 'danger' : 'success',
+                  }}
+                  trend={{
+                    text: criticalItemsCount > 0 ? 'Reposição prioritária' : 'Estável',
+                    direction: criticalItemsCount > 0 ? 'up' : 'neutral',
+                    isPositive: criticalItemsCount === 0,
+                  }}
+                  footerNote="Monitoramento de estoque mínimo"
+                />
+
+                <KpiCard
+                  title="Perdas & Desperdício"
+                  value={`R$ ${monthlyLossTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+                  subtitle="Quebras, validade e sangrias"
+                  icon={<TrendingDown className="h-5 w-5 text-[#C24E48]" />}
+                  trend={{
+                    text: metrics ? `${metrics.monthlyLossCount} registros no mês` : '-14,5% vs. mês ant.',
+                    direction: 'down',
+                    isPositive: true,
+                  }}
+                  footerNote={metrics ? `Taxa de perda: ${metrics.lossRate}` : 'Controle de perdas'}
+                />
+
+                <KpiCard
+                  title="Giro Projetado (FDS)"
+                  value="R$ 19.350,00"
+                  subtitle="Estimativa Sex, Sáb e Dom"
+                  icon={<CalendarCheck className="h-5 w-5 text-[#DDA76A]" />}
+                  badge={{
+                    text: 'Pico Esperado',
+                    variant: 'secondary',
+                  }}
+                  trend={{
+                    text: '+18% vs. fds normal',
+                    direction: 'up',
+                    isPositive: true,
+                  }}
+                  footerNote="Baseado no histórico de balcão"
+                />
+              </div>
+            </section>
+
+            {/* Ações Rápidas */}
+            <section aria-label="Ações Rápidas">
+              <ActionButtons
+                onNewEntry={() => setIsEntryModalOpen(true)}
+                onRegisterLoss={() => setIsLossModalOpen(true)}
+                onStartBlindAudit={() => setIsAuditModalOpen(true)}
+              />
+            </section>
+
+            {/* Tabela de Alertas de Reposição */}
+            <section aria-label="Reposição Imediata">
+              <AlertTable
+                products={products}
+                onAddToShoppingList={handleAddToShoppingList}
+                addedProductIds={addedProductIds}
+              />
+            </section>
           </div>
-        </section>
+        )}
 
-        {/* 3. Ações Rápidas (Barra de Acesso Imediato) */}
-        <section aria-label="Ações Rápidas">
-          <ActionButtons
-            onNewEntry={() => setIsEntryModalOpen(true)}
-            onRegisterLoss={() => setIsLossModalOpen(true)}
-            onStartBlindAudit={() => setIsAuditModalOpen(true)}
-          />
-        </section>
+        {activeTab === 'analytics' && (
+          <DashboardAnalytics metrics={metrics} products={products} />
+        )}
 
-        {/* 4. Tabela / Lista de Reposição Imediata ("Atenção para o Fim de Semana") */}
-        <section aria-label="Reposição Imediata">
-          <AlertTable
+        {activeTab === 'categories' && (
+          <CategoriesManager
+            categories={categories}
             products={products}
-            onAddToShoppingList={handleAddToShoppingList}
-            addedProductIds={addedProductIds}
+            onCreateCategory={handleCreateCategory}
+            onUpdateCategory={handleUpdateCategory}
+            onDeleteCategory={handleDeleteCategory}
           />
-        </section>
+        )}
+
+        {activeTab === 'recipes' && <DrinkRecipesManager />}
+
+        {activeTab === 'customization' && (
+          <StoreCustomizer
+            currentTenant={currentTenant}
+            onSaveTenant={handleSaveTenant}
+            showToast={showToast}
+          />
+        )}
+
+        {activeTab === 'audit' && (
+          <AuditTrailTable movements={movements} onRefresh={loadData} />
+        )}
       </main>
 
-      {/* Botão Flutuante da Lista de Compras (Mobile / Desktop) */}
+      {/* Botão Flutuante da Lista de Compras */}
       {shoppingCart.length > 0 && (
         <aside
           aria-label="Carrinho de Reposição"
@@ -600,7 +872,7 @@ export const MeuBotequimDashboard: React.FC<MeuBotequimDashboardProps> = ({
         </aside>
       )}
 
-      {/* Drawer da Lista de Compras */}
+      {/* Drawer da Lista de Compras com WhatsApp */}
       <ShoppingListDrawer
         isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
@@ -618,6 +890,7 @@ export const MeuBotequimDashboard: React.FC<MeuBotequimDashboardProps> = ({
         products={products}
         onConfirmEntry={handleConfirmEntry}
       />
+
       <RegisterLossModal
         isOpen={isLossModalOpen}
         onClose={() => setIsLossModalOpen(false)}
@@ -625,6 +898,7 @@ export const MeuBotequimDashboard: React.FC<MeuBotequimDashboardProps> = ({
         products={products}
         onConfirmLoss={handleConfirmLoss}
       />
+
       <BlindAuditModal
         isOpen={isAuditModalOpen}
         onClose={() => setIsAuditModalOpen(false)}
@@ -632,39 +906,26 @@ export const MeuBotequimDashboard: React.FC<MeuBotequimDashboardProps> = ({
         products={products}
         onConfirmAudit={handleConfirmAudit}
       />
+
+      {/* Modal de Autenticação SaaS */}
       <AuthModal
-        key={`${authModalMode}-${isAuthModalOpen}`}
         isOpen={isAuthModalOpen}
-        initialMode={authModalMode}
         onClose={() => setIsAuthModalOpen(false)}
+        initialMode={authModalMode}
         onSuccess={handleAuthSuccess}
       />
 
-      {/* Toast de Notificação Suave */}
+      {/* Toast Notification Flutuante */}
       {toastMessage && (
         <aside
+          role="status"
           aria-live="polite"
-          className="fixed top-20 right-4 z-50 flex items-center gap-2.5 rounded-xl border border-[#5B8A62]/30 bg-[#FFFFFF] px-4 py-3 text-xs font-semibold text-[#2C221E] shadow-soft-lg animate-in fade-in slide-in-from-top-2"
+          className="fixed bottom-5 left-1/2 z-50 -translate-x-1/2 rounded-2xl bg-[#2C221E] px-4 py-2.5 text-xs font-semibold text-white shadow-soft-lg flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2 border border-[#EFE8DE]/20"
         >
-          <CheckCircle2 className="h-4 w-4 text-[#5B8A62]" />
+          <CheckCircle2 className="h-4 w-4 text-[#5B8A62] shrink-0" />
           <span>{toastMessage}</span>
         </aside>
       )}
-
-      {/* Rodapé institucional com cores terrosas */}
-      <footer className="mt-auto border-t border-[#EFE8DE] bg-[#FFFFFF] py-4 text-center text-xs text-[#70625B]">
-        <div className="mx-auto max-w-7xl px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <img src="/logo.png" alt="MeuBotequim" className="h-6 w-6 rounded-md object-cover border border-[#EFE8DE] bg-[#F4EDE4]" />
-            <span>
-              <strong>MeuBotequim</strong> © {new Date().getFullYear()} — Sistema Especializado para Bares, Botecos & Restaurantes.
-            </span>
-          </div>
-          <span className="text-[11px] text-[#70625B]/70">
-            Design System Tons Terrosos Pastel
-          </span>
-        </div>
-      </footer>
     </div>
   );
 };

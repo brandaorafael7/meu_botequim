@@ -42,6 +42,17 @@ export const UserRole = {
 
 export type UserRole = (typeof UserRole)[keyof typeof UserRole];
 
+export interface TenantSettings {
+  primaryColor?: string;
+  branchName?: string;
+  logoUrl?: string;
+  phone?: string;
+  address?: string;
+  safetyMarginDays?: number;
+  whatsappSupplier?: string;
+  shiftNames?: string[];
+}
+
 export interface Tenant {
   id: string;
   name: string;
@@ -50,11 +61,33 @@ export interface Tenant {
   cnpj?: string;
   phone?: string;
   address?: string;
-  settings?: {
-    primaryColor?: string;
-    branchName?: string;
-    logoUrl?: string;
-  };
+  settings?: TenantSettings;
+}
+
+export interface Category {
+  _id?: string;
+  id?: string;
+  name: string;
+  description?: string;
+  tenantId?: string;
+  isActive?: boolean;
+}
+
+export interface DrinkRecipe {
+  id: string;
+  name: string;
+  category: string;
+  description: string;
+  glass: string;
+  prepTimeMinutes: number;
+  ingredients: Array<{
+    name: string;
+    quantity: string;
+    unitCost: number;
+  }>;
+  doseCost: number;
+  suggestedSalePrice: number;
+  marginPercent: number;
 }
 
 export interface AuthSession {
