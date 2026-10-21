@@ -686,15 +686,16 @@ export const MeuBotequimDashboard: React.FC<MeuBotequimDashboardProps> = ({
       {/* 1. Header Superior com paleta MeuBotequim */}
       <Header
         profile={profile}
+        products={products}
         criticalAlertCount={criticalItemsCount}
+        addedProductIds={addedProductIds}
+        onAddToShoppingList={handleAddToShoppingList}
+        onEditPrice={handleOpenEditPrice}
         isAuthenticated={isAuthenticated}
         onOpenAuthModal={handleOpenAuthModal}
         onLogout={handleLogout}
         onNavigateToLanding={onNavigateToLanding}
         onSelectBranch={(branch) => setProfile((p) => ({ ...p, branch }))}
-        onOpenNotifications={() => {
-          showToast(`Você possui ${criticalItemsCount} itens em nível crítico requerendo atenção.`);
-        }}
       />
 
       {/* Conteúdo Principal do Dashboard */}

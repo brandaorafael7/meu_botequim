@@ -9,11 +9,16 @@ import {
   LogIn,
   CheckCircle2,
 } from 'lucide-react';
-import type { BarProfile } from '../../types';
+import type { BarProfile, ReplenishmentProduct } from '../../types';
+import { NotificationsPopover } from './NotificationsPopover';
 
 interface HeaderProps {
   profile: BarProfile;
+  products?: ReplenishmentProduct[];
   criticalAlertCount?: number;
+  addedProductIds?: Set<string>;
+  onAddToShoppingList?: (product: ReplenishmentProduct) => void;
+  onEditPrice?: (product: ReplenishmentProduct) => void;
   onOpenNotifications?: () => void;
   onSelectBranch?: (branch: string) => void;
   availableBranches?: string[];
@@ -25,7 +30,11 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({
   profile,
+  products = [],
   criticalAlertCount = 0,
+  addedProductIds = new Set(),
+  onAddToShoppingList,
+  onEditPrice,
   onOpenNotifications,
   onSelectBranch,
   availableBranches = [
@@ -40,6 +49,7 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const [branchDropdownOpen, setBranchDropdownOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-[#EFE8DE] bg-[#FFFFFF]/90 backdrop-blur-md transition-all">
@@ -81,6 +91,7 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={() => {
                 setBranchDropdownOpen(!branchDropdownOpen);
                 setProfileDropdownOpen(false);
+                setNotificationsOpen(false);
               }}
               className="flex items-center gap-2 rounded-xl border border-[#EFE8DE] bg-[#FAF6F0] px-2.5 py-1.5 text-xs font-semibold text-[#2C221E] transition-colors hover:bg-[#EFE8DE]/60 focus:outline-none focus:ring-2 focus:ring-[#C87A5B]/20 sm:px-3 sm:py-2"
             >
@@ -127,19 +138,54 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* Sino de Notificações / Alertas Críticos */}
-          <button
-            type="button"
-            onClick={onOpenNotifications}
-            aria-label="Ver alertas"
-            className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-[#EFE8DE] bg-[#FAF6F0] text-[#70625B] transition-colors hover:bg-[#EFE8DE]/60 hover:text-[#2C221E]"
-          >
-            <Bell className="h-4 w-4" />
-            {criticalAlertCount > 0 && (
-              <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#C24E48] px-1 text-[10px] font-bold text-white shadow-soft">
-                {criticalAlertCount}
-              </span>
-            )}
-          </button>
+          <div className="relative">
+            <button
+              id="notifications-button"
+              type="button"
+              onClick={() => {
+                setNotificationsOpen(!notificationsOpen);
+                setBranchDropdownOpen(false);
+                setProfileDropdownOpen(false);
+                onOpenNotifications?.();
+              }}
+              aria-expanded={notificationsOpen}
+              aria-haspopup="dialog"
+              aria-controls="notifications-popover"
+              aria-label={
+                criticalAlertCount > 0
+                  ? `Notificações: ${criticalAlertCount} produtos em nível crítico`
+                  : 'Notificações de estoque'
+              }
+              className={`relative flex h-9 w-9 items-center justify-center rounded-xl border transition-all ${
+                notificationsOpen
+                  ? 'border-[#C87A5B] bg-[#C87A5B]/15 text-[#C87A5B] ring-2 ring-[#C87A5B]/20 shadow-soft'
+                  : 'border-[#EFE8DE] bg-[#FAF6F0] text-[#70625B] hover:bg-[#EFE8DE]/60 hover:text-[#2C221E]'
+              }`}
+            >
+              <Bell className={`h-4 w-4 ${criticalAlertCount > 0 ? 'text-[#C24E48]' : ''}`} />
+              {criticalAlertCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#C24E48] px-1 text-[10px] font-bold text-white shadow-soft animate-pulse">
+                  {criticalAlertCount}
+                </span>
+              )}
+            </button>
+
+            <NotificationsPopover
+              isOpen={notificationsOpen}
+              onClose={() => setNotificationsOpen(false)}
+              products={products}
+              addedProductIds={addedProductIds}
+              onAddToShoppingList={onAddToShoppingList}
+              onEditPrice={onEditPrice}
+              onViewAllInTable={() => {
+                setNotificationsOpen(false);
+                const tableElem = document.querySelector(
+                  'section[aria-label="Reposição Imediata"]'
+                );
+                tableElem?.scrollIntoView({ behavior: 'smooth' });
+              }}
+            />
+          </div>
 
           {/* Divisória Vertical Sutil */}
           <div className="h-6 w-px bg-[#EFE8DE]" />
@@ -163,6 +209,7 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={() => {
                 setProfileDropdownOpen(!profileDropdownOpen);
                 setBranchDropdownOpen(false);
+                setNotificationsOpen(false);
               }}
               className="flex items-center gap-2.5 rounded-xl p-1 transition-colors hover:bg-[#FAF6F0] focus:outline-none focus:ring-2 focus:ring-[#C87A5B]/20"
             >

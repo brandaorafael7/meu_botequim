@@ -13,4 +13,5 @@ export * from './meubotequim/DrinkRecipesManager';
 export * from './meubotequim/AuditTrailTable';
 export * from './meubotequim/EditPriceModal';
 export * from './meubotequim/NewProductModal';
+export * from './meubotequim/NotificationsPopover';
 
