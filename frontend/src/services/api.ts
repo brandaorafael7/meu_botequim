@@ -114,6 +114,7 @@ export const productManagementService = {
     brand?: string;
     category?: string;
     dayPrice: number;
+    nightPrice?: number;
     costPrice?: number;
     currentStock: number;
     minStock: number;
@@ -130,6 +131,7 @@ export const productManagementService = {
       brand?: string;
       category?: string;
       dayPrice: number;
+      nightPrice?: number;
       costPrice?: number;
       currentStock: number;
       minStock: number;

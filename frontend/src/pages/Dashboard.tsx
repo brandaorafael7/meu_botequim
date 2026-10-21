@@ -32,11 +32,14 @@ import { StoreCustomizer } from '../components/meubotequim/StoreCustomizer';
 import { DashboardAnalytics } from '../components/meubotequim/DashboardAnalytics';
 import { DrinkRecipesManager } from '../components/meubotequim/DrinkRecipesManager';
 import { AuditTrailTable } from '../components/meubotequim/AuditTrailTable';
+import { EditPriceModal } from '../components/meubotequim/EditPriceModal';
+import { NewProductModal } from '../components/meubotequim/NewProductModal';
 import {
   authService,
   inventoryService,
   tenantService,
   categoryService,
+  productManagementService,
 } from '../services/api';
 import {
   MovementType,
@@ -352,6 +355,11 @@ export const MeuBotequimDashboard: React.FC<MeuBotequimDashboardProps> = ({
   const [isLossModalOpen, setIsLossModalOpen] = useState(false);
   const [isAuditModalOpen, setIsAuditModalOpen] = useState(false);
 
+  // Modais de criação de produto e edição de preços (Diurno & Noturno)
+  const [isNewProductModalOpen, setIsNewProductModalOpen] = useState(false);
+  const [isEditPriceModalOpen, setIsEditPriceModalOpen] = useState(false);
+  const [productToEditPrice, setProductToEditPrice] = useState<ReplenishmentProduct | null>(null);
+
   // Mostrar Toast temporário
   const showToast = (message: string) => {
     setToastMessage(message);
@@ -536,6 +544,88 @@ export const MeuBotequimDashboard: React.FC<MeuBotequimDashboardProps> = ({
       reason: 'Balanço Cego de Balcão',
     });
     await loadData();
+  };
+
+  // Gestão de Preços e Criação de Produtos
+  const handleOpenEditPrice = (product: ReplenishmentProduct) => {
+    setProductToEditPrice(product);
+    setIsEditPriceModalOpen(true);
+  };
+
+  const handleSavePrice = async (
+    productId: string,
+    prices: { costPrice: number; dayPrice: number; nightPrice: number }
+  ) => {
+    try {
+      const updated = await productManagementService.updateProduct(productId, {
+        costPrice: prices.costPrice,
+        dayPrice: prices.dayPrice,
+        nightPrice: prices.nightPrice,
+      });
+
+      setProducts((prev) =>
+        prev.map((p) =>
+          p.id === productId
+            ? {
+                ...p,
+                costPrice: updated.costPrice !== undefined ? updated.costPrice : prices.costPrice,
+                dayPrice: updated.dayPrice !== undefined ? updated.dayPrice : prices.dayPrice,
+                nightPrice: updated.nightPrice !== undefined ? updated.nightPrice : prices.nightPrice,
+              }
+            : p
+        )
+      );
+    } catch {
+      // Atualização otimista caso esteja usando dados locais/offline
+      setProducts((prev) =>
+        prev.map((p) =>
+          p.id === productId
+            ? {
+                ...p,
+                costPrice: prices.costPrice,
+                dayPrice: prices.dayPrice,
+                nightPrice: prices.nightPrice,
+              }
+            : p
+        )
+      );
+    }
+  };
+
+  const handleCreateProduct = async (productData: {
+    name: string;
+    brand?: string;
+    category?: string;
+    unit: string;
+    currentStock: number;
+    minStock: number;
+    costPrice: number;
+    dayPrice: number;
+    nightPrice: number;
+  }) => {
+    try {
+      const created = await productManagementService.createProduct(productData);
+      setProducts((prev) => [created, ...prev]);
+      await loadData();
+    } catch {
+      // Fallback offline / local
+      const fallbackId = `prod-${Date.now()}`;
+      const newLocalProd: ReplenishmentProduct = {
+        id: fallbackId,
+        name: productData.name,
+        brand: productData.brand,
+        category: productData.category || 'Chopp & Cervejas',
+        unit: productData.unit,
+        currentStock: productData.currentStock,
+        minStock: productData.minStock,
+        costPrice: productData.costPrice,
+        dayPrice: productData.dayPrice,
+        nightPrice: productData.nightPrice,
+        status: productData.currentStock <= productData.minStock ? 'CRITICO' : 'NORMAL',
+        suggestedOrder: Math.max(1, productData.minStock * 2 - productData.currentStock),
+      };
+      setProducts((prev) => [newLocalProd, ...prev]);
+    }
   };
 
   // Adicionar produto à lista de compras
@@ -817,6 +907,7 @@ export const MeuBotequimDashboard: React.FC<MeuBotequimDashboardProps> = ({
             {/* Ações Rápidas */}
             <section aria-label="Ações Rápidas">
               <ActionButtons
+                onNewProduct={() => setIsNewProductModalOpen(true)}
                 onNewEntry={() => setIsEntryModalOpen(true)}
                 onRegisterLoss={() => setIsLossModalOpen(true)}
                 onStartBlindAudit={() => setIsAuditModalOpen(true)}
@@ -828,6 +919,8 @@ export const MeuBotequimDashboard: React.FC<MeuBotequimDashboardProps> = ({
               <AlertTable
                 products={products}
                 onAddToShoppingList={handleAddToShoppingList}
+                onEditPrice={handleOpenEditPrice}
+                onOpenNewProduct={() => setIsNewProductModalOpen(true)}
                 addedProductIds={addedProductIds}
               />
             </section>
@@ -931,6 +1024,27 @@ export const MeuBotequimDashboard: React.FC<MeuBotequimDashboardProps> = ({
         onClose={() => setIsAuthModalOpen(false)}
         initialMode={authModalMode}
         onSuccess={handleAuthSuccess}
+      />
+
+      {/* Modal de Cadastro de Novo Produto (com custo, diurno e noturno) */}
+      <NewProductModal
+        isOpen={isNewProductModalOpen}
+        onClose={() => setIsNewProductModalOpen(false)}
+        categories={categories}
+        onCreateProduct={handleCreateProduct}
+        onSuccess={showToast}
+      />
+
+      {/* Modal de Ajuste de Preço Rápido durante o uso */}
+      <EditPriceModal
+        isOpen={isEditPriceModalOpen}
+        onClose={() => {
+          setIsEditPriceModalOpen(false);
+          setProductToEditPrice(null);
+        }}
+        product={productToEditPrice}
+        onSavePrice={handleSavePrice}
+        onSuccess={showToast}
       />
 
       {/* Toast Notification Flutuante */}

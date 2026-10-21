@@ -11,4 +11,6 @@ export * from './meubotequim/StoreCustomizer';
 export * from './meubotequim/DashboardAnalytics';
 export * from './meubotequim/DrinkRecipesManager';
 export * from './meubotequim/AuditTrailTable';
+export * from './meubotequim/EditPriceModal';
+export * from './meubotequim/NewProductModal';
 

@@ -7,6 +7,8 @@ import {
   Package,
   Moon,
   Sun,
+  Pencil,
+  PlusCircle,
 } from 'lucide-react';
 import { StatusBadge } from './StatusBadge';
 import type { ReplenishmentProduct, StockStatus } from '../../types';
@@ -14,6 +16,8 @@ import type { ReplenishmentProduct, StockStatus } from '../../types';
 interface AlertTableProps {
   products: ReplenishmentProduct[];
   onAddToShoppingList: (product: ReplenishmentProduct) => void;
+  onEditPrice?: (product: ReplenishmentProduct) => void;
+  onOpenNewProduct?: () => void;
   addedProductIds?: Set<string>;
   isLoading?: boolean;
 }
@@ -21,6 +25,8 @@ interface AlertTableProps {
 export const AlertTable: React.FC<AlertTableProps> = ({
   products,
   onAddToShoppingList,
+  onEditPrice,
+  onOpenNewProduct,
   addedProductIds = new Set(),
   isLoading = false,
 }) => {
@@ -81,6 +87,18 @@ export const AlertTable: React.FC<AlertTableProps> = ({
 
           {/* Badges de contagem rápida e Alternador de Turno Noturno */}
           <div className="flex flex-wrap items-center gap-2">
+            {onOpenNewProduct && (
+              <button
+                type="button"
+                onClick={onOpenNewProduct}
+                className="inline-flex items-center gap-1.5 rounded-full bg-[#C87A5B] px-3.5 py-1 text-xs font-bold text-white shadow-soft hover:bg-[#B2684B] transition-all"
+                title="Cadastrar novo produto com preços diurno e noturno"
+              >
+                <PlusCircle className="h-3.5 w-3.5" />
+                <span>+ Novo Produto</span>
+              </button>
+            )}
+
             <button
               type="button"
               onClick={() => setIsNightShiftActive(!isNightShiftActive)}
@@ -264,6 +282,16 @@ export const AlertTable: React.FC<AlertTableProps> = ({
                             >
                               🌙 R$ {effectiveNightPrice.toFixed(2)}
                             </span>
+                            {onEditPrice && (
+                              <button
+                                type="button"
+                                onClick={() => onEditPrice(product)}
+                                className="inline-flex p-1 rounded-lg text-[#70625B] hover:text-[#C87A5B] hover:bg-[#FAF6F0] transition-colors"
+                                title={`Alterar preços de "${product.name}"`}
+                              >
+                                <Pencil className="h-3 w-3" />
+                              </button>
+                            )}
                           </div>
                           <span className="text-[9px] text-[#70625B] mt-0.5">
                             {isNightShiftActive ? 'Cobrança Noturna' : 'Diurno / Pós 00h'}
@@ -313,27 +341,40 @@ export const AlertTable: React.FC<AlertTableProps> = ({
 
                       {/* Ação */}
                       <td className="py-4 pl-4 pr-6 text-right">
-                        <button
-                          type="button"
-                          onClick={() => onAddToShoppingList(product)}
-                          className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition-all duration-150 focus:outline-none focus:ring-2 ${
-                            isAdded
-                              ? 'bg-[#5B8A62]/15 text-[#5B8A62] border border-[#5B8A62]/30 hover:bg-[#5B8A62]/25'
-                              : 'bg-[#FAF6F0] text-[#2C221E] border border-[#EFE8DE] hover:bg-[#C87A5B] hover:text-white hover:border-[#C87A5B] shadow-soft'
-                          }`}
-                        >
-                          {isAdded ? (
-                            <>
-                              <Check className="h-3.5 w-3.5" />
-                              <span>Na Lista</span>
-                            </>
-                          ) : (
-                            <>
-                              <ShoppingCart className="h-3.5 w-3.5" />
-                              <span>Repor</span>
-                            </>
+                        <div className="inline-flex items-center justify-end gap-2">
+                          {onEditPrice && (
+                            <button
+                              type="button"
+                              onClick={() => onEditPrice(product)}
+                              className="inline-flex items-center gap-1.5 rounded-xl border border-[#EFE8DE] bg-[#FAF6F0] px-3 py-2 text-xs font-bold text-[#70625B] hover:border-[#C87A5B]/40 hover:bg-white hover:text-[#C87A5B] transition-all shadow-soft active:scale-95"
+                              title="Alterar preços (Custo, Diurno, Noturno e Margem)"
+                            >
+                              <Pencil className="h-3.5 w-3.5 text-[#C87A5B]" />
+                              <span>Preços</span>
+                            </button>
                           )}
-                        </button>
+                          <button
+                            type="button"
+                            onClick={() => onAddToShoppingList(product)}
+                            className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition-all duration-150 focus:outline-none focus:ring-2 ${
+                              isAdded
+                                ? 'bg-[#5B8A62]/15 text-[#5B8A62] border border-[#5B8A62]/30 hover:bg-[#5B8A62]/25'
+                                : 'bg-[#FAF6F0] text-[#2C221E] border border-[#EFE8DE] hover:bg-[#C87A5B] hover:text-white hover:border-[#C87A5B] shadow-soft'
+                            }`}
+                          >
+                            {isAdded ? (
+                              <>
+                                <Check className="h-3.5 w-3.5" />
+                                <span>Na Lista</span>
+                              </>
+                            ) : (
+                              <>
+                                <ShoppingCart className="h-3.5 w-3.5" />
+                                <span>Repor</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -376,15 +417,17 @@ export const AlertTable: React.FC<AlertTableProps> = ({
                         R$ {(product.dayPrice || 0).toFixed(2)}
                       </strong>
                     </span>
-                    <span
-                      className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-extrabold border ${
-                        isNightShiftActive
-                          ? 'bg-[#2C221E] text-white border-[#2C221E]'
-                          : 'bg-[#FAF6F0] text-[#C87A5B] border-[#EFE8DE]'
-                      }`}
-                    >
-                      🌙 Pós 00h: R$ {effectiveNightPrice.toFixed(2)}
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span
+                        className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-extrabold border ${
+                          isNightShiftActive
+                            ? 'bg-[#2C221E] text-white border-[#2C221E]'
+                            : 'bg-[#FAF6F0] text-[#C87A5B] border-[#EFE8DE]'
+                        }`}
+                      >
+                        🌙 Pós 00h: R$ {effectiveNightPrice.toFixed(2)}
+                      </span>
+                    </div>
                   </div>
 
                   {/* Detalhes de Saldo */}
@@ -422,12 +465,23 @@ export const AlertTable: React.FC<AlertTableProps> = ({
                     </div>
                   </div>
 
-                  {/* Botão de Ação Mobile */}
-                  <div>
+                  {/* Botões de Ação Mobile */}
+                  <div className="flex items-center gap-2">
+                    {onEditPrice && (
+                      <button
+                        type="button"
+                        onClick={() => onEditPrice(product)}
+                        className="flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border border-[#EFE8DE] bg-[#FAF6F0] px-3.5 text-xs font-bold text-[#2C221E] hover:bg-white hover:text-[#C87A5B] active:scale-[0.98] transition-all shadow-soft"
+                        title="Ajustar preços diurno/noturno"
+                      >
+                        <Pencil className="h-4 w-4 text-[#C87A5B]" />
+                        <span>Preços</span>
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() => onAddToShoppingList(product)}
-                      className={`flex w-full min-h-[44px] items-center justify-center gap-2 rounded-xl text-xs font-bold transition-all active:scale-[0.98] ${
+                      className={`flex flex-1 min-h-[44px] items-center justify-center gap-2 rounded-xl text-xs font-bold transition-all active:scale-[0.98] ${
                         isAdded
                           ? 'bg-[#5B8A62]/15 text-[#5B8A62] border border-[#5B8A62]/30'
                           : 'bg-[#C87A5B] text-white hover:bg-[#B2684B] shadow-soft'
@@ -436,12 +490,12 @@ export const AlertTable: React.FC<AlertTableProps> = ({
                       {isAdded ? (
                         <>
                           <Check className="h-4 w-4" />
-                          <span>Adicionado à Lista de Compras</span>
+                          <span>Adicionado à Lista</span>
                         </>
                       ) : (
                         <>
                           <ShoppingCart className="h-4 w-4" />
-                          <span>Adicionar à Lista de Compras</span>
+                          <span>Repor Estoque</span>
                         </>
                       )}
                     </button>

@@ -4,12 +4,14 @@ import {
   TrendingDown,
   ClipboardCheck,
   Sparkles,
+  PlusCircle,
 } from 'lucide-react';
 
 interface ActionButtonsProps {
   onNewEntry: () => void;
   onRegisterLoss: () => void;
   onStartBlindAudit: () => void;
+  onNewProduct?: () => void;
   className?: string;
 }
 
@@ -17,6 +19,7 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
   onNewEntry,
   onRegisterLoss,
   onStartBlindAudit,
+  onNewProduct,
   className = '',
 }) => {
   return (
@@ -31,7 +34,19 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
         </div>
 
         {/* Grupo de Botões (Grid ou Flex Mobile-First) */}
-        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3 sm:gap-3 lg:flex lg:items-center">
+        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:flex lg:items-center">
+          {/* Botão Novo Produto */}
+          {onNewProduct && (
+            <button
+              type="button"
+              onClick={onNewProduct}
+              className="group flex min-h-[46px] items-center justify-center gap-2 rounded-xl border border-[#C87A5B]/40 bg-[#C87A5B]/10 px-4 py-2.5 text-xs font-bold text-[#C87A5B] transition-all duration-150 hover:bg-[#C87A5B] hover:text-white active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-[#C87A5B]/30 sm:text-sm"
+            >
+              <PlusCircle className="h-4 w-4 transition-transform group-hover:scale-110" />
+              <span>+ Novo Produto</span>
+            </button>
+          )}
+
           {/* Botão Primário Destacado: Nova Entrada de Mercadoria */}
           <button
             type="button"
@@ -39,7 +54,7 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
             className="group flex min-h-[46px] items-center justify-center gap-2 rounded-xl bg-[#C87A5B] px-4 py-2.5 text-xs font-bold text-white shadow-soft transition-all duration-150 hover:bg-[#B2684B] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-[#C87A5B]/30 sm:text-sm"
           >
             <PackagePlus className="h-4 w-4 transition-transform group-hover:scale-110" />
-            <span>+ Nova Entrada de Mercadoria</span>
+            <span>+ Nova Entrada</span>
           </button>
 
           {/* Botão Secundário de Contorno: Registrar Baixa / Perda */}
@@ -49,7 +64,7 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
             className="group flex min-h-[46px] items-center justify-center gap-2 rounded-xl border border-[#EFE8DE] bg-[#FFFFFF] px-4 py-2.5 text-xs font-bold text-[#2C221E] transition-all duration-150 hover:bg-[#FAF6F0] hover:border-[#DDA76A]/40 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-[#70625B]/20 sm:text-sm"
           >
             <TrendingDown className="h-4 w-4 text-[#C24E48] transition-transform group-hover:scale-110" />
-            <span>Registrar Baixa / Perda</span>
+            <span>Registrar Perda</span>
           </button>
 
           {/* Botão de Apoio: Iniciar Balanço Cego */}
@@ -59,7 +74,7 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
             className="group flex min-h-[46px] items-center justify-center gap-2 rounded-xl border border-transparent bg-[#FAF6F0] px-4 py-2.5 text-xs font-bold text-[#2C221E] transition-all duration-150 hover:bg-[#EFE8DE] hover:text-[#2C221E] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-[#DDA76A]/30 sm:text-sm"
           >
             <ClipboardCheck className="h-4 w-4 text-[#DDA76A] transition-transform group-hover:scale-110" />
-            <span>Iniciar Balanço Cego</span>
+            <span>Balanço Cego</span>
           </button>
         </div>
       </div>
