@@ -1,8 +1,7 @@
 import React, { useEffect } from 'react';
 
 const BLIP_CHAT_SCRIPT_ID = 'blip-chat-widget-script';
-const BLIP_CHAT_SCRIPT_SRC =
-  'https://unpkg.com/blip-chat-widget@1.11.4/dist/blip-chat.js';
+const BLIP_CHAT_SCRIPT_SRC = 'https://unpkg.com/blip-chat-widget';
 const DEFAULT_BLIP_APP_KEY =
   'bWV1Ym90ZXF1aW1ib3Q6NTRjOWEwMmQtMTI3NS00ZDU1LTkzNDQtY2I5ODUyMzAxYWI5';
 const DEFAULT_BLIP_CUSTOM_COMMON_URL =
@@ -21,6 +20,9 @@ export interface BlipChatBuilder {
   withButton: (config: { color: string; icon?: string }) => BlipChatBuilder;
   withCustomCommonUrl: (url: string) => BlipChatBuilder;
   withAccount: (account: BlipChatAccountConfig) => BlipChatBuilder;
+  withCustomMessageMetadata?: (
+    metadata: Record<string, string | undefined>,
+  ) => BlipChatBuilder;
   build: () => void;
   toogleChat?: () => void;
   destroy?: () => void;
@@ -108,27 +110,34 @@ export const BlipChatWidget: React.FC<BlipChatWidgetProps> = ({
           },
         });
 
+      if (typeof blipClient.withCustomMessageMetadata === 'function') {
+        blipClient.withCustomMessageMetadata({
+          establishmentId: establishmentId || 'demo',
+        });
+      }
+
       blipClient.build();
       window.__blipChatClient = blipClient;
     };
 
-    const existingScript = document.getElementById(
-      BLIP_CHAT_SCRIPT_ID,
-    ) as HTMLScriptElement | null;
-
-    if (existingScript) {
-      if (window.BlipChat) {
-        initBlipChat();
-      } else {
-        existingScript.addEventListener('load', initBlipChat);
-      }
+    if (typeof window !== 'undefined' && window.BlipChat) {
+      initBlipChat();
     } else {
-      const script = document.createElement('script');
-      script.id = BLIP_CHAT_SCRIPT_ID;
-      script.src = BLIP_CHAT_SCRIPT_SRC;
-      script.async = true;
-      script.onload = initBlipChat;
-      document.body.appendChild(script);
+      const existingScript = document.getElementById(
+        BLIP_CHAT_SCRIPT_ID,
+      ) as HTMLScriptElement | null;
+
+      if (existingScript) {
+        existingScript.addEventListener('load', initBlipChat);
+      } else {
+        const script = document.createElement('script');
+        script.id = BLIP_CHAT_SCRIPT_ID;
+        script.src = BLIP_CHAT_SCRIPT_SRC;
+        script.type = 'text/javascript';
+        script.async = true;
+        script.onload = initBlipChat;
+        document.head.appendChild(script);
+      }
     }
 
     return () => {
