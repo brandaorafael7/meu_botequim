@@ -1,10 +1,3 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Schema as MongooseSchema, Types } from 'mongoose';
-import { Product } from '../../products/schemas/product.schema';
-import { User } from '../../users/schemas/user.schema';
-
-export type StockMovementDocument = HydratedDocument<StockMovement>;
-
 export enum MovementType {
   ENTRADA = 'ENTRADA',
   SAIDA = 'SAIDA',
@@ -12,46 +5,35 @@ export enum MovementType {
   AJUSTE = 'AJUSTE',
 }
 
-@Schema({ timestamps: { createdAt: true, updatedAt: false } })
-export class StockMovement {
-  @Prop({
-    type: MongooseSchema.Types.ObjectId,
-    ref: Product.name,
-    required: true,
-  })
-  productId!: Types.ObjectId;
-
-  @Prop({
-    type: MongooseSchema.Types.ObjectId,
-    ref: User.name,
-    required: false,
-    default: null,
-  })
-  userId?: Types.ObjectId;
-
-  @Prop({
-    type: MongooseSchema.Types.ObjectId,
-    ref: 'Tenant',
-    required: false,
-    default: null,
-    index: true,
-  })
-  tenantId?: Types.ObjectId;
-
-  @Prop({ type: String, enum: MovementType, required: true })
-  type!: MovementType;
-
-  @Prop({ type: Number, required: true, min: 1 })
-  quantity!: number;
-
-  @Prop({ type: Number, required: true })
-  previousStock!: number;
-
-  @Prop({ type: Number, required: true })
-  newStock!: number;
-
-  @Prop({ type: String, trim: true, default: null })
-  reason?: string;
+export interface StockMovement {
+  id: string;
+  _id: string;
+  productId:
+    | string
+    | {
+        id: string;
+        _id: string;
+        name: string;
+        barcode?: string | null;
+        currentStock?: number;
+      };
+  userId?:
+    | string
+    | {
+        id: string;
+        _id: string;
+        name: string;
+        email?: string;
+        role?: string;
+      }
+    | null;
+  tenantId?: string | null;
+  type: MovementType;
+  quantity: number;
+  previousStock: number;
+  newStock: number;
+  reason?: string | null;
+  createdAt?: Date;
 }
 
-export const StockMovementSchema = SchemaFactory.createForClass(StockMovement);
+export type StockMovementDocument = StockMovement;

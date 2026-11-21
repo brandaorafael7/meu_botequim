@@ -612,7 +612,7 @@ export const BlipAiPlayground: React.FC<BlipAiPlaygroundProps> = ({
                 <div className="rounded-2xl border border-[#EFE8DE] bg-white px-4 py-3 text-xs text-[#70625B] shadow-soft flex items-center gap-2">
                   <span className="h-2 w-2 rounded-full bg-[#C87A5B] animate-ping" />
                   <span>
-                    Consultando Gemini IA & estoque disponível no MongoDB...
+                    Consultando Gemini IA &amp; estoque disponível no PostgreSQL...
                   </span>
                 </div>
               </div>
@@ -741,8 +741,8 @@ export const BlipAiPlayground: React.FC<BlipAiPlaygroundProps> = ({
                           })}
                         </p>
                         <p className="text-[11px] text-[#5B8A62] font-semibold mt-0.5">
-                          filtro MongoDB: &#123; isActive: true, currentStock: &#123;
-                          $gt: 0 &#125; &#125;
+                          query Prisma (PostgreSQL): where &#123; isActive: true,
+                          currentStock: &#123; gt: 0 &#125; &#125;
                         </p>
                       </>
                     ) : (

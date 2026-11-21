@@ -11,14 +11,15 @@ import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { RegisterEstablishmentDto } from './dto/register-establishment.dto';
 import { TenantDocument } from '../tenants/schemas/tenant.schema';
-import { Role, UserDocument } from '../users/schemas/user.schema';
+import { Role } from '../users/schemas/user.schema';
 
 export interface SafeUser {
-  _id: { toString(): string };
+  id: string;
+  _id: string;
   name: string;
   email: string;
   role: Role;
-  tenantId?: { toString(): string };
+  tenantId?: string | null;
   isActive: boolean;
 }
 
@@ -35,11 +36,15 @@ export class AuthService {
     if (user && user.isActive) {
       const isMatch = await bcrypt.compare(pass, user.password);
       if (isMatch) {
-        const userObj = user.toObject() as unknown as SafeUser & {
-          password?: string;
+        return {
+          id: user.id,
+          _id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          tenantId: user.tenantId,
+          isActive: user.isActive,
         };
-        delete userObj.password;
-        return userObj;
       }
     }
     return null;
@@ -54,7 +59,7 @@ export class AuthService {
     let tenant: TenantDocument = await this.tenantsService.getOrCreateDefault();
     if (user.tenantId) {
       const found = await this.tenantsService
-        .findById(user.tenantId.toString())
+        .findById(user.tenantId)
         .catch(() => null);
       if (found) {
         tenant = found;
@@ -62,23 +67,23 @@ export class AuthService {
     }
 
     const payload = {
-      sub: user._id.toString(),
+      sub: user.id,
       email: user.email,
       role: user.role,
-      tenantId: tenant._id.toString(),
+      tenantId: tenant.id,
     };
 
     return {
       accessToken: this.jwtService.sign(payload),
       user: {
-        id: user._id.toString(),
+        id: user.id,
         name: user.name,
         email: user.email,
         role: user.role,
-        tenantId: tenant._id.toString(),
+        tenantId: tenant.id,
       },
       tenant: {
-        id: tenant._id.toString(),
+        id: tenant.id,
         name: tenant.name,
         slug: tenant.slug,
         plan: tenant.plan,
@@ -102,34 +107,32 @@ export class AuthService {
       email: dto.email,
       password: dto.password,
       role: Role.OWNER,
-      tenantId: tenant._id.toString(),
+      tenantId: tenant.id,
       phone: dto.phone,
     });
 
-    const userId = (createdUser as UserDocument)._id.toString();
-
-    await this.tenantsService.update(tenant._id, {
-      ownerId: (createdUser as UserDocument)._id,
+    await this.tenantsService.update(tenant.id, {
+      ownerId: createdUser.id,
     });
 
     const payload = {
-      sub: userId,
+      sub: createdUser.id,
       email: createdUser.email,
       role: createdUser.role,
-      tenantId: tenant._id.toString(),
+      tenantId: tenant.id,
     };
 
     return {
       accessToken: this.jwtService.sign(payload),
       user: {
-        id: userId,
+        id: createdUser.id,
         name: createdUser.name,
         email: createdUser.email,
         role: createdUser.role,
-        tenantId: tenant._id.toString(),
+        tenantId: tenant.id,
       },
       tenant: {
-        id: tenant._id.toString(),
+        id: tenant.id,
         name: tenant.name,
         slug: tenant.slug,
         plan: tenant.plan,
@@ -143,7 +146,6 @@ export class AuthService {
       throw new ConflictException('Já existe um usuário com este e-mail.');
     }
 
-    // Chave para definir se a conta é de Administrador (apenas se configurada via variável de ambiente)
     const validAdminKey = process.env.ADMIN_REGISTRATION_KEY;
     const role =
       validAdminKey && dto.adminKey && dto.adminKey === validAdminKey
@@ -157,16 +159,15 @@ export class AuthService {
       role,
     });
 
-    const newUserId = String((newUser as unknown as { _id: unknown })._id);
     const payload = {
-      sub: newUserId,
+      sub: newUser.id,
       email: newUser.email,
       role: newUser.role,
     };
     return {
       accessToken: this.jwtService.sign(payload),
       user: {
-        id: newUserId,
+        id: newUser.id,
         name: newUser.name,
         email: newUser.email,
         role: newUser.role,

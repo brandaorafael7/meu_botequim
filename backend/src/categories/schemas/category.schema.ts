@@ -1,21 +1,12 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Types } from 'mongoose';
-
-export type CategoryDocument = Category & Document;
-
-@Schema({ timestamps: true })
-export class Category {
-  @Prop({ required: true, trim: true })
+export interface Category {
+  id: string;
+  _id: string;
   name: string;
-
-  @Prop({ type: Types.ObjectId, ref: 'Tenant', index: true, default: null })
-  tenantId?: Types.ObjectId;
-
-  @Prop({ trim: true })
-  description?: string;
-
-  @Prop({ default: true })
+  tenantId?: string | null;
+  description?: string | null;
   isActive: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
-export const CategorySchema = SchemaFactory.createForClass(Category);
+export type CategoryDocument = Category;

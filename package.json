@@ -10,6 +10,7 @@
     "build:frontend": "npm --prefix frontend run build",
     "build:backend": "npm --prefix backend run build",
     "seed:backend": "npm --prefix backend run seed",
-    "migrate:backend": "npm --prefix backend run migrate"
+    "migrate:backend": "npm --prefix backend run migrate",
+    "neon:setup": "npm --prefix backend run neon:setup"
   }
 }

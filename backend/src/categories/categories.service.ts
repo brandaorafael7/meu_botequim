@@ -1,136 +1,129 @@
 import {
-  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model, isValidObjectId, Types } from 'mongoose';
+import { Prisma } from '@prisma/client';
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { Category, CategoryDocument } from './schemas/category.schema';
 
-function escapeRegex(text: string): string {
-  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
 @Injectable()
 export class CategoriesService {
-  constructor(
-    @InjectModel(Category.name)
-    private readonly categoryModel: Model<CategoryDocument>,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
+
+  private toCategory(record: {
+    id: string;
+    name: string;
+    tenantId: string | null;
+    description: string | null;
+    isActive: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+  }): CategoryDocument {
+    return {
+      ...record,
+      _id: record.id,
+    };
+  }
 
   async create(
     createCategoryDto: CreateCategoryDto,
     tenantId?: string,
   ): Promise<CategoryDocument> {
-    const escapedName = escapeRegex(createCategoryDto.name.trim());
-    const filter: Record<string, unknown> = {
-      name: { $regex: new RegExp(`^${escapedName}$`, 'i') },
+    const cleanName = createCategoryDto.name.trim();
+    const whereFilter: Prisma.CategoryWhereInput = {
+      name: { equals: cleanName, mode: 'insensitive' },
       isActive: true,
+      ...(tenantId
+        ? { OR: [{ tenantId }, { tenantId: null }] }
+        : { tenantId: null }),
     };
 
-    if (tenantId && isValidObjectId(tenantId)) {
-      filter.$or = [
-        { tenantId: new Types.ObjectId(tenantId) },
-        { tenantId: null },
-      ];
-    } else {
-      filter.tenantId = null;
-    }
-
-    const existingCategory = await this.categoryModel.findOne(filter);
+    const existingCategory = await this.prisma.category.findFirst({
+      where: whereFilter,
+    });
     if (existingCategory) {
       throw new ConflictException(
         'Já existe uma categoria cadastrada com esse nome.',
       );
     }
 
-    const categoryData = {
-      ...createCategoryDto,
-      name: createCategoryDto.name.trim(),
-      tenantId:
-        tenantId && isValidObjectId(tenantId)
-          ? new Types.ObjectId(tenantId)
-          : null,
-    };
+    const created = await this.prisma.category.create({
+      data: {
+        name: cleanName,
+        description: createCategoryDto.description ?? null,
+        tenantId: tenantId ?? null,
+        isActive: true,
+      },
+    });
 
-    const createdCategory = new this.categoryModel(categoryData);
-    return createdCategory.save();
+    return this.toCategory(created);
   }
 
   async findOrCreateByName(
     name: string,
     tenantId?: string,
   ): Promise<CategoryDocument> {
-    const escapedName = escapeRegex(name.trim());
-    const filter: Record<string, unknown> = {
-      name: { $regex: new RegExp(`^${escapedName}$`, 'i') },
+    const cleanName = name.trim();
+    const whereFilter: Prisma.CategoryWhereInput = {
+      name: { equals: cleanName, mode: 'insensitive' },
       isActive: true,
+      ...(tenantId
+        ? { OR: [{ tenantId }, { tenantId: null }] }
+        : { tenantId: null }),
     };
 
-    if (tenantId && isValidObjectId(tenantId)) {
-      filter.$or = [
-        { tenantId: new Types.ObjectId(tenantId) },
-        { tenantId: null },
-      ];
-    } else {
-      filter.tenantId = null;
-    }
-
-    const existing = await this.categoryModel.findOne(filter).exec();
-    if (existing) {
-      return existing;
-    }
-
-    const created = new this.categoryModel({
-      name: name.trim(),
-      tenantId:
-        tenantId && isValidObjectId(tenantId)
-          ? new Types.ObjectId(tenantId)
-          : null,
-      isActive: true,
+    const existing = await this.prisma.category.findFirst({
+      where: whereFilter,
     });
-    return created.save();
+    if (existing) {
+      return this.toCategory(existing);
+    }
+
+    const created = await this.prisma.category.create({
+      data: {
+        name: cleanName,
+        tenantId: tenantId ?? null,
+        isActive: true,
+      },
+    });
+    return this.toCategory(created);
   }
 
   async findAll(tenantId?: string): Promise<Category[]> {
-    const filter: Record<string, unknown> = { isActive: true };
-    if (tenantId && isValidObjectId(tenantId)) {
-      filter.$or = [
-        { tenantId: new Types.ObjectId(tenantId) },
-        { tenantId: null },
-      ];
-    } else {
-      filter.tenantId = null;
-    }
-    return this.categoryModel.find(filter).sort({ name: 1 }).exec();
+    const whereFilter: Prisma.CategoryWhereInput = {
+      isActive: true,
+      ...(tenantId
+        ? { OR: [{ tenantId }, { tenantId: null }] }
+        : { tenantId: null }),
+    };
+
+    const list = await this.prisma.category.findMany({
+      where: whereFilter,
+      orderBy: { name: 'asc' },
+    });
+    return list.map((c) => this.toCategory(c));
   }
 
   async findOne(id: string, tenantId?: string): Promise<Category> {
-    if (!isValidObjectId(id)) {
-      throw new BadRequestException(
-        'ID informado possui formato inválido para o MongoDB.',
-      );
-    }
-
-    const category = await this.categoryModel.findById(id).exec();
+    const category = await this.prisma.category.findUnique({ where: { id } });
     if (!category || !category.isActive) {
       throw new NotFoundException('Categoria não encontrada.');
     }
 
     if (
       category.tenantId &&
-      (!tenantId || category.tenantId.toString() !== tenantId)
+      (!tenantId || category.tenantId !== tenantId)
     ) {
       throw new UnauthorizedException(
         'Acesso não autorizado a esta categoria.',
       );
     }
 
-    return category;
+    return this.toCategory(category);
   }
 
   async update(
@@ -139,36 +132,33 @@ export class CategoriesService {
     tenantId?: string,
     isAdmin = false,
   ): Promise<Category> {
-    if (!isValidObjectId(id)) {
-      throw new BadRequestException(
-        'ID informado possui formato inválido para o MongoDB.',
-      );
-    }
-
-    const existing = await this.categoryModel.findById(id).exec();
+    const existing = await this.prisma.category.findUnique({ where: { id } });
     if (!existing || !existing.isActive) {
       throw new NotFoundException('Categoria não encontrada.');
     }
 
     if (
       !isAdmin &&
-      (!existing.tenantId ||
-        !tenantId ||
-        existing.tenantId.toString() !== tenantId)
+      (!existing.tenantId || !tenantId || existing.tenantId !== tenantId)
     ) {
       throw new UnauthorizedException(
         'Você não tem permissão para editar esta categoria.',
       );
     }
 
-    const updatedCategory = await this.categoryModel
-      .findByIdAndUpdate(id, updateCategoryDto, { new: true })
-      .exec();
+    const updated = await this.prisma.category.update({
+      where: { id },
+      data: {
+        ...(updateCategoryDto.name !== undefined
+          ? { name: updateCategoryDto.name.trim() }
+          : {}),
+        ...(updateCategoryDto.description !== undefined
+          ? { description: updateCategoryDto.description }
+          : {}),
+      },
+    });
 
-    if (!updatedCategory) {
-      throw new NotFoundException('Categoria não encontrada.');
-    }
-    return updatedCategory;
+    return this.toCategory(updated);
   }
 
   async remove(
@@ -176,32 +166,24 @@ export class CategoriesService {
     tenantId?: string,
     isAdmin = false,
   ): Promise<{ message: string }> {
-    if (!isValidObjectId(id)) {
-      throw new BadRequestException(
-        'ID informado possui formato inválido para o MongoDB.',
-      );
-    }
-
-    const existing = await this.categoryModel.findById(id).exec();
+    const existing = await this.prisma.category.findUnique({ where: { id } });
     if (!existing || !existing.isActive) {
       throw new NotFoundException('Categoria não encontrada.');
     }
 
     if (
       !isAdmin &&
-      (!existing.tenantId ||
-        !tenantId ||
-        existing.tenantId.toString() !== tenantId)
+      (!existing.tenantId || !tenantId || existing.tenantId !== tenantId)
     ) {
       throw new UnauthorizedException(
         'Você não tem permissão para remover esta categoria.',
       );
     }
 
-    // Soft delete: apenas desativa
-    await this.categoryModel
-      .findByIdAndUpdate(id, { isActive: false }, { new: true })
-      .exec();
+    await this.prisma.category.update({
+      where: { id },
+      data: { isActive: false },
+    });
 
     return { message: 'Categoria desativada com sucesso.' };
   }

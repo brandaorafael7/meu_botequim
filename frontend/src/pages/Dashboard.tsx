@@ -756,42 +756,49 @@ export const MeuBotequimDashboard: React.FC<MeuBotequimDashboardProps> = ({
         </div>
 
         {/* 2. Barra de Navegação de Abas (Tabs) */}
-        <nav
+        <div
+          role="tablist"
           aria-label="Abas de Gestão"
-          className="flex items-center gap-1.5 overflow-x-auto pb-1 border-b border-[#EFE8DE]"
+          className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-[#EFE8DE]"
         >
           <button
             type="button"
+            role="tab"
+            aria-selected={activeTab === 'overview'}
             onClick={() => setActiveTab('overview')}
-            className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all whitespace-nowrap ${
+            className={`relative flex items-center gap-2 rounded-full px-4 py-2 text-xs font-bold transition-all whitespace-nowrap ${
               activeTab === 'overview'
-                ? 'bg-[#C87A5B] text-white shadow-soft'
+                ? 'bg-[#C87A5B] text-white shadow-soft after:content-[""] after:absolute after:-bottom-2 after:left-3 after:right-3 after:border-b-[3px] after:border-[#2C221E]'
                 : 'bg-white border border-[#EFE8DE] text-[#70625B] hover:text-[#2C221E] hover:bg-[#FAF6F0]'
             }`}
           >
             <LayoutDashboard className="h-4 w-4" />
-            <span>Visão Geral & Balcão</span>
+            <span>Visão Geral &amp; Balcão</span>
           </button>
 
           <button
             type="button"
+            role="tab"
+            aria-selected={activeTab === 'analytics'}
             onClick={() => setActiveTab('analytics')}
-            className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all whitespace-nowrap ${
+            className={`relative flex items-center gap-2 rounded-full px-4 py-2 text-xs font-bold transition-all whitespace-nowrap ${
               activeTab === 'analytics'
-                ? 'bg-[#C87A5B] text-white shadow-soft'
+                ? 'bg-[#C87A5B] text-white shadow-soft after:content-[""] after:absolute after:-bottom-2 after:left-3 after:right-3 after:border-b-[3px] after:border-[#2C221E]'
                 : 'bg-white border border-[#EFE8DE] text-[#70625B] hover:text-[#2C221E] hover:bg-[#FAF6F0]'
             }`}
           >
             <BarChart3 className="h-4 w-4" />
-            <span>Métricas & Gráficos</span>
+            <span>Métricas &amp; Gráficos</span>
           </button>
 
           <button
             type="button"
+            role="tab"
+            aria-selected={activeTab === 'categories'}
             onClick={() => setActiveTab('categories')}
-            className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all whitespace-nowrap ${
+            className={`relative flex items-center gap-2 rounded-full px-4 py-2 text-xs font-bold transition-all whitespace-nowrap ${
               activeTab === 'categories'
-                ? 'bg-[#C87A5B] text-white shadow-soft'
+                ? 'bg-[#C87A5B] text-white shadow-soft after:content-[""] after:absolute after:-bottom-2 after:left-3 after:right-3 after:border-b-[3px] after:border-[#2C221E]'
                 : 'bg-white border border-[#EFE8DE] text-[#70625B] hover:text-[#2C221E] hover:bg-[#FAF6F0]'
             }`}
           >
@@ -804,23 +811,27 @@ export const MeuBotequimDashboard: React.FC<MeuBotequimDashboardProps> = ({
 
           <button
             type="button"
+            role="tab"
+            aria-selected={activeTab === 'recipes'}
             onClick={() => setActiveTab('recipes')}
-            className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all whitespace-nowrap ${
+            className={`relative flex items-center gap-2 rounded-full px-4 py-2 text-xs font-bold transition-all whitespace-nowrap ${
               activeTab === 'recipes'
-                ? 'bg-[#C87A5B] text-white shadow-soft'
+                ? 'bg-[#C87A5B] text-white shadow-soft after:content-[""] after:absolute after:-bottom-2 after:left-3 after:right-3 after:border-b-[3px] after:border-[#2C221E]'
                 : 'bg-white border border-[#EFE8DE] text-[#70625B] hover:text-[#2C221E] hover:bg-[#FAF6F0]'
             }`}
           >
             <Wine className="h-4 w-4" />
-            <span>Fichas Técnicas & Drinks</span>
+            <span>Fichas Técnicas &amp; Drinks</span>
           </button>
 
           <button
             type="button"
+            role="tab"
+            aria-selected={activeTab === 'customization'}
             onClick={() => setActiveTab('customization')}
-            className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all whitespace-nowrap ${
+            className={`relative flex items-center gap-2 rounded-full px-4 py-2 text-xs font-bold transition-all whitespace-nowrap ${
               activeTab === 'customization'
-                ? 'bg-[#C87A5B] text-white shadow-soft'
+                ? 'bg-[#C87A5B] text-white shadow-soft after:content-[""] after:absolute after:-bottom-2 after:left-3 after:right-3 after:border-b-[3px] after:border-[#2C221E]'
                 : 'bg-white border border-[#EFE8DE] text-[#70625B] hover:text-[#2C221E] hover:bg-[#FAF6F0]'
             }`}
           >
@@ -830,33 +841,37 @@ export const MeuBotequimDashboard: React.FC<MeuBotequimDashboardProps> = ({
 
           <button
             type="button"
+            role="tab"
+            aria-selected={activeTab === 'audit'}
             onClick={() => setActiveTab('audit')}
-            className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all whitespace-nowrap ${
+            className={`relative flex items-center gap-2 rounded-full px-4 py-2 text-xs font-bold transition-all whitespace-nowrap ${
               activeTab === 'audit'
-                ? 'bg-[#C87A5B] text-white shadow-soft'
+                ? 'bg-[#C87A5B] text-white shadow-soft after:content-[""] after:absolute after:-bottom-2 after:left-3 after:right-3 after:border-b-[3px] after:border-[#2C221E]'
                 : 'bg-white border border-[#EFE8DE] text-[#70625B] hover:text-[#2C221E] hover:bg-[#FAF6F0]'
             }`}
           >
             <History className="h-4 w-4" />
-            <span>Auditoria & Perdas</span>
+            <span>Auditoria &amp; Perdas</span>
           </button>
 
           <button
             type="button"
+            role="tab"
+            aria-selected={activeTab === 'blip-ai'}
             onClick={() => setActiveTab('blip-ai')}
-            className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all whitespace-nowrap ${
+            className={`relative flex items-center gap-2 rounded-full px-4 py-2 text-xs font-bold transition-all whitespace-nowrap ${
               activeTab === 'blip-ai'
-                ? 'bg-[#C87A5B] text-white shadow-soft'
+                ? 'bg-[#C87A5B] text-white shadow-soft after:content-[""] after:absolute after:-bottom-2 after:left-3 after:right-3 after:border-b-[3px] after:border-[#2C221E]'
                 : 'bg-white border border-[#C87A5B]/30 text-[#2C221E] hover:bg-[#FAF6F0]'
             }`}
           >
             <MessageSquare className="h-4 w-4 text-[#D97706]" />
-            <span>Assistente Blip & IA</span>
+            <span>Assistente Blip &amp; IA</span>
             <span className="rounded-full bg-[#D97706]/15 text-[#D97706] px-1.5 py-0.2 text-[10px] font-extrabold border border-[#D97706]/30">
               NOVO
             </span>
           </button>
-        </nav>
+        </div>
 
         {/* 3. Renderização Condicional da Aba Ativa */}
         {activeTab === 'overview' && (

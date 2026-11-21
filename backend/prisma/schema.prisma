@@ -1,0 +1,147 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TenantPlan {
+  TRIAL
+  STARTER
+  PRO
+  ENTERPRISE
+}
+
+enum Role {
+  SUPER_ADMIN
+  OWNER
+  MANAGER
+  BARTENDER
+  ADMIN
+  EMPLOYEE
+}
+
+enum MovementType {
+  ENTRADA
+  SAIDA
+  PERDA
+  AJUSTE
+}
+
+model Tenant {
+  id             String          @id @default(uuid())
+  name           String
+  slug           String          @unique
+  cnpj           String?
+  phone          String?
+  address        String?
+  plan           TenantPlan      @default(TRIAL)
+  isActive       Boolean         @default(true)
+  ownerId        String?
+  settings       Json            @default("{}")
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  users          User[]
+  categories     Category[]
+  products       Product[]
+  stockMovements StockMovement[]
+  storeSettings  StoreSetting[]
+
+  @@index([slug])
+}
+
+model User {
+  id             String          @id @default(uuid())
+  name           String
+  email          String          @unique
+  password       String
+  tenantId       String?
+  tenant         Tenant?         @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  role           Role            @default(BARTENDER)
+  phone          String?
+  avatarUrl      String?
+  isActive       Boolean         @default(true)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  stockMovements StockMovement[]
+
+  @@index([tenantId])
+}
+
+model Category {
+  id          String    @id @default(uuid())
+  name        String
+  tenantId    String?
+  tenant      Tenant?   @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  description String?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  products    Product[]
+
+  @@index([tenantId])
+}
+
+model Product {
+  id             String          @id @default(uuid())
+  name           String
+  tenantId       String?
+  tenant         Tenant?         @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  brand          String?
+  barcode        String?
+  categoryId     String?
+  category       Category?       @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  dayPrice       Float
+  nightPrice     Float           @default(0)
+  eventPrice     Float           @default(0)
+  costPrice      Float           @default(0)
+  currentStock   Int             @default(0)
+  minStock       Int             @default(5)
+  unit           String          @default("un")
+  isActive       Boolean         @default(true)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  stockMovements StockMovement[]
+
+  @@index([tenantId])
+  @@index([categoryId])
+}
+
+model StockMovement {
+  id            String       @id @default(uuid())
+  productId     String
+  product       Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId        String?
+  user          User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  tenantId      String?
+  tenant        Tenant?      @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  type          MovementType
+  quantity      Int
+  previousStock Int
+  newStock      Int
+  reason        String?
+  createdAt     DateTime     @default(now())
+
+  @@index([tenantId])
+  @@index([productId])
+}
+
+model StoreSetting {
+  id           String   @id @default(uuid())
+  storeName    String   @default("MeuBotequim")
+  tenantId     String?
+  tenant       Tenant?  @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  logoUrl      String?
+  phone        String?
+  primaryColor String?  @default("#C87A5B")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([tenantId])
+}

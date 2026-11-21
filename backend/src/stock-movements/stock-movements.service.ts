@@ -4,191 +4,246 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types, isValidObjectId } from 'mongoose';
+import { Prisma } from '@prisma/client';
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateStockMovementDto } from './dto/create-stock-movement.dto';
 import {
   MovementType,
   StockMovement,
-  StockMovementDocument,
 } from './schemas/stock-movement.schema';
-import { Product, ProductDocument } from '../products/schemas/product.schema';
-import { User, UserDocument } from '../users/schemas/user.schema';
 
 @Injectable()
 export class StockMovementsService {
-  constructor(
-    @InjectModel(StockMovement.name)
-    private readonly stockMovementModel: Model<StockMovementDocument>,
-    @InjectModel(Product.name)
-    private readonly productModel: Model<ProductDocument>,
-    @InjectModel(User.name)
-    private readonly userModel: Model<UserDocument>,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
+
+  private toMovementResponse(record: {
+    id: string;
+    productId: string;
+    userId: string | null;
+    tenantId: string | null;
+    type: string;
+    quantity: number;
+    previousStock: number;
+    newStock: number;
+    reason: string | null;
+    createdAt: Date;
+    product?: {
+      id: string;
+      name: string;
+      barcode: string | null;
+      currentStock: number;
+    } | null;
+    user?: {
+      id: string;
+      name: string;
+      email: string;
+      role: string;
+    } | null;
+  }): StockMovement {
+    return {
+      id: record.id,
+      _id: record.id,
+      productId: record.product
+        ? {
+            id: record.product.id,
+            _id: record.product.id,
+            name: record.product.name,
+            barcode: record.product.barcode,
+            currentStock: record.product.currentStock,
+          }
+        : record.productId,
+      userId: record.user
+        ? {
+            id: record.user.id,
+            _id: record.user.id,
+            name: record.user.name,
+            email: record.user.email,
+            role: record.user.role,
+          }
+        : record.userId,
+      tenantId: record.tenantId,
+      type: record.type as MovementType,
+      quantity: record.quantity,
+      previousStock: record.previousStock,
+      newStock: record.newStock,
+      reason: record.reason,
+      createdAt: record.createdAt,
+    };
+  }
 
   async create(
     dto: CreateStockMovementDto,
     userId?: string,
     tenantId?: string,
   ): Promise<StockMovement> {
-    if (!isValidObjectId(dto.productId)) {
-      throw new BadRequestException('ID de produto inválido.');
-    }
+    return this.prisma.$transaction(async (tx) => {
+      const product = await tx.product.findUnique({
+        where: { id: dto.productId },
+      });
 
-    const product = await this.productModel.findById(dto.productId);
-    if (!product || !product.isActive) {
-      throw new NotFoundException('Produto não encontrado ou inativo.');
-    }
-
-    // Validação multi-tenant estrita: impede movimentar produtos de outro bar
-    if (
-      product.tenantId &&
-      (!tenantId || product.tenantId.toString() !== tenantId)
-    ) {
-      throw new UnauthorizedException(
-        'Você não tem permissão para movimentar estoque deste estabelecimento.',
-      );
-    }
-
-    let updatedProduct: ProductDocument | null = null;
-    let previousStock = product.currentStock;
-    let newStock = previousStock;
-
-    // Atualização atômica no MongoDB para evitar race conditions em baixas concorrentes
-    switch (dto.type) {
-      case MovementType.ENTRADA:
-        updatedProduct = await this.productModel
-          .findOneAndUpdate(
-            { _id: product._id, isActive: true },
-            { $inc: { currentStock: dto.quantity } },
-            { new: true },
-          )
-          .exec();
-        if (!updatedProduct) {
-          throw new NotFoundException('Produto não encontrado ou inativo.');
-        }
-        newStock = updatedProduct.currentStock;
-        previousStock = newStock - dto.quantity;
-        break;
-
-      case MovementType.SAIDA:
-      case MovementType.PERDA:
-        updatedProduct = await this.productModel
-          .findOneAndUpdate(
-            {
-              _id: product._id,
-              isActive: true,
-              currentStock: { $gte: dto.quantity },
-            },
-            { $inc: { currentStock: -dto.quantity } },
-            { new: true },
-          )
-          .exec();
-        if (!updatedProduct) {
-          throw new BadRequestException(
-            `Estoque insuficiente para esta operação. Estoque atual: ${product.currentStock}`,
-          );
-        }
-        newStock = updatedProduct.currentStock;
-        previousStock = newStock + dto.quantity;
-        break;
-
-      case MovementType.AJUSTE:
-        updatedProduct = await this.productModel
-          .findOneAndUpdate(
-            { _id: product._id, isActive: true },
-            { $set: { currentStock: dto.quantity } },
-            { new: false },
-          )
-          .exec();
-        if (!updatedProduct) {
-          throw new NotFoundException('Produto não encontrado ou inativo.');
-        }
-        previousStock = updatedProduct.currentStock;
-        newStock = dto.quantity;
-        break;
-
-      default:
-        throw new BadRequestException('Tipo de movimentação inválido.');
-    }
-
-    let userObjectId: Types.ObjectId | null = null;
-    if (userId && isValidObjectId(userId)) {
-      userObjectId = new Types.ObjectId(userId);
-    } else {
-      const defaultUser = await this.userModel.findOne().exec();
-      if (defaultUser) {
-        userObjectId = defaultUser._id;
+      if (!product || !product.isActive) {
+        throw new NotFoundException('Produto não encontrado ou inativo.');
       }
-    }
 
-    const effectiveTenant = tenantId || dto.tenantId;
-    const tenantObjectId =
-      effectiveTenant && isValidObjectId(effectiveTenant)
-        ? new Types.ObjectId(effectiveTenant)
-        : product.tenantId || null;
+      if (
+        product.tenantId &&
+        (!tenantId || product.tenantId !== tenantId)
+      ) {
+        throw new UnauthorizedException(
+          'Você não tem permissão para movimentar estoque deste estabelecimento.',
+        );
+      }
 
-    const movement = new this.stockMovementModel({
-      productId: new Types.ObjectId(dto.productId),
-      userId: userObjectId,
-      tenantId: tenantObjectId,
-      type: dto.type,
-      quantity: dto.quantity,
-      previousStock,
-      newStock,
-      reason: dto.reason,
+      const previousStock = product.currentStock;
+      let newStock = previousStock;
+
+      switch (dto.type) {
+        case MovementType.ENTRADA:
+          newStock = previousStock + dto.quantity;
+          break;
+
+        case MovementType.SAIDA:
+        case MovementType.PERDA:
+          if (previousStock < dto.quantity) {
+            throw new BadRequestException(
+              `Estoque insuficiente para esta operação. Estoque atual: ${previousStock}`,
+            );
+          }
+          newStock = previousStock - dto.quantity;
+          break;
+
+        case MovementType.AJUSTE:
+          newStock = dto.quantity;
+          break;
+
+        default:
+          throw new BadRequestException('Tipo de movimentação inválido.');
+      }
+
+      await tx.product.update({
+        where: { id: product.id },
+        data: { currentStock: newStock },
+      });
+
+      let resolvedUserId: string | null = userId ?? null;
+      if (!resolvedUserId) {
+        const defaultUser = await tx.user.findFirst();
+        if (defaultUser) {
+          resolvedUserId = defaultUser.id;
+        }
+      }
+
+      const effectiveTenant = tenantId || dto.tenantId || product.tenantId || null;
+
+      const movement = await tx.stockMovement.create({
+        data: {
+          productId: product.id,
+          userId: resolvedUserId,
+          tenantId: effectiveTenant,
+          type: dto.type,
+          quantity: dto.quantity,
+          previousStock,
+          newStock,
+          reason: dto.reason ?? null,
+        },
+        include: {
+          product: {
+            select: {
+              id: true,
+              name: true,
+              barcode: true,
+              currentStock: true,
+            },
+          },
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              role: true,
+            },
+          },
+        },
+      });
+
+      return this.toMovementResponse(movement);
     });
-
-    return movement.save();
   }
 
   async findAll(tenantId?: string): Promise<StockMovement[]> {
-    const filter: Record<string, unknown> = {};
-    if (tenantId && isValidObjectId(tenantId)) {
-      filter.$or = [
-        { tenantId: new Types.ObjectId(tenantId) },
-        { tenantId: null },
-      ];
-    } else {
-      // Isolamento multi-tenant: chamadas não autenticadas só veem movimentações de demonstração
-      filter.tenantId = null;
-    }
+    const whereFilter: Prisma.StockMovementWhereInput = tenantId
+      ? { OR: [{ tenantId }, { tenantId: null }] }
+      : { tenantId: null };
 
-    return this.stockMovementModel
-      .find(filter)
-      .populate('productId', 'name barcode currentStock')
-      .populate('userId', 'name email role')
-      .sort({ createdAt: -1 })
-      .exec();
+    const movements = await this.prisma.stockMovement.findMany({
+      where: whereFilter,
+      include: {
+        product: {
+          select: {
+            id: true,
+            name: true,
+            barcode: true,
+            currentStock: true,
+          },
+        },
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return movements.map((m) => this.toMovementResponse(m));
   }
 
   async findByProduct(
     productId: string,
     tenantId?: string,
   ): Promise<StockMovement[]> {
-    if (!isValidObjectId(productId)) {
-      throw new BadRequestException('ID de produto inválido.');
-    }
-
-    const product = await this.productModel.findById(productId);
+    const product = await this.prisma.product.findUnique({
+      where: { id: productId },
+    });
     if (!product) {
       throw new NotFoundException('Produto não encontrado.');
     }
 
     if (
       product.tenantId &&
-      (!tenantId || product.tenantId.toString() !== tenantId)
+      (!tenantId || product.tenantId !== tenantId)
     ) {
       throw new UnauthorizedException(
         'Acesso não autorizado às movimentações deste produto.',
       );
     }
 
-    return this.stockMovementModel
-      .find({ productId: new Types.ObjectId(productId) })
-      .populate('productId', 'name')
-      .populate('userId', 'name email role')
-      .sort({ createdAt: -1 })
-      .exec();
+    const movements = await this.prisma.stockMovement.findMany({
+      where: { productId },
+      include: {
+        product: {
+          select: {
+            id: true,
+            name: true,
+            barcode: true,
+            currentStock: true,
+          },
+        },
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return movements.map((m) => this.toMovementResponse(m));
   }
 }

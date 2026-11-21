@@ -1,56 +1,27 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
-import { Product, ProductDocument } from '../products/schemas/product.schema';
-import {
-  StockMovement,
-  StockMovementDocument,
-} from '../stock-movements/schemas/stock-movement.schema';
+import { Prisma } from '@prisma/client';
+import { PrismaService } from '../prisma/prisma.service';
 import { MovementType } from '../common/enums/movement-type.enum';
-
-interface DashboardProductSummary {
-  _id: Types.ObjectId;
-  name: string;
-  dayPrice?: number;
-}
-
-interface PopulatedDashboardMovement {
-  _id: Types.ObjectId;
-  productId?: DashboardProductSummary | null;
-  type: MovementType;
-  quantity: number;
-  createdAt: Date;
-}
 
 @Injectable()
 export class DashboardService {
-  constructor(
-    @InjectModel(Product.name)
-    private readonly productModel: Model<ProductDocument>,
-    @InjectModel(StockMovement.name)
-    private readonly movementModel: Model<StockMovementDocument>,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async getMetrics(tenantId?: string) {
-    const productFilter: Record<string, unknown> = { isActive: true };
-    const movementTenantFilter: Record<string, unknown> = {};
+    const productFilter: Prisma.ProductWhereInput = {
+      isActive: true,
+      ...(tenantId
+        ? { OR: [{ tenantId }, { tenantId: null }] }
+        : { tenantId: null }),
+    };
 
-    if (tenantId && Types.ObjectId.isValid(tenantId)) {
-      productFilter.$or = [
-        { tenantId: new Types.ObjectId(tenantId) },
-        { tenantId: null },
-      ];
-      movementTenantFilter.$or = [
-        { tenantId: new Types.ObjectId(tenantId) },
-        { tenantId: null },
-      ];
-    } else {
-      // Modo visitante/demonstração: exibe apenas os dados do template público (sem vazar dados de outros bares)
-      productFilter.tenantId = null;
-      movementTenantFilter.tenantId = null;
-    }
+    const movementTenantFilter: Prisma.StockMovementWhereInput = tenantId
+      ? { OR: [{ tenantId }, { tenantId: null }] }
+      : { tenantId: null };
 
-    const allProducts = await this.productModel.find(productFilter).exec();
+    const allProducts = await this.prisma.product.findMany({
+      where: productFilter,
+    });
     const totalProducts = allProducts.length;
 
     let stockValue = 0;
@@ -73,41 +44,45 @@ export class DashboardService {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    const recentLosses = (await this.movementModel
-      .find({
-        type: MovementType.PERDA,
-        createdAt: { $gte: thirtyDaysAgo },
+    const recentLosses = await this.prisma.stockMovement.findMany({
+      where: {
         ...movementTenantFilter,
-      })
-      .populate('productId', 'name costPrice')
-      .exec()) as unknown as {
-      productId?: { costPrice?: number };
-      quantity: number;
-    }[];
+        type: MovementType.PERDA,
+        createdAt: { gte: thirtyDaysAgo },
+      },
+      include: {
+        product: {
+          select: { name: true, costPrice: true },
+        },
+      },
+    });
 
     let monthlyLossValue = 0;
     recentLosses.forEach((loss) => {
-      const cost = loss.productId?.costPrice ?? 0;
+      const cost = loss.product?.costPrice ?? 0;
       monthlyLossValue += cost * loss.quantity;
     });
 
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    const recentSales = (await this.movementModel
-      .find({
-        type: MovementType.SAIDA,
-        createdAt: { $gte: sevenDaysAgo },
+    const recentSales = await this.prisma.stockMovement.findMany({
+      where: {
         ...movementTenantFilter,
-      })
-      .populate('productId', 'name dayPrice')
-      .exec()) as unknown as PopulatedDashboardMovement[];
+        type: MovementType.SAIDA,
+        createdAt: { gte: sevenDaysAgo },
+      },
+      include: {
+        product: {
+          select: { name: true, dayPrice: true },
+        },
+      },
+    });
 
     let totalRevenue = 0;
     const daysMap: Record<string, number> = {};
     const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
-    // Inicializa os últimos 7 dias com zero
     for (let i = 6; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);
@@ -116,8 +91,8 @@ export class DashboardService {
     }
 
     recentSales.forEach((mov) => {
-      if (mov.productId) {
-        const price = mov.productId.dayPrice ?? 0;
+      if (mov.product) {
+        const price = mov.product.dayPrice ?? 0;
         const total = price * mov.quantity;
         totalRevenue += total;
 
@@ -133,11 +108,14 @@ export class DashboardService {
       vendas: Number(vendas.toFixed(2)),
     }));
 
-    const totalMovementsCount =
-      await this.movementModel.countDocuments(movementTenantFilter);
-    const totalLossesCount = await this.movementModel.countDocuments({
-      type: MovementType.PERDA,
-      ...movementTenantFilter,
+    const totalMovementsCount = await this.prisma.stockMovement.count({
+      where: movementTenantFilter,
+    });
+    const totalLossesCount = await this.prisma.stockMovement.count({
+      where: {
+        ...movementTenantFilter,
+        type: MovementType.PERDA,
+      },
     });
 
     const lossRate =

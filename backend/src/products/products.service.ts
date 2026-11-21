@@ -1,12 +1,11 @@
 import {
   Injectable,
   NotFoundException,
-  BadRequestException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
-import { Product, ProductDocument } from './schemas/product.schema';
+import { Prisma } from '@prisma/client';
+import { PrismaService } from '../prisma/prisma.service';
+import { Product } from './schemas/product.schema';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { CategoriesService } from '../categories/categories.service';
@@ -14,88 +13,127 @@ import { CategoriesService } from '../categories/categories.service';
 @Injectable()
 export class ProductsService {
   constructor(
-    @InjectModel(Product.name)
-    private readonly productModel: Model<ProductDocument>,
+    private readonly prisma: PrismaService,
     private readonly categoriesService: CategoriesService,
   ) {}
 
-  private async resolveCategoryObjectId(
+  private toProduct(record: {
+    id: string;
+    name: string;
+    tenantId: string | null;
+    brand: string | null;
+    barcode: string | null;
+    categoryId: string | null;
+    category?: {
+      id: string;
+      name: string;
+      tenantId: string | null;
+      description: string | null;
+      isActive: boolean;
+    } | null;
+    dayPrice: number;
+    nightPrice: number;
+    eventPrice: number;
+    costPrice: number;
+    currentStock: number;
+    minStock: number;
+    unit: string;
+    isActive: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+  }): Product {
+    return {
+      ...record,
+      _id: record.id,
+      category: record.category
+        ? { ...record.category, _id: record.category.id }
+        : null,
+    };
+  }
+
+  private async resolveCategoryId(
     categoryInput: string | undefined,
     tenantId?: string,
-  ): Promise<Types.ObjectId | null> {
+  ): Promise<string | null> {
     if (!categoryInput || !categoryInput.trim()) {
       return null;
     }
 
     const trimmed = categoryInput.trim();
-    if (Types.ObjectId.isValid(trimmed)) {
+    const existingById = await this.prisma.category.findUnique({
+      where: { id: trimmed },
+    });
+
+    if (existingById && existingById.isActive) {
       await this.categoriesService.findOne(trimmed, tenantId);
-      return new Types.ObjectId(trimmed);
+      return existingById.id;
     }
 
     const categoryDoc = await this.categoriesService.findOrCreateByName(
       trimmed,
       tenantId,
     );
-    return categoryDoc._id;
+    return categoryDoc.id;
   }
 
   async create(createProductDto: CreateProductDto): Promise<Product> {
-    const resolvedCategoryId = await this.resolveCategoryObjectId(
+    const resolvedCategoryId = await this.resolveCategoryId(
       createProductDto.category,
       createProductDto.tenantId,
     );
 
-    const resolvedTenantId =
-      createProductDto.tenantId &&
-      Types.ObjectId.isValid(createProductDto.tenantId)
-        ? new Types.ObjectId(createProductDto.tenantId)
-        : null;
-
-    const createdProduct = new this.productModel({
-      ...createProductDto,
-      category: resolvedCategoryId,
-      tenantId: resolvedTenantId,
+    const created = await this.prisma.product.create({
+      data: {
+        name: createProductDto.name.trim(),
+        brand: createProductDto.brand?.trim() ?? null,
+        barcode: createProductDto.barcode?.trim() ?? null,
+        tenantId: createProductDto.tenantId ?? null,
+        categoryId: resolvedCategoryId,
+        dayPrice: createProductDto.dayPrice,
+        nightPrice: createProductDto.nightPrice ?? 0,
+        eventPrice: createProductDto.eventPrice ?? 0,
+        costPrice: createProductDto.costPrice ?? 0,
+        currentStock: createProductDto.currentStock,
+        minStock: createProductDto.minStock ?? 5,
+        unit: createProductDto.unit?.trim() || 'un',
+        isActive: true,
+      },
+      include: { category: true },
     });
-    const saved = await createdProduct.save();
-    return saved.populate('category');
+
+    return this.toProduct(created);
   }
 
   async findAll(tenantId?: string): Promise<Product[]> {
-    const filter: Record<string, unknown> = { isActive: true };
-    if (tenantId && Types.ObjectId.isValid(tenantId)) {
-      filter.$or = [
-        { tenantId: new Types.ObjectId(tenantId) },
-        { tenantId: null },
-      ];
-    } else {
-      // Isolamento de segurança: visitante não autenticado acessa apenas itens modelo (demo)
-      filter.tenantId = null;
-    }
+    const whereFilter: Prisma.ProductWhereInput = {
+      isActive: true,
+      ...(tenantId
+        ? { OR: [{ tenantId }, { tenantId: null }] }
+        : { tenantId: null }),
+    };
 
-    return this.productModel
-      .find(filter)
-      .populate('category')
-      .sort({ name: 1 })
-      .exec();
+    const products = await this.prisma.product.findMany({
+      where: whereFilter,
+      include: { category: true },
+      orderBy: { name: 'asc' },
+    });
+
+    return products.map((p) => this.toProduct(p));
   }
 
   async getReplenishmentList(tenantId?: string) {
-    const filter: Record<string, unknown> = { isActive: true };
-    if (tenantId && Types.ObjectId.isValid(tenantId)) {
-      filter.$or = [
-        { tenantId: new Types.ObjectId(tenantId) },
-        { tenantId: null },
-      ];
-    } else {
-      filter.tenantId = null;
-    }
+    const whereFilter: Prisma.ProductWhereInput = {
+      isActive: true,
+      ...(tenantId
+        ? { OR: [{ tenantId }, { tenantId: null }] }
+        : { tenantId: null }),
+    };
 
-    const products = await this.productModel
-      .find(filter)
-      .populate('category')
-      .sort({ currentStock: 1 })
-      .exec();
+    const products = await this.prisma.product.findMany({
+      where: whereFilter,
+      include: { category: true },
+      orderBy: { currentStock: 'asc' },
+    });
 
     return products.map((prod) => {
       let status: 'CRITICO' | 'ALERTA' | 'NORMAL' = 'NORMAL';
@@ -109,11 +147,10 @@ export class ProductsService {
       }
 
       const suggestedOrder = Math.max(0, prod.minStock * 2 - prod.currentStock);
-      const categoryName =
-        (prod.category as unknown as { name?: string })?.name || 'Geral';
+      const categoryName = prod.category?.name || 'Geral';
 
       return {
-        id: prod._id.toString(),
+        id: prod.id,
         name: prod.name,
         brand: prod.brand || '',
         category: categoryName,
@@ -135,28 +172,23 @@ export class ProductsService {
   }
 
   async findOne(id: string, tenantId?: string): Promise<Product> {
-    if (!Types.ObjectId.isValid(id)) {
-      throw new BadRequestException('ID de produto inválido.');
-    }
-
-    const product = await this.productModel
-      .findById(id)
-      .populate('category')
-      .exec();
+    const product = await this.prisma.product.findUnique({
+      where: { id },
+      include: { category: true },
+    });
 
     if (!product || !product.isActive) {
       throw new NotFoundException(`Produto com ID ${id} não encontrado.`);
     }
 
-    // Validação estrita de Tenant: produtos privados exigem autenticação do respectivo tenant
     if (
       product.tenantId &&
-      (!tenantId || product.tenantId.toString() !== tenantId)
+      (!tenantId || product.tenantId !== tenantId)
     ) {
       throw new UnauthorizedException('Acesso não autorizado a este produto.');
     }
 
-    return product;
+    return this.toProduct(product);
   }
 
   async update(
@@ -165,46 +197,73 @@ export class ProductsService {
     tenantId?: string,
     isAdmin = false,
   ): Promise<Product> {
-    if (!Types.ObjectId.isValid(id)) {
-      throw new BadRequestException('ID de produto inválido.');
-    }
-
-    const existingProduct = await this.productModel.findById(id).exec();
+    const existingProduct = await this.prisma.product.findUnique({
+      where: { id },
+    });
     if (!existingProduct || !existingProduct.isActive) {
       throw new NotFoundException(`Produto com ID ${id} não encontrado.`);
     }
 
-    // Verificação de autorização multi-tenant (protege também itens globais com tenantId: null contra alteração por tenants comuns)
     if (
       !isAdmin &&
       (!existingProduct.tenantId ||
         !tenantId ||
-        existingProduct.tenantId.toString() !== tenantId)
+        existingProduct.tenantId !== tenantId)
     ) {
       throw new UnauthorizedException(
         'Você não tem permissão para editar este produto.',
       );
     }
 
-    const updatePayload: Record<string, unknown> = { ...updateProductDto };
-
-    if (updateProductDto.category) {
-      updatePayload.category = await this.resolveCategoryObjectId(
+    let resolvedCategoryId: string | null | undefined = undefined;
+    if (updateProductDto.category !== undefined) {
+      resolvedCategoryId = await this.resolveCategoryId(
         updateProductDto.category,
         tenantId,
       );
     }
 
-    const updatedProduct = await this.productModel
-      .findByIdAndUpdate(id, updatePayload, { new: true })
-      .populate('category')
-      .exec();
+    const updatedProduct = await this.prisma.product.update({
+      where: { id },
+      data: {
+        ...(updateProductDto.name !== undefined
+          ? { name: updateProductDto.name.trim() }
+          : {}),
+        ...(updateProductDto.brand !== undefined
+          ? { brand: updateProductDto.brand }
+          : {}),
+        ...(updateProductDto.barcode !== undefined
+          ? { barcode: updateProductDto.barcode }
+          : {}),
+        ...(resolvedCategoryId !== undefined
+          ? { categoryId: resolvedCategoryId }
+          : {}),
+        ...(updateProductDto.dayPrice !== undefined
+          ? { dayPrice: updateProductDto.dayPrice }
+          : {}),
+        ...(updateProductDto.nightPrice !== undefined
+          ? { nightPrice: updateProductDto.nightPrice }
+          : {}),
+        ...(updateProductDto.eventPrice !== undefined
+          ? { eventPrice: updateProductDto.eventPrice }
+          : {}),
+        ...(updateProductDto.costPrice !== undefined
+          ? { costPrice: updateProductDto.costPrice }
+          : {}),
+        ...(updateProductDto.currentStock !== undefined
+          ? { currentStock: updateProductDto.currentStock }
+          : {}),
+        ...(updateProductDto.minStock !== undefined
+          ? { minStock: updateProductDto.minStock }
+          : {}),
+        ...(updateProductDto.unit !== undefined
+          ? { unit: updateProductDto.unit }
+          : {}),
+      },
+      include: { category: true },
+    });
 
-    if (!updatedProduct) {
-      throw new NotFoundException(`Produto com ID ${id} não encontrado.`);
-    }
-
-    return updatedProduct;
+    return this.toProduct(updatedProduct);
   }
 
   async remove(
@@ -212,11 +271,9 @@ export class ProductsService {
     tenantId?: string,
     isAdmin = false,
   ): Promise<{ message: string }> {
-    if (!Types.ObjectId.isValid(id)) {
-      throw new BadRequestException('ID de produto inválido.');
-    }
-
-    const existingProduct = await this.productModel.findById(id).exec();
+    const existingProduct = await this.prisma.product.findUnique({
+      where: { id },
+    });
     if (!existingProduct || !existingProduct.isActive) {
       throw new NotFoundException(`Produto com ID ${id} não encontrado.`);
     }
@@ -225,41 +282,25 @@ export class ProductsService {
       !isAdmin &&
       (!existingProduct.tenantId ||
         !tenantId ||
-        existingProduct.tenantId.toString() !== tenantId)
+        existingProduct.tenantId !== tenantId)
     ) {
       throw new UnauthorizedException(
         'Você não tem permissão para remover este produto.',
       );
     }
 
-    await this.productModel.findByIdAndUpdate(
-      id,
-      { isActive: false },
-      { new: true },
-    );
+    await this.prisma.product.update({
+      where: { id },
+      data: { isActive: false },
+    });
 
     return { message: 'Produto desativado com sucesso.' };
   }
 
   async findLowStock(tenantId?: string): Promise<Product[]> {
-    const filter: Record<string, unknown> = {
-      isActive: true,
-      $expr: { $lte: ['$currentStock', '$minStock'] },
-    };
-
-    if (tenantId && Types.ObjectId.isValid(tenantId)) {
-      filter.$or = [
-        { tenantId: new Types.ObjectId(tenantId) },
-        { tenantId: null },
-      ];
-    } else {
-      filter.tenantId = null;
-    }
-
-    return this.productModel
-      .find(filter)
-      .populate('category')
-      .sort({ currentStock: 1 })
-      .exec();
+    const allActive = await this.findAll(tenantId);
+    return allActive
+      .filter((p) => p.currentStock <= p.minStock)
+      .sort((a, b) => a.currentStock - b.currentStock);
   }
 }

@@ -3,17 +3,53 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
-    @apply bg-[#FAF6F0] text-[#2C221E] font-sans;
+    @apply bg-[#FAF6F0] text-[#2C221E] font-sans antialiased;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 
-  input, select, textarea, button {
+  input,
+  select,
+  textarea,
+  button {
     @apply font-sans;
   }
 }
 
-/* Scrollbar refinada e discreta com paleta MeuBotequim */
+@keyframes sarab-marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-sarab-marquee {
+  display: flex;
+  width: max-content;
+  animation: sarab-marquee 28s linear infinite;
+}
+
+.animate-sarab-marquee:hover {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .animate-sarab-marquee {
+    animation: none;
+  }
+}
+
+/* Scrollbar refinada com paleta MeuBotequim / Sarab */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -24,10 +60,10 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #EFE8DE;
-  border-radius: 3px;
+  background: #C87A5B;
+  border-radius: 6px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #DDA76A;
+  background: #B2684B;
 }

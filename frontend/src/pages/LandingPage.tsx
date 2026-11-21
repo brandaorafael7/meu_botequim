@@ -1,30 +1,372 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  Sparkles,
-  AlertTriangle,
-  CheckCircle2,
-  Clock,
-  ArrowRight,
-  ChevronRight,
-  Check,
-  ShieldCheck,
-  DollarSign,
-  TrendingDown,
-  CalendarCheck,
+  Phone,
+  Mail,
+  MapPin,
+  Flame,
+  Search,
   ShoppingBag,
+  Utensils,
+  Star,
+  Play,
+  Clock,
+  Heart,
+  Plus,
+  X,
+  Check,
+  Award,
+  Leaf,
   Zap,
-  LogIn,
+  CalendarCheck,
+  Users,
+  ChevronLeft,
+  ChevronRight,
+  Send,
+  Lock,
+  MessageSquare,
   Store,
-  ChevronDown,
+  LogIn,
+  Menu,
+  ArrowRight,
+  Sparkles,
+  Minus,
 } from 'lucide-react';
 import { AuthModal } from '../components/meubotequim/AuthModal';
-import { BlipChatWidget } from '../components/BlipChatWidget';
+import { BlipChatWidget, openBlipChatWidget } from '../components/BlipChatWidget';
 
 interface LandingPageProps {
   onNavigateToDashboard: () => void;
   isAuthenticated: boolean;
   onLogout?: () => void;
 }
+
+interface MenuItem {
+  id: string;
+  title: string;
+  categoryKey: string;
+  categoryLabel: string;
+  priceDay: number;
+  priceNight: number;
+  oldPrice?: number;
+  rating: string;
+  reviewsCount: number;
+  stockCount: number;
+  unit: string;
+  prepTimeMinutes: number;
+  caloriesOrAbv: string;
+  badge?: {
+    text: string;
+    variant: 'hot' | 'new' | 'primary';
+  };
+  image: string;
+  shortDesc: string;
+  fullDesc: string;
+  tags: string[];
+}
+
+interface GalleryItem {
+  id: number;
+  title: string;
+  subtitle: string;
+  description: string;
+  image: string;
+}
+
+const SARAB_BASE_IMG = 'https://preview.themewagon.com/sarab/img';
+
+const CATEGORIES = [
+  {
+    key: 'all',
+    name: 'Todos os Itens',
+    count: '36 SKUs',
+    image: `${SARAB_BASE_IMG}/category/1.jpg`,
+  },
+  {
+    key: 'chopp',
+    name: 'Chopp & Cervejas',
+    count: '12 itens',
+    image: `${SARAB_BASE_IMG}/category/2.jpg`,
+  },
+  {
+    key: 'porcoes',
+    name: 'Porções & Burgers',
+    count: '9 itens',
+    image: `${SARAB_BASE_IMG}/category/3.jpg`,
+  },
+  {
+    key: 'frango',
+    name: 'Petiscos & Crocantes',
+    count: '6 itens',
+    image: `${SARAB_BASE_IMG}/category/4.jpg`,
+  },
+  {
+    key: 'destilados',
+    name: 'Drinks & Destilados',
+    count: '5 itens',
+    image: `${SARAB_BASE_IMG}/category/5.jpg`,
+  },
+  {
+    key: 'sobremesas',
+    name: 'Sobremesas & Café',
+    count: '4 itens',
+    image: `${SARAB_BASE_IMG}/category/6.jpg`,
+  },
+];
+
+const MENU_ITEMS: MenuItem[] = [
+  {
+    id: 'item-1',
+    title: 'Combo Smash Botequim + Chopp Pilsen',
+    categoryKey: 'porcoes',
+    categoryLabel: 'Porções & Burgers',
+    priceDay: 38.9,
+    priceNight: 44.9,
+    oldPrice: 48.0,
+    rating: '4.9',
+    reviewsCount: 142,
+    stockCount: 28,
+    unit: 'combos',
+    prepTimeMinutes: 12,
+    caloriesOrAbv: '620 kcal',
+    badge: { text: 'Mais Pedido', variant: 'hot' },
+    image: `${SARAB_BASE_IMG}/menu/1.jpg`,
+    shortDesc:
+      'Blend duplo smash na brasa, cheddar inglês, cebola caramelizada no chopp escuro e pão brioche.',
+    fullDesc:
+      'Hambúrguer artesanal duplo prensado na chapa com crosta caramelizada, queijo cheddar maturado, picles da casa e molho defumado do botequim. Sincronizado com baixa automática de insumos no estoque.',
+    tags: ['Giro Alto', 'Chapa', 'Ficha Técnica Ativa'],
+  },
+  {
+    id: 'item-2',
+    title: 'Pizza Artesanal Margherita Royale',
+    categoryKey: 'porcoes',
+    categoryLabel: 'Porções & Burgers',
+    priceDay: 54.0,
+    priceNight: 62.0,
+    oldPrice: 68.0,
+    rating: '4.8',
+    reviewsCount: 98,
+    stockCount: 16,
+    unit: 'discos',
+    prepTimeMinutes: 15,
+    caloriesOrAbv: '480 kcal',
+    badge: { text: 'Forno a Lenha', variant: 'new' },
+    image: `${SARAB_BASE_IMG}/menu/2.jpg`,
+    shortDesc:
+      'Massa de fermentação natural 48h, molho San Marzano, muçarela de búfala fresca e manjericão.',
+    fullDesc:
+      'Assada a 450 graus no forno de pedra para borda aerada e crocante. Ideal para compartilhar no balcão acompanhada de cervejas artesanais ou vinho tinto.',
+    tags: ['Fermentação 48h', 'Para Compartilhar', 'Vegetariano'],
+  },
+  {
+    id: 'item-3',
+    title: 'Frango Crocante Nashville & Mel Picante',
+    categoryKey: 'frango',
+    categoryLabel: 'Petiscos & Crocantes',
+    priceDay: 34.5,
+    priceNight: 39.9,
+    oldPrice: 42.0,
+    rating: '5.0',
+    reviewsCount: 215,
+    stockCount: 22,
+    unit: 'porções',
+    prepTimeMinutes: 10,
+    caloriesOrAbv: '710 kcal',
+    badge: { text: 'Campeão de Giro', variant: 'primary' },
+    image: `${SARAB_BASE_IMG}/menu/3.jpg`,
+    shortDesc:
+      'Sobrecoxa marinada em 15 especiarias, empanamento extra crocante, mel picante e picles.',
+    fullDesc:
+      'Porção generosa de frango frito estilo Nashville com toque de páprica defumada e mel de engenho. O petisco de maior saída nas sextas e sábados à noite.',
+    tags: ['Picante', 'Tira-Gosto', 'Alta Margem'],
+  },
+  {
+    id: 'item-4',
+    title: 'Chopp Pilsen 50L & Heineken Long Neck',
+    categoryKey: 'chopp',
+    categoryLabel: 'Chopp & Cervejas',
+    priceDay: 12.0,
+    priceNight: 15.0,
+    oldPrice: 16.5,
+    rating: '4.9',
+    reviewsCount: 310,
+    stockCount: 64,
+    unit: 'un / caldeireta',
+    prepTimeMinutes: 2,
+    caloriesOrAbv: '5.0% ABV',
+    badge: { text: 'Gelada -2°C', variant: 'hot' },
+    image: `${SARAB_BASE_IMG}/menu/4.jpg`,
+    shortDesc:
+      'Tiragem perfeita com colarinho cremoso a -2°C e garrafas long neck 330ml trincando no balcão.',
+    fullDesc:
+      'Monitoramento de barris e garrafas com alerta de ruptura antes do fim de semana e tarifa noturna automática pós-meia-noite.',
+    tags: ['Serpentina Gelada', 'Tarifa Noturna', 'Curva A'],
+  },
+  {
+    id: 'item-5',
+    title: 'Petit Gâteau de Nutella & Sorvete Artesanal',
+    categoryKey: 'sobremesas',
+    categoryLabel: 'Sobremesas & Café',
+    priceDay: 26.0,
+    priceNight: 29.0,
+    oldPrice: 32.0,
+    rating: '4.9',
+    reviewsCount: 64,
+    stockCount: 14,
+    unit: 'unidades',
+    prepTimeMinutes: 8,
+    caloriesOrAbv: '390 kcal',
+    badge: { text: 'Novo', variant: 'new' },
+    image: `${SARAB_BASE_IMG}/menu/5.jpg`,
+    shortDesc:
+      'Bolo quente de chocolate belga com centro cremoso de avelã, sorvete de baunilha e caramelo salgado.',
+    fullDesc:
+      'Fechamento perfeito para jantares e encontros no gastrobar, preparado na hora com controle individual de porcionamento.',
+    tags: ['Chocolate Belga', 'Sobremesa', 'Feito na Hora'],
+  },
+  {
+    id: 'item-6',
+    title: 'Gin Tanqueray Tonic & Especiarias Botânicas',
+    categoryKey: 'destilados',
+    categoryLabel: 'Drinks & Destilados',
+    priceDay: 32.0,
+    priceNight: 38.0,
+    rating: '4.9',
+    reviewsCount: 118,
+    stockCount: 19,
+    unit: 'doses / taças',
+    prepTimeMinutes: 4,
+    caloriesOrAbv: '47.3% ABV',
+    badge: { text: 'Signature Drink', variant: 'hot' },
+    image: `${SARAB_BASE_IMG}/menu/6.jpg`,
+    shortDesc:
+      'Dose dupla medida no dosador (60ml), água tônica Antarctica bem gelada, zimbro, alecrim e limão taiti.',
+    fullDesc:
+      'Cada taça desconta automaticamente 60ml da garrafa de Gin Tanqueray 750ml, 1 lata de tônica e 50g de limão taiti na ficha técnica do MeuBotequim.',
+    tags: ['Coquetelaria', 'Balanço Cego', 'Destilado Premium'],
+  },
+];
+
+const GALLERY_ITEMS: GalleryItem[] = [
+  {
+    id: 0,
+    title: 'Balcão & Chapa Artesanal',
+    subtitle: 'Padrão de Qualidade em Cada Turno',
+    description:
+      'Integração total entre a saída da cozinha, o consumo de insumos e o controle de estoque em tempo real no MeuBotequim.',
+    image: `${SARAB_BASE_IMG}/portfolio/work1.jpg`,
+  },
+  {
+    id: 1,
+    title: 'Forno & Petiscos de Alta Rotatividade',
+    subtitle: 'Previsão de Demanda para Sexta e Sábado',
+    description:
+      'Saiba na quinta-feira exatamente quantos quilos de insumos e caixas de cerveja pedir para não sofrer ruptura no pico.',
+    image: `${SARAB_BASE_IMG}/portfolio/work2.jpg`,
+  },
+  {
+    id: 2,
+    title: 'Porções Campeãs de Venda',
+    subtitle: 'Ficha Técnica com Margem Calculada',
+    description:
+      'Acompanhe o custo de cada porção e ajuste preços diurnos e noturnos com 2 cliques direto pelo celular.',
+    image: `${SARAB_BASE_IMG}/portfolio/work3.jpg`,
+  },
+  {
+    id: 3,
+    title: 'Sobremesas & Fechamento de Comanda',
+    subtitle: 'Zero Desperdício de Validade',
+    description:
+      'Controle rigoroso de validade, perdas e avarias na troca de turno da equipe.',
+    image: `${SARAB_BASE_IMG}/portfolio/work4.jpg`,
+  },
+  {
+    id: 4,
+    title: 'Drinks, Coquetéis & Atendimento Blip IA',
+    subtitle: 'Cardápio Conectado ao WhatsApp / Blip Chat',
+    description:
+      'Seu cliente pergunta no chat se tem a bebida ou prato disponível e a IA consulta o MongoDB do bar na hora.',
+    image: `${SARAB_BASE_IMG}/portfolio/work5.jpg`,
+  },
+];
+
+const TIMELINE_STEPS = [
+  {
+    year: 'Passo 01',
+    title: 'Entrada Rápida de Mercadorias & Notas',
+    description:
+      'Chegou o caminhão da Ambev, Heineken ou distribuidora? Lance barris, fardos e insumos pelo celular em menos de 30 segundos.',
+  },
+  {
+    year: 'Passo 02',
+    title: 'Atendimento Inteligente Blip Chat + Gemini IA',
+    description:
+      'Clientes consultam preços diurnos/noturnos e disponibilidade real no chat. O bot executa Function Calling direto no estoque do MongoDB.',
+  },
+  {
+    year: 'Passo 03',
+    title: 'Balanço Cego de Balcão em 3 Minutos',
+    description:
+      'Na virada de turno, o bartender informa a contagem física sem ver o saldo esperado no sistema, eliminando contagens viciadas e desvios.',
+  },
+  {
+    year: 'Passo 04',
+    title: 'Lista de Compras Pronta para o WhatsApp',
+    description:
+      'O sistema identifica os itens em nível crítico para o fim de semana e gera a mensagem formatada para enviar direto ao fornecedor.',
+  },
+];
+
+const TEAM_ROLES = [
+  {
+    name: 'João Felipe',
+    role: 'Proprietário / Dono',
+    experience: 'Visão de Lucro, DRE & Custos',
+    image: `${SARAB_BASE_IMG}/chefs/1.jpg`,
+  },
+  {
+    name: 'Marcos Oliveira',
+    role: 'Gerente Operacional',
+    experience: 'Compras, Entradas & Fornecedores',
+    image: `${SARAB_BASE_IMG}/chefs/2.jpg`,
+  },
+  {
+    name: 'Lucas Ribeiro',
+    role: 'Chefe de Bar & Balcão',
+    experience: 'Balanço Cego & Sangria de Chopp',
+    image: `${SARAB_BASE_IMG}/chefs/3.jpg`,
+  },
+  {
+    name: 'Concierge Blip IA',
+    role: 'Atendente Virtual 24h',
+    experience: 'Consulta Estoque & Transbordo Humano',
+    image: `${SARAB_BASE_IMG}/chefs/4.jpg`,
+  },
+];
+
+const TESTIMONIALS = [
+  {
+    name: 'Mônica Wilber',
+    role: 'Sócia do Boteco da Vila',
+    avatar: `${SARAB_BASE_IMG}/testimonial/1.jpg`,
+    quote:
+      'Antes do MeuBotequim a gente perdia quase 2 barris de chopp por mês sem saber se era espuma, vazamento ou desvio. O balanço cego em 3 minutos mudou nossa rotina.',
+  },
+  {
+    name: 'Ricardo Camargo',
+    role: 'Fundador da Choperia Artesanal',
+    avatar: `${SARAB_BASE_IMG}/testimonial/2.jpg`,
+    quote:
+      'A função de Preço Noturno pós-meia-noite aumentou nossa margem nas sextas e sábados sem precisar trocar cardápio impresso. E o bot da Blip já responde os clientes com o valor certo.',
+  },
+  {
+    name: 'Priya Almeida',
+    role: 'Gerente de Gastrobar',
+    avatar: `${SARAB_BASE_IMG}/testimonial/3.jpg`,
+    quote:
+      'A lista de compras integrada ao WhatsApp economiza 2 horas toda quinta-feira. Em 2 cliques eu mando o pedido exato para a distribuidora antes do pico do fim de semana.',
+  },
+];
 
 export const LandingPage: React.FC<LandingPageProps> = ({
   onNavigateToDashboard,
@@ -33,8 +375,84 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 }) => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('register');
-  const [isAnnual, setIsAnnual] = useState(false);
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [activeNavSection, setActiveNavSection] = useState<string>('hero');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  // Search Overlay state (Sarab FIX 1)
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Menu Category filter & Detail Modal state (Sarab FIX 3 & FIX 4)
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [likedIds, setLikedIds] = useState<Set<string>>(() => new Set(['item-1', 'item-4']));
+  const [detailItem, setDetailItem] = useState<MenuItem | null>(null);
+  const [detailQty, setDetailQty] = useState<number>(1);
+
+  // Gallery Lightbox Popup state (Sarab FIX 7)
+  const [activeGalleryIndex, setActiveGalleryIndex] = useState<number | null>(null);
+
+  // Countdown Timer state (Sarab Special Offer section)
+  const [countdown, setCountdown] = useState({ hours: 6, minutes: 42, seconds: 19 });
+
+  // Pricing switch in Hours & Plans section
+  const [isAnnualPlan, setIsAnnualPlan] = useState(false);
+
+  // Reservation / Demo Booking form state (Sarab Reservation section)
+  const [resForm, setResForm] = useState({
+    fullName: '',
+    phone: '',
+    email: '',
+    barSize: 'Bar Médio (50 a 150 lugares)',
+    date: '',
+    time: '19:00',
+    notes: '',
+  });
+  const [resSubmitted, setResSubmitted] = useState(false);
+
+  // Newsletter state
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [newsletterSubmitted, setNewsletterSubmitted] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => {
+      setIsScrolled(window.scrollY > 30);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  // Countdown tick
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setCountdown((prev) => {
+        if (prev.seconds > 0) {
+          return { ...prev, seconds: prev.seconds - 1 };
+        }
+        if (prev.minutes > 0) {
+          return { ...prev, minutes: prev.minutes - 1, seconds: 59 };
+        }
+        if (prev.hours > 0) {
+          return { hours: prev.hours - 1, minutes: 59, seconds: 59 };
+        }
+        return { hours: 8, minutes: 45, seconds: 30 };
+      });
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  // Keyboard Escape handler for overlays/modals
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsSearchOpen(false);
+        setDetailItem(null);
+        setActiveGalleryIndex(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const handleOpenAuth = (mode: 'login' | 'register') => {
     setAuthModalMode(mode);
@@ -46,103 +464,197 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     onNavigateToDashboard();
   };
 
-  return (
-    <div className="min-h-screen bg-[#FAF6F0] text-[#2C221E] font-sans selection:bg-[#C87A5B]/20 selection:text-[#2C221E] relative overflow-x-hidden">
-      {/* Luz ambiente superior suave com a paleta terracota/areia do MeuBotequim */}
-      <div
-        className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 h-[550px] w-[850px] -z-10 rounded-full blur-[130px] opacity-60"
-        style={{
-          background:
-            'radial-gradient(circle, rgba(200, 122, 91, 0.16) 0%, rgba(221, 167, 106, 0.10) 40%, transparent 70%)',
-        }}
-      />
+  const handleCategorySelect = (catKey: string, shouldScroll = false) => {
+    setSelectedCategory(catKey);
+    if (shouldScroll) {
+      const el = document.getElementById('menu');
+      el?.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
-      {/* 1. Header / Navbar Flutuante em Pílula (Estilo Automark com Cores MeuBotequim) */}
-      <header className="fixed top-0 left-0 right-0 z-50 px-4 py-4 sm:px-6 lg:px-8">
-        <nav className="mx-auto max-w-7xl flex items-center justify-between rounded-full border border-[#EFE8DE] bg-[#FFFFFF]/90 px-4 py-2.5 backdrop-blur-md shadow-soft-md transition-all">
-          {/* Logo Oficial MeuBotequim */}
-          <div
-            className="flex items-center gap-2.5 pl-1 cursor-pointer"
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+  const toggleLike = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setLikedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const filteredMenuItems = MENU_ITEMS.filter((item) => {
+    const matchesCat =
+      selectedCategory === 'all' || item.categoryKey === selectedCategory;
+    const matchesQuery =
+      !searchQuery.trim() ||
+      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.shortDesc.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.categoryLabel.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCat && matchesQuery;
+  });
+
+  const handleSearchApply = (term?: string, catKey?: string) => {
+    if (term !== undefined) {
+      setSearchQuery(term);
+    }
+    if (catKey !== undefined) {
+      setSelectedCategory(catKey);
+    }
+    setIsSearchOpen(false);
+    const menuEl = document.getElementById('menu');
+    menuEl?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const handleReservationSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resForm.fullName.trim() || !resForm.phone.trim()) {
+      return;
+    }
+    setResSubmitted(true);
+    setTimeout(() => {
+      setResSubmitted(false);
+    }, 6000);
+  };
+
+  return (
+    <div className="min-h-dvh bg-[#FAF6F0] text-[#2C221E] font-sans selection:bg-[#C87A5B]/20 selection:text-[#2C221E] relative overflow-x-hidden">
+      {/* ============================================================
+          1. TOP BAR (Sarab #topbar style)
+          ============================================================ */}
+      <div
+        id="topbar"
+        className="bg-[#161210] text-stone-300 py-2 px-4 sm:px-6 lg:px-8 text-xs border-b border-white/10"
+      >
+        <div className="mx-auto max-w-7xl flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center gap-4 sm:gap-6">
+            <span className="inline-flex items-center gap-1.5">
+              <Phone className="h-3.5 w-3.5 text-[#DDA76A]" />
+              <span>(11) 98765-4321</span>
+            </span>
+            <span className="hidden sm:inline-flex items-center gap-1.5">
+              <Mail className="h-3.5 w-3.5 text-[#DDA76A]" />
+              <span>contato@meubotequim.com.br</span>
+            </span>
+            <span className="hidden md:inline-flex items-center gap-1.5">
+              <MapPin className="h-3.5 w-3.5 text-[#DDA76A]" />
+              <span>Rua dos Boêmios, 142 - Vila Madalena, SP</span>
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3 ml-auto sm:ml-0">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#C87A5B] px-3 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white">
+              <Flame className="h-3 w-3" />
+              <span>Balanço Cego 3 min + Blip Chat IA</span>
+            </span>
+            <button
+              type="button"
+              onClick={() => openBlipChatWidget()}
+              className="hidden sm:inline-flex items-center gap-1 text-[11px] font-semibold text-[#DDA76A] hover:text-white transition-colors"
+            >
+              <MessageSquare className="h-3 w-3" />
+              <span>Chat Ao Vivo</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ============================================================
+          2. STICKY NAVBAR (Sarab #nav style + accessible aria-current)
+          ============================================================ */}
+      <header
+        id="nav"
+        className={`sticky top-0 z-50 bg-white transition-all duration-300 border-b border-[#EFE8DE] ${
+          isScrolled ? 'shadow-soft-lg py-2.5' : 'shadow-soft py-3.5'
+        }`}
+      >
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
+          {/* Brand Logo */}
+          <a
+            href="#hero"
+            onClick={() => setActiveNavSection('hero')}
+            className="flex items-center gap-3 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C87A5B] rounded-xl"
           >
-            <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl border border-[#EFE8DE] bg-[#F4EDE4] shadow-soft transition-transform hover:scale-105">
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#C87A5B] text-white shadow-soft overflow-hidden border-2 border-[#FAF6F0] transition-transform group-hover:scale-105">
               <img
                 src="/logo.png"
                 alt="MeuBotequim Logo"
                 className="h-full w-full object-cover"
               />
             </div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-lg font-black tracking-tight text-[#2C221E]">
+            <div>
+              <div className="text-xl font-black tracking-tight text-[#2C221E] leading-none">
                 Meu<span className="text-[#C87A5B]">Botequim</span>
-              </span>
-              <span className="rounded-full bg-[#FAF6F0] px-2 py-0.5 text-[10px] font-bold text-[#70625B] border border-[#EFE8DE]">
-                v2.4
-              </span>
+              </div>
+              <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#70625B] mt-1">
+                Bar, Estoque &amp; Cardápio
+              </div>
             </div>
-          </div>
+          </a>
 
-          {/* Menu Central Desktop */}
-          <ul className="hidden md:flex items-center gap-1 rounded-full bg-[#FAF6F0] border border-[#EFE8DE] px-4 py-1 text-xs font-semibold text-[#70625B]">
-            <li>
-              <a
-                href="#problemas"
-                className="px-3 py-1.5 rounded-full hover:text-[#2C221E] hover:bg-[#FFFFFF] transition-colors"
-              >
-                O Desperdício
-              </a>
-            </li>
-            <li>
-              <a
-                href="#recursos"
-                className="px-3 py-1.5 rounded-full hover:text-[#2C221E] hover:bg-[#FFFFFF] transition-colors"
-              >
-                Recursos
-              </a>
-            </li>
-            <li>
-              <a
-                href="#como-funciona"
-                className="px-3 py-1.5 rounded-full hover:text-[#2C221E] hover:bg-[#FFFFFF] transition-colors"
-              >
-                Como Funciona
-              </a>
-            </li>
-            <li>
-              <a
-                href="#planos"
-                className="px-3 py-1.5 rounded-full hover:text-[#2C221E] hover:bg-[#FFFFFF] transition-colors"
-              >
-                Planos
-              </a>
-            </li>
-            <li>
-              <a
-                href="#faq"
-                className="px-3 py-1.5 rounded-full hover:text-[#2C221E] hover:bg-[#FFFFFF] transition-colors"
-              >
-                Dúvidas
-              </a>
-            </li>
-          </ul>
+          {/* Navigation Links (Desktop) */}
+          <nav aria-label="Navegação Principal" className="hidden lg:block">
+            <ul className="flex items-center gap-1">
+              {[
+                { id: 'hero', label: 'Início' },
+                { id: 'category', label: 'Categorias' },
+                { id: 'about', label: 'O Sistema' },
+                { id: 'menu', label: 'Cardápio & Estoque' },
+                { id: 'special', label: 'Tarifa Noturna' },
+                { id: 'history', label: 'Operação' },
+                { id: 'hours', label: 'Horários & Planos' },
+                { id: 'reservation', label: 'Agendar Demo' },
+              ].map((link) => {
+                const isActive = activeNavSection === link.id;
+                return (
+                  <li key={link.id}>
+                    <a
+                      href={`#${link.id}`}
+                      aria-current={isActive ? 'page' : undefined}
+                      onClick={() => setActiveNavSection(link.id)}
+                      className={`relative px-3 py-2 text-xs font-bold transition-colors rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C87A5B] ${
+                        isActive
+                          ? 'text-[#C87A5B] after:content-[""] after:absolute after:bottom-0 after:left-3 after:right-3 after:h-[3px] after:bg-[#C87A5B] after:rounded-t-full'
+                          : 'text-[#2C221E] hover:text-[#C87A5B]'
+                      }`}
+                    >
+                      {link.label}
+                    </a>
+                  </li>
+                );
+              })}
+            </ul>
+          </nav>
 
-          {/* Ações Direitas */}
-          <div className="flex items-center gap-2.5 pr-1">
+          {/* Right Actions: Search Trigger + Auth / Dashboard CTA */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsSearchOpen(true)}
+              aria-label="Pesquisar no cardápio e estoque"
+              title="Pesquisar item no cardápio"
+              className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#EFE8DE] bg-[#FAF6F0] text-[#2C221E] hover:bg-[#C87A5B]/15 hover:text-[#C87A5B] hover:border-[#C87A5B]/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C87A5B]"
+            >
+              <Search className="h-4 w-4" />
+            </button>
+
             {isAuthenticated ? (
               <>
                 <button
                   type="button"
                   onClick={onNavigateToDashboard}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-[#C87A5B] hover:bg-[#B2684B] px-4 py-2 text-xs font-bold text-white shadow-soft transition-all active:scale-95"
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#C87A5B] hover:bg-[#B2684B] px-4 py-2.5 text-xs font-bold text-white shadow-soft transition-all active:scale-95"
                 >
                   <Store className="h-3.5 w-3.5" />
-                  <span>Acessar Painel</span>
+                  <span>Abrir Painel</span>
                 </button>
                 {onLogout && (
                   <button
                     type="button"
                     onClick={onLogout}
-                    className="text-xs text-[#70625B] hover:text-[#2C221E] px-2 py-1 transition-colors font-medium"
+                    className="hidden sm:inline-flex text-xs font-semibold text-[#70625B] hover:text-[#2C221E] px-2 py-1"
                   >
                     Sair
                   </button>
@@ -153,686 +665,1882 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <button
                   type="button"
                   onClick={() => handleOpenAuth('login')}
-                  className="hidden sm:inline-flex items-center gap-1 text-xs font-bold text-[#70625B] hover:text-[#2C221E] px-3 py-1.5 transition-colors"
+                  className="hidden sm:inline-flex items-center gap-1.5 rounded-xl border border-[#EFE8DE] bg-[#FAF6F0] hover:bg-[#EFE8DE] px-3.5 py-2.5 text-xs font-bold text-[#2C221E] transition-colors"
                 >
                   <LogIn className="h-3.5 w-3.5 text-[#C87A5B]" />
                   <span>Entrar</span>
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleOpenAuth('register')}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-[#C87A5B] hover:bg-[#B2684B] px-4 py-2 text-xs font-bold text-white shadow-soft transition-all active:scale-95"
+                  onClick={onNavigateToDashboard}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-[#C87A5B] hover:bg-[#B2684B] px-4 py-2.5 text-xs font-bold text-white shadow-soft transition-all active:scale-95"
                 >
-                  <Sparkles className="h-3.5 w-3.5" />
-                  <span>Cadastrar Meu Bar</span>
+                  <ShoppingBag className="h-3.5 w-3.5" />
+                  <span>Painel Ao Vivo</span>
                 </button>
               </>
             )}
+
+            {/* Mobile Hamburger Button */}
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-expanded={mobileMenuOpen}
+              aria-label="Abrir menu de navegação"
+              className="lg:hidden flex h-10 w-10 items-center justify-center rounded-xl border border-[#EFE8DE] bg-[#FAF6F0] text-[#2C221E]"
+            >
+              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
           </div>
-        </nav>
-      </header>
+        </div>
 
-      <main className="pt-32 pb-24 space-y-24 sm:space-y-32">
-        {/* 2. HERO SECTION ESTILO AUTOMARK NA PALETA MEUBOTEQUIM */}
-        <section className="relative px-4 sm:px-6 lg:px-8 text-center pt-6">
-          <div className="mx-auto max-w-5xl">
-            {/* Pill Tag no Topo */}
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#C87A5B]/30 bg-[#C87A5B]/10 px-4 py-1.5 text-xs font-bold text-[#C87A5B] backdrop-blur-md mb-8 animate-in fade-in slide-in-from-top-4">
-              <span className="flex h-2 w-2 rounded-full bg-[#C87A5B] animate-pulse" />
-              <span>O Fim do Estoque Furado no Final de Semana</span>
-            </div>
-
-            {/* Headline Principal */}
-            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-[#2C221E] leading-[1.15] mb-6">
-              O Sistema Inteligente de Estoque para{' '}
-              <span className="text-[#C87A5B] underline decoration-[#C87A5B]/30 underline-offset-8">
-                Bares, Botecos & Restaurantes
-              </span>
-            </h1>
-
-            {/* Subtítulo */}
-            <p className="mx-auto max-w-2xl text-sm sm:text-base lg:text-lg text-[#70625B] font-normal leading-relaxed mb-10">
-              Faça a <strong>auditoria de balcão em 3 minutos</strong>, preveja as compras de Chopp para o fim de semana e elimine o prejuízo com quebras, validade e desvios.
-            </p>
-
-            {/* Botões Principais de Ação */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 mb-12">
-              <button
-                type="button"
-                onClick={() => handleOpenAuth('register')}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-2xl bg-[#C87A5B] hover:bg-[#B2684B] px-7 py-4 text-sm font-extrabold text-white shadow-soft-lg active:scale-95 transition-all"
-              >
-                <Sparkles className="h-4 w-4" />
-                <span>Começar Grátis por 14 Dias</span>
-                <ArrowRight className="h-4 w-4" />
-              </button>
-
-              <button
-                type="button"
-                onClick={onNavigateToDashboard}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-2xl border border-[#EFE8DE] bg-[#FFFFFF] px-6 py-4 text-sm font-bold text-[#2C221E] shadow-soft hover:bg-[#FAF6F0] active:scale-95 transition-all"
-              >
-                <span>Ver Demonstração do Painel</span>
-                <ChevronRight className="h-4 w-4 text-[#70625B]" />
-              </button>
-            </div>
-
-            {/* Badges de confiança */}
-            <div className="flex flex-wrap items-center justify-center gap-6 text-xs text-[#70625B] font-medium">
-              <span className="inline-flex items-center gap-1.5">
-                <Check className="h-3.5 w-3.5 text-[#5B8A62]" />
-                Sem cartão de crédito
-              </span>
-              <span className="inline-flex items-center gap-1.5">
-                <Check className="h-3.5 w-3.5 text-[#5B8A62]" />
-                Pronto para usar em 3 minutos
-              </span>
-              <span className="inline-flex items-center gap-1.5">
-                <Check className="h-3.5 w-3.5 text-[#5B8A62]" />
-                Multi-perfil (Dono, Gerente, Balcão)
-              </span>
-            </div>
-          </div>
-
-          {/* 3. MOCKUP INTERATIVO (Janela do Sistema com Paleta MeuBotequim) */}
-          <div className="mt-14 mx-auto max-w-6xl">
-            <div className="relative rounded-3xl border border-[#EFE8DE] bg-[#FFFFFF] p-3 sm:p-5 shadow-soft-lg">
-              {/* Barra superior de janela de navegador */}
-              <div className="flex items-center justify-between border-b border-[#EFE8DE] pb-3 mb-4 px-2">
-                <div className="flex items-center gap-2">
-                  <span className="h-3 w-3 rounded-full bg-[#C24E48]/80" />
-                  <span className="h-3 w-3 rounded-full bg-[#DF9B42]/80" />
-                  <span className="h-3 w-3 rounded-full bg-[#5B8A62]/80" />
-                  <span className="ml-3 text-xs font-mono text-[#70625B] hidden sm:inline">
-                    https://meubotequim.com.br/dashboard
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="inline-flex items-center gap-1 rounded-full bg-[#5B8A62]/10 px-2.5 py-0.5 text-[10px] font-bold text-[#5B8A62] border border-[#5B8A62]/30">
-                    <span className="h-1.5 w-1.5 rounded-full bg-[#5B8A62] animate-pulse" />
-                    Turno Ativo • BeerGod - Matriz
-                  </span>
-                </div>
-              </div>
-
-              {/* Preview dos 4 Cards de KPI Reais do MeuBotequim */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-left mb-4">
-                <div className="rounded-2xl border border-[#EFE8DE] bg-[#FAF6F0]/60 p-4">
-                  <div className="flex items-center justify-between text-xs text-[#70625B] mb-2">
-                    <span>Valor em Estoque</span>
-                    <DollarSign className="h-4 w-4 text-[#C87A5B]" />
-                  </div>
-                  <p className="text-xl font-extrabold text-[#2C221E]">R$ 48.720,00</p>
-                  <p className="text-[11px] text-[#5B8A62] mt-1 font-semibold">+3,2% no mês</p>
-                </div>
-
-                <div className="rounded-2xl border border-[#C24E48]/30 bg-[#C24E48]/5 p-4">
-                  <div className="flex items-center justify-between text-xs text-[#C24E48] mb-2">
-                    <span className="font-bold">Nível Crítico</span>
-                    <AlertTriangle className="h-4 w-4 text-[#C24E48]" />
-                  </div>
-                  <p className="text-xl font-extrabold text-[#2C221E]">5 Itens</p>
-                  <p className="text-[11px] text-[#C24E48] mt-1 font-semibold">Reposição Imediata</p>
-                </div>
-
-                <div className="rounded-2xl border border-[#EFE8DE] bg-[#FAF6F0]/60 p-4">
-                  <div className="flex items-center justify-between text-xs text-[#70625B] mb-2">
-                    <span>Perdas & Desperdício</span>
-                    <TrendingDown className="h-4 w-4 text-[#C24E48]" />
-                  </div>
-                  <p className="text-xl font-extrabold text-[#2C221E]">R$ 845,00</p>
-                  <p className="text-[11px] text-[#5B8A62] mt-1 font-semibold">-14,5% vs. mês anterior</p>
-                </div>
-
-                <div className="rounded-2xl border border-[#DF9B42]/30 bg-[#DF9B42]/5 p-4">
-                  <div className="flex items-center justify-between text-xs text-[#70625B] mb-2">
-                    <span>Giro Projetado (FDS)</span>
-                    <CalendarCheck className="h-4 w-4 text-[#DF9B42]" />
-                  </div>
-                  <p className="text-xl font-extrabold text-[#2C221E]">R$ 19.350,00</p>
-                  <p className="text-[11px] text-[#DF9B42] mt-1 font-semibold">Pico de Sex/Sáb/Dom</p>
-                </div>
-              </div>
-
-              {/* Mini Tabela de Alerta do Mockup */}
-              <div className="rounded-2xl border border-[#EFE8DE] bg-[#FAF6F0]/30 p-3 sm:p-4 text-left">
-                <div className="flex items-center justify-between mb-3 text-xs">
-                  <span className="font-bold text-[#2C221E]">Atenção Prioritária para o Fim de Semana</span>
-                  <button
-                    type="button"
-                    onClick={onNavigateToDashboard}
-                    className="text-[11px] text-[#C87A5B] hover:text-[#B2684B] font-bold"
-                  >
-                    Abrir no modo completo →
-                  </button>
-                </div>
-                <div className="divide-y divide-[#EFE8DE] text-xs">
-                  <div className="py-2.5 flex items-center justify-between">
-                    <div>
-                      <p className="font-bold text-[#2C221E]">Chopp Pilsen 50L (Barril)</p>
-                      <p className="text-[10px] text-[#70625B]">Ambev / Brahma • Chopp & Cervejas</p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-[#C24E48] font-extrabold">1 barril (Mín: 4)</span>
-                      <span className="rounded-lg bg-[#C24E48]/15 px-2 py-0.5 text-[10px] font-bold text-[#C24E48] border border-[#C24E48]/30">
-                        CRÍTICO
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="py-2.5 flex items-center justify-between">
-                    <div>
-                      <p className="font-bold text-[#2C221E]">Gin Tanqueray London Dry 750ml</p>
-                      <p className="text-[10px] text-[#70625B]">Diageo • Destilados Premium</p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-[#C24E48] font-extrabold">2 gf (Mín: 6)</span>
-                      <span className="rounded-lg bg-[#C24E48]/15 px-2 py-0.5 text-[10px] font-bold text-[#C24E48] border border-[#C24E48]/30">
-                        CRÍTICO
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="py-2.5 flex items-center justify-between">
-                    <div>
-                      <p className="font-bold text-[#2C221E]">Cerveja Heineken Long Neck 330ml</p>
-                      <p className="text-[10px] text-[#70625B]">Heineken • Chopp & Cervejas</p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-[#DF9B42] font-extrabold">14 un (Mín: 48)</span>
-                      <span className="rounded-lg bg-[#DF9B42]/15 px-2 py-0.5 text-[10px] font-bold text-[#DF9B42] border border-[#DF9B42]/30">
-                        ALERTA
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* 4. AS DORES DO DONO DE BAR (Automark Pain-points Section) */}
-        <section id="problemas" className="px-4 sm:px-6 lg:px-8 text-center scroll-mt-28">
-          <div className="mx-auto max-w-4xl">
-            <h2 className="text-2xl sm:text-4xl font-extrabold text-[#2C221E] mb-4">
-              Você ainda perde até 20% do faturamento no{' '}
-              <span className="text-[#C24E48]">Ralo do Desperdício?</span>
-            </h2>
-            <p className="text-sm sm:text-base text-[#70625B] max-w-2xl mx-auto mb-10">
-              Não adianta encher o salão e vender bem no sábado se o lucro escorre pelo balcão em compras de emergência, chopp perdido e anotações em papel.
-            </p>
-
-            {/* Grupo de Pílulas com os Problemas Clássicos de Bares */}
-            <div className="flex flex-wrap items-center justify-center gap-2.5 max-w-3xl mx-auto">
+        {/* Mobile Collapsible Menu */}
+        {mobileMenuOpen && (
+          <div className="lg:hidden border-t border-[#EFE8DE] bg-white px-4 py-4 space-y-2 animate-in fade-in duration-150">
+            <div className="grid grid-cols-2 gap-1.5">
               {[
-                'Chopp acabando no pico de sábado à noite',
-                'Garrafas quebradas sem registro de avaria',
-                'Furtos e desvios ocultos no balcão',
-                'Planilhas confusas que ninguém preenche',
-                'Compras de emergência pagando preço de varejo',
-                'Limão, frutas e insumos estragando na geladeira',
-                'Contagem viciada em que o bartender chuta o saldo',
-              ].map((problem, i) => (
-                <div
-                  key={i}
-                  className="flex items-center gap-2 rounded-full border border-[#C24E48]/25 bg-[#C24E48]/5 px-4 py-2 text-xs font-semibold text-[#2C221E] shadow-soft"
+                { id: 'hero', label: 'Início' },
+                { id: 'category', label: 'Categorias' },
+                { id: 'about', label: 'O Sistema' },
+                { id: 'menu', label: 'Cardápio & Estoque' },
+                { id: 'special', label: 'Tarifa Noturna' },
+                { id: 'history', label: 'Operação' },
+                { id: 'hours', label: 'Horários & Planos' },
+                { id: 'reservation', label: 'Agendar Demo' },
+              ].map((link) => (
+                <a
+                  key={link.id}
+                  href={`#${link.id}`}
+                  onClick={() => {
+                    setActiveNavSection(link.id);
+                    setMobileMenuOpen(false);
+                  }}
+                  className="rounded-xl px-3 py-2 text-xs font-bold text-[#2C221E] hover:bg-[#FAF6F0] hover:text-[#C87A5B]"
                 >
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#C24E48] shrink-0" />
-                  <span>{problem}</span>
-                </div>
+                  {link.label}
+                </a>
               ))}
             </div>
+            {!isAuthenticated && (
+              <div className="pt-2 border-t border-[#EFE8DE] flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    handleOpenAuth('login');
+                  }}
+                  className="flex-1 rounded-xl border border-[#EFE8DE] bg-[#FAF6F0] py-2.5 text-xs font-bold text-[#2C221E]"
+                >
+                  Entrar na Conta
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    handleOpenAuth('register');
+                  }}
+                  className="flex-1 rounded-xl bg-[#C87A5B] py-2.5 text-xs font-bold text-white"
+                >
+                  Cadastrar Meu Bar
+                </button>
+              </div>
+            )}
           </div>
-        </section>
+        )}
+      </header>
 
-        {/* 5. BENTO GRID: RECURSOS ALL-IN-ONE (Automark Bento Style com Cores MeuBotequim) */}
-        <section id="recursos" className="px-4 sm:px-6 lg:px-8 scroll-mt-28">
-          <div className="mx-auto max-w-6xl">
-            <div className="text-center max-w-3xl mx-auto mb-16">
-              <h2 className="text-2xl sm:text-4xl font-extrabold text-[#2C221E] mb-4">
-                Substitua o caderninho e planilhas por um{' '}
-                <span className="text-[#C87A5B]">Sistema Ágil e Inteligente</span>
-              </h2>
-              <p className="text-sm sm:text-base text-[#70625B]">
-                Criado especificamente para a dinâmica veloz de bares, pubs e restaurantes. Tudo ao alcance de 2 cliques no celular.
-              </p>
+      {/* ============================================================
+          SEARCH OVERLAY POPUP (Sarab #searchOv style)
+          ============================================================ */}
+      {isSearchOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Pesquisar no cardápio e estoque"
+          onClick={() => setIsSearchOpen(false)}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#161210]/80 backdrop-blur-sm p-4 animate-in fade-in duration-150"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full max-w-2xl rounded-3xl border border-[#EFE8DE] bg-white p-6 sm:p-8 shadow-soft-lg space-y-6"
+          >
+            <button
+              type="button"
+              onClick={() => setIsSearchOpen(false)}
+              aria-label="Fechar busca"
+              className="absolute top-5 right-5 flex h-9 w-9 items-center justify-center rounded-full bg-[#FAF6F0] text-[#70625B] hover:bg-[#C87A5B] hover:text-white transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
+
+            <div>
+              <span className="text-xs font-bold uppercase tracking-wider text-[#C87A5B]">
+                Busca Rápida de Cardápio &amp; Estoque
+              </span>
+              <h3 className="text-xl sm:text-2xl font-black text-[#2C221E] mt-1">
+                O que você procura no balcão hoje?
+              </h3>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {/* Card 1: Previsão de Giro FDS */}
-              <div className="rounded-3xl border border-[#EFE8DE] bg-[#FFFFFF] p-7 shadow-soft hover:shadow-soft-md transition-all relative overflow-hidden group">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#DF9B42]/10 text-[#DF9B42] border border-[#DF9B42]/30 mb-5 group-hover:scale-105 transition-transform">
-                  <CalendarCheck className="h-6 w-6" />
-                </div>
-                <h3 className="text-lg font-bold text-[#2C221E] mb-2">Previsão de Giro para o Fim de Semana</h3>
-                <p className="text-xs text-[#70625B] leading-relaxed mb-4">
-                  O MeuBotequim calcula a demanda de Sex/Sáb/Dom e te avisa exatamente quantos barris de chopp e caixas de cerveja pedir antes da quinta-feira.
-                </p>
-                <div className="rounded-xl border border-[#EFE8DE] bg-[#FAF6F0] p-3 text-[11px] text-[#2C221E]">
-                  <p className="text-[#5B8A62] font-bold">✓ Sugestão Automática de Compra</p>
-                  <p className="text-[#70625B]">Evite pagar frete urgente ou ficar na mão no domingo.</p>
-                </div>
-              </div>
-
-              {/* Card 2: Balanço Cego em 3 Minutos */}
-              <div className="rounded-3xl border border-[#EFE8DE] bg-[#FFFFFF] p-7 shadow-soft hover:shadow-soft-md transition-all relative overflow-hidden group">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#C87A5B]/10 text-[#C87A5B] border border-[#C87A5B]/30 mb-5 group-hover:scale-105 transition-transform">
-                  <Clock className="h-6 w-6" />
-                </div>
-                <h3 className="text-lg font-bold text-[#2C221E] mb-2">Balanço Cego de Balcão (3 Minutos)</h3>
-                <p className="text-xs text-[#70625B] leading-relaxed mb-4">
-                  O bartender conta as garrafas e barris na troca de turno sem saber o saldo do sistema. O sistema calcula a divergência exata na hora.
-                </p>
-                <div className="rounded-xl border border-[#EFE8DE] bg-[#FAF6F0] p-3 text-[11px] text-[#2C221E]">
-                  <p className="text-[#C87A5B] font-bold">✓ Acabe com contagens "maquiadas"</p>
-                  <p className="text-[#70625B]">Descubra sobras ou faltas imediatamente na passagem de turno.</p>
-                </div>
-              </div>
-
-              {/* Card 3: Controle de Perdas & Sangrias */}
-              <div className="rounded-3xl border border-[#EFE8DE] bg-[#FFFFFF] p-7 shadow-soft hover:shadow-soft-md transition-all relative overflow-hidden group">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#C24E48]/10 text-[#C24E48] border border-[#C24E48]/30 mb-5 group-hover:scale-105 transition-transform">
-                  <TrendingDown className="h-6 w-6" />
-                </div>
-                <h3 className="text-lg font-bold text-[#2C221E] mb-2">Registro de Perdas & Descarte de Chopp</h3>
-                <p className="text-xs text-[#70625B] leading-relaxed mb-4">
-                  Quebrou uma garrafa de Gin ou descartou espuma da serpentina? Lance a perda em 2 toques e saiba no fim do mês o valor exato do desperdício.
-                </p>
-                <div className="rounded-xl border border-[#EFE8DE] bg-[#FAF6F0] p-3 text-[11px] text-[#2C221E]">
-                  <p className="text-[#C24E48] font-bold">✓ Motivos de quebra auditados</p>
-                  <p className="text-[#70625B]">Validade, sangria, quebra de taça ou garrafa.</p>
-                </div>
-              </div>
-
-              {/* Card 4: Lista de Reposição & WhatsApp */}
-              <div className="rounded-3xl border border-[#EFE8DE] bg-[#FFFFFF] p-7 shadow-soft hover:shadow-soft-md transition-all relative overflow-hidden group">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#5B8A62]/10 text-[#5B8A62] border border-[#5B8A62]/30 mb-5 group-hover:scale-105 transition-transform">
-                  <ShoppingBag className="h-6 w-6" />
-                </div>
-                <h3 className="text-lg font-bold text-[#2C221E] mb-2">Lista de Compras Pronta pro WhatsApp</h3>
-                <p className="text-xs text-[#70625B] leading-relaxed mb-4">
-                  Adicione os itens em alerta à lista de reposição e copie a mensagem formatada para disparar direto para o seu fornecedor Ambev, Heineken ou Ceasa.
-                </p>
-                <div className="rounded-xl border border-[#EFE8DE] bg-[#FAF6F0] p-3 text-[11px] text-[#2C221E]">
-                  <p className="text-[#5B8A62] font-bold">✓ Cotação sem estresse</p>
-                  <p className="text-[#70625B]">Quantidades ideais calculadas automaticamente.</p>
-                </div>
-              </div>
-
-              {/* Card 5: Multi-Tenant & Perfis Isolados */}
-              <div className="rounded-3xl border border-[#EFE8DE] bg-[#FFFFFF] p-7 shadow-soft hover:shadow-soft-md transition-all relative overflow-hidden group">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#DDA76A]/15 text-[#C87A5B] border border-[#DDA76A]/30 mb-5 group-hover:scale-105 transition-transform">
-                  <ShieldCheck className="h-6 w-6" />
-                </div>
-                <h3 className="text-lg font-bold text-[#2C221E] mb-2">Perfis Separados com Segurança</h3>
-                <p className="text-xs text-[#70625B] leading-relaxed mb-4">
-                  O Dono vê custos e lucros; o Gerente gerencia compras e entradas; o Bartender tem acesso simplificado para auditar e dar baixas operacionais.
-                </p>
-                <div className="rounded-xl border border-[#EFE8DE] bg-[#FAF6F0] p-3 text-[11px] text-[#2C221E]">
-                  <p className="text-[#C87A5B] font-bold">✓ Permissões Proprietário / Bartender</p>
-                  <p className="text-[#70625B]">Dados do seu bar 100% isolados na nuvem.</p>
-                </div>
-              </div>
-
-              {/* Card 6: Conexão em Tempo Real & Offline */}
-              <div className="rounded-3xl border border-[#EFE8DE] bg-[#FFFFFF] p-7 shadow-soft hover:shadow-soft-md transition-all relative overflow-hidden group">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#FAF6F0] text-[#70625B] border border-[#EFE8DE] mb-5 group-hover:scale-105 transition-transform">
-                  <Zap className="h-6 w-6 text-[#C87A5B]" />
-                </div>
-                <h3 className="text-lg font-bold text-[#2C221E] mb-2">Funciona em Qualquer Dispositivo</h3>
-                <p className="text-xs text-[#70625B] leading-relaxed mb-4">
-                  Abra no celular do balcão, no tablet do caixa ou no notebook da gerência. Sincronização instantânea na nuvem com criptografia de ponta a ponta.
-                </p>
-                <div className="rounded-xl border border-[#EFE8DE] bg-[#FAF6F0] p-3 text-[11px] text-[#2C221E]">
-                  <p className="text-[#5B8A62] font-bold">✓ Responsivo e ultra veloz</p>
-                  <p className="text-[#70625B]">Sem travamentos na correria da sexta-feira.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* 6. OS 5 PASSOS DO BAR LUCRATIVO (Automark 5 steps style) */}
-        <section id="como-funciona" className="px-4 sm:px-6 lg:px-8 scroll-mt-28">
-          <div className="mx-auto max-w-4xl text-center mb-12">
-            <h2 className="text-2xl sm:text-4xl font-extrabold text-[#2C221E] mb-3">
-              Os 5 Passos da Operação no <span className="text-[#C87A5B]">MeuBotequim</span>
-            </h2>
-            <p className="text-sm text-[#70625B]">Como uma rotina de 5 minutos blinda o seu estoque e protege seu lucro.</p>
-          </div>
-
-          <div className="mx-auto max-w-4xl space-y-3">
-            {[
-              {
-                step: '01',
-                title: 'ENTRADA RÁPIDA DE NOTAS & CARGAS',
-                desc: 'Recebeu o caminhão da distribuidora? Lance as caixas e barris em segundos pelo celular.',
-              },
-              {
-                step: '02',
-                title: 'BAIXA OPERACIONAL NO TURNO',
-                desc: 'Registre as sangrias de chopp e o consumo do balcão sem burocracia.',
-              },
-              {
-                step: '03',
-                title: 'BALANÇO CEGO NA TROCA DE TURNO',
-                desc: 'Conferência limpa em 3 minutos sem que o funcionário veja o saldo esperado.',
-              },
-              {
-                step: '04',
-                title: 'ALERTA ANTECIPADO DE RUPTURA',
-                desc: 'O sistema avisa com antecedência os itens que vão faltar antes do fim de semana começar.',
-              },
-              {
-                step: '05',
-                title: 'PEDIDO IDEAL DIRETO AO FORNECEDOR',
-                desc: 'Gere a lista exata sem estourar seu caixa nem deixar o cliente sem a bebida favorita.',
-              },
-            ].map((item, idx) => (
-              <div
-                key={idx}
-                className="flex flex-col sm:flex-row sm:items-center justify-between rounded-2xl border border-[#EFE8DE] bg-[#FFFFFF] p-5 shadow-soft hover:bg-[#FAF6F0]/60 transition-all gap-4"
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSearchApply(searchQuery);
+              }}
+              className="flex items-center gap-2 rounded-2xl border-2 border-[#EFE8DE] bg-[#FAF6F0] p-1.5 focus-within:border-[#C87A5B] focus-within:bg-white transition-colors"
+            >
+              <input
+                type="text"
+                autoFocus
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Pesquisar chopp, cerveja Heineken, smash burger, gin..."
+                className="flex-1 bg-transparent px-4 py-2.5 text-sm text-[#2C221E] focus:outline-none"
+              />
+              <button
+                type="submit"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-[#C87A5B] hover:bg-[#B2684B] px-5 py-2.5 text-xs font-bold text-white transition-colors"
               >
-                <div className="flex items-center gap-4">
-                  <span className="text-2xl sm:text-3xl font-black font-mono text-[#C87A5B]">
-                    {item.step}
+                <Search className="h-4 w-4" />
+                <span>Buscar</span>
+              </button>
+            </form>
+
+            {/* Categories inside search popup */}
+            <div>
+              <p className="text-xs font-bold text-[#70625B] mb-2.5">
+                Filtrar por Categoria:
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {CATEGORIES.map((cat) => (
+                  <button
+                    key={cat.key}
+                    type="button"
+                    onClick={() => handleSearchApply('', cat.key)}
+                    className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs font-bold transition-all ${
+                      selectedCategory === cat.key
+                        ? 'border-[#C87A5B] bg-[#C87A5B] text-white'
+                        : 'border-[#EFE8DE] bg-[#FAF6F0] text-[#2C221E] hover:border-[#C87A5B]'
+                    }`}
+                  >
+                    <img
+                      src={cat.image}
+                      alt={cat.name}
+                      className="h-5 w-5 rounded-full object-cover"
+                    />
+                    <span>{cat.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Trending Searches */}
+            <div className="border-t border-[#EFE8DE] pt-4">
+              <p className="text-xs font-bold text-[#2C221E] flex items-center gap-1.5 mb-2.5">
+                <Flame className="h-3.5 w-3.5 text-[#DDA76A]" />
+                <span>Mais Buscados no Turno da Noite</span>
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  'Smash Botequim',
+                  'Chopp Pilsen',
+                  'Heineken',
+                  'Frango Nashville',
+                  'Gin Tanqueray',
+                  'Petit Gâteau',
+                ].map((tag) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => handleSearchApply(tag, 'all')}
+                    className="rounded-lg bg-[#FAF6F0] hover:bg-[#C87A5B]/15 hover:text-[#C87A5B] border border-[#EFE8DE] px-3 py-1 text-xs font-semibold text-[#70625B] transition-colors"
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================
+          3. SPLIT 50/50 HERO SECTION (Sarab #hero layout)
+          ============================================================ */}
+      <section
+        id="hero"
+        className="relative min-h-[86dvh] flex items-center bg-[#FAF6F0] py-14 sm:py-20 overflow-hidden"
+      >
+        {/* Subtle Watermark Text in Background (Sarab .hbgtxt) */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none select-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[18vw] font-black tracking-tighter text-[#2C221E]/[0.03] whitespace-nowrap"
+        >
+          BOTEQUIM
+        </div>
+
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10 w-full">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+            {/* Left Column: Badge, Headline, Description, CTAs, 4 Stats */}
+            <div className="lg:col-span-6 space-y-6 text-left">
+              <div className="inline-flex items-center gap-2.5 rounded-full bg-white p-1.5 pr-4 shadow-soft border border-[#EFE8DE]">
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#C87A5B] text-white">
+                  <Star className="h-3.5 w-3.5 fill-current" />
+                </span>
+                <span className="text-xs font-bold text-[#2C221E]">
+                  #1 Gestão de Balcão, Cardápio &amp; Atendimento Blip IA
+                </span>
+              </div>
+
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-[#2C221E] leading-[1.08]">
+                Sabor de Boteco,{' '}
+                <span className="text-[#C87A5B] underline decoration-[#C87A5B]/30 underline-offset-8">
+                  Estoque Blindado
+                </span>{' '}
+                em Cada Turno
+              </h1>
+
+              <p className="text-sm sm:text-base text-[#70625B] leading-relaxed max-w-xl">
+                Una a vitrine gastronômica do seu bar ao controle de estoque em tempo real. Faça o{' '}
+                <strong className="text-[#2C221E]">balanço cego em 3 minutos</strong>, ative a tabela noturna pós-00h e deixe o assistente da{' '}
+                <strong className="text-[#2C221E]">Blip com IA</strong> responder seus clientes consultando o saldo real do balcão.
+              </p>
+
+              {/* CTA Row */}
+              <div className="flex flex-wrap items-center gap-4 pt-1">
+                <a
+                  href="#menu"
+                  className="inline-flex items-center gap-2.5 rounded-full bg-[#C87A5B] hover:bg-[#B2684B] px-7 py-4 text-sm font-extrabold text-white shadow-soft-lg transition-all active:scale-95"
+                >
+                  <Utensils className="h-4 w-4" />
+                  <span>Explorar Cardápio Vivo</span>
+                </a>
+
+                <button
+                  type="button"
+                  onClick={onNavigateToDashboard}
+                  className="group inline-flex items-center gap-3 rounded-full pr-4 py-1.5 text-sm font-bold text-[#2C221E] hover:text-[#C87A5B] transition-colors"
+                >
+                  <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-[#C87A5B] shadow-soft-md border border-[#EFE8DE] group-hover:bg-[#C87A5B] group-hover:text-white transition-all">
+                    <Play className="h-4 w-4 fill-current ml-0.5" />
                   </span>
+                  <span>Testar Painel &amp; Blip IA</span>
+                </button>
+              </div>
+
+              {/* 4 Stats Row (Sarab .hstats) */}
+              <div className="pt-4 flex flex-wrap items-center gap-6 sm:gap-8 border-t border-[#EFE8DE]">
+                <div>
+                  <span className="block text-2xl sm:text-3xl font-black text-[#2C221E]">
+                    850<em className="not-italic text-[#C87A5B]">+</em>
+                  </span>
+                  <small className="text-[11px] font-bold uppercase tracking-wider text-[#70625B]">
+                    Bares Ativos
+                  </small>
+                </div>
+                <div className="h-9 w-px bg-[#EFE8DE]" />
+                <div>
+                  <span className="block text-2xl sm:text-3xl font-black text-[#2C221E]">
+                    3<em className="not-italic text-[#C87A5B]">min</em>
+                  </span>
+                  <small className="text-[11px] font-bold uppercase tracking-wider text-[#70625B]">
+                    Balanço Cego
+                  </small>
+                </div>
+                <div className="h-9 w-px bg-[#EFE8DE]" />
+                <div>
+                  <span className="block text-2xl sm:text-3xl font-black text-[#2C221E]">
+                    -20<em className="not-italic text-[#5B8A62]">%</em>
+                  </span>
+                  <small className="text-[11px] font-bold uppercase tracking-wider text-[#70625B]">
+                    Perdas &amp; Quebras
+                  </small>
+                </div>
+                <div className="h-9 w-px bg-[#EFE8DE] hidden sm:block" />
+                <div className="hidden sm:block">
+                  <span className="block text-2xl sm:text-3xl font-black text-[#2C221E]">
+                    24<em className="not-italic text-[#DDA76A]">h</em>
+                  </span>
+                  <small className="text-[11px] font-bold uppercase tracking-wider text-[#70625B]">
+                    Bot Blip IA
+                  </small>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column: Circular Dish Image + 3 Floating Cards (Sarab .hcircle + .fcard) */}
+            <div className="lg:col-span-6 flex justify-center">
+              <div className="relative w-full max-w-[460px] aspect-square flex items-center justify-center">
+                <div className="w-[88%] h-[88%] rounded-full bg-[#F4EDE4] border-8 border-white shadow-soft-lg overflow-hidden flex items-center justify-center">
+                  <img
+                    src={`${SARAB_BASE_IMG}/banner-img.jpg`}
+                    alt="Hambúrguer Artesanal e Petiscos MeuBotequim"
+                    className="w-full h-full object-cover rounded-full"
+                  />
+                </div>
+
+                {/* Floating Card 1: Top-Left */}
+                <div className="absolute top-6 left-0 sm:-left-4 rounded-2xl bg-white p-3 shadow-soft-lg border border-[#EFE8DE] flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#C87A5B]/15 text-[#C87A5B]">
+                    <Flame className="h-5 w-5" />
+                  </div>
                   <div className="text-left">
-                    <h4 className="text-sm font-bold text-[#2C221E]">{item.title}</h4>
-                    <p className="text-xs text-[#70625B]">{item.desc}</p>
+                    <span className="block text-xs font-extrabold text-[#2C221E]">
+                      Tarifa Noturna
+                    </span>
+                    <span className="block text-[11px] text-[#70625B]">
+                      +20% automático pós-00h
+                    </span>
                   </div>
                 </div>
-                <div className="self-end sm:self-center">
-                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#5B8A62] bg-[#5B8A62]/10 px-2.5 py-1 rounded-full border border-[#5B8A62]/30">
-                    <CheckCircle2 className="h-3 w-3" />
-                    Automático
+
+                {/* Floating Card 2: Middle-Right */}
+                <div className="absolute top-1/3 right-0 sm:-right-6 rounded-2xl bg-white p-3 shadow-soft-lg border border-[#EFE8DE] flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#5B8A62]/15 text-[#5B8A62]">
+                    <Clock className="h-5 w-5" />
+                  </div>
+                  <div className="text-left">
+                    <span className="block text-xs font-extrabold text-[#2C221E]">
+                      Estoque Ao Vivo
+                    </span>
+                    <span className="block text-[11px] text-[#5B8A62] font-semibold">
+                      Sincronizado c/ Blip IA
+                    </span>
+                  </div>
+                </div>
+
+                {/* Floating Card 3: Bottom-Right */}
+                <div className="absolute bottom-8 right-4 sm:right-0 rounded-2xl bg-white p-3 shadow-soft-lg border border-[#EFE8DE] flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#DDA76A]/20 text-[#D97706]">
+                    <Star className="h-5 w-5 fill-current" />
+                  </div>
+                  <div className="text-left">
+                    <span className="block text-xs font-extrabold text-[#2C221E]">
+                      4.9 / 5.0
+                    </span>
+                    <span className="block text-[11px] text-[#70625B]">
+                      +2.000 avaliações
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================================
+          4. MARQUEE STRIP (Sarab .mqsec style)
+          ============================================================ */}
+      <div className="bg-[#C87A5B] py-3.5 overflow-hidden border-y border-[#B2684B]">
+        <div className="animate-sarab-marquee">
+          {[...Array(2)].map((_, groupIndex) => (
+            <div key={groupIndex} className="flex items-center gap-10 px-5">
+              {[
+                'Chopp Pilsen 50L Gelado',
+                'Smash Burgers na Brasa',
+                'Balanço Cego de Balcão em 3 Minutos',
+                'Frango Crocante Nashville',
+                'Atendimento Blip Chat + Gemini Function Calling',
+                'Drinks Autorais & Gin Tanqueray',
+                'Tabela de Preço Diurno & Noturno Pós-00h',
+                'Lista de Reposição Direto no WhatsApp',
+              ].map((item, idx) => (
+                <span
+                  key={`${groupIndex}-${idx}`}
+                  className="inline-flex items-center gap-3 text-xs sm:text-sm font-bold text-white whitespace-nowrap"
+                >
+                  <span className="h-2 w-2 rounded-full bg-white/60" />
+                  <span>{item}</span>
+                </span>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ============================================================
+          5. BROWSE BY CATEGORY (Sarab #category style)
+          ============================================================ */}
+      <section id="category" className="py-20 px-4 sm:px-6 lg:px-8 bg-[#FAF6F0] scroll-mt-16">
+        <div className="mx-auto max-w-7xl">
+          <div className="text-center max-w-xl mx-auto mb-12">
+            <span className="text-xs font-bold uppercase tracking-widest text-[#C87A5B]">
+              O Que Servimos &amp; Controlamos
+            </span>
+            <h2 className="text-2xl sm:text-4xl font-black text-[#2C221E] mt-1">
+              Navegue por <span className="text-[#C87A5B]">Categoria</span>
+            </h2>
+            <div className="h-1 w-14 bg-[#C87A5B] rounded-full mx-auto my-3" />
+            <p className="text-xs sm:text-sm text-[#70625B]">
+              Clique em uma categoria para filtrar instantaneamente os pratos, chopps e destilados monitorados pelo estoque do MeuBotequim.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+            {CATEGORIES.map((cat) => {
+              const isSelected = selectedCategory === cat.key;
+              return (
+                <button
+                  key={cat.key}
+                  type="button"
+                  onClick={() => handleCategorySelect(cat.key, true)}
+                  className={`group rounded-2xl p-5 text-center transition-all border-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C87A5B] ${
+                    isSelected
+                      ? 'bg-white border-[#C87A5B] shadow-soft-lg -translate-y-1'
+                      : 'bg-white border-transparent hover:border-[#C87A5B]/50 shadow-soft hover:-translate-y-1'
+                  }`}
+                >
+                  <img
+                    src={cat.image}
+                    alt={cat.name}
+                    className="w-20 h-20 rounded-full object-cover mx-auto mb-3 border-2 border-[#FAF6F0] shadow-sm transition-transform duration-300 group-hover:scale-105"
+                  />
+                  <div className="text-xs sm:text-sm font-extrabold text-[#2C221E] mb-0.5">
+                    {cat.name}
+                  </div>
+                  <div className="text-[11px] font-semibold text-[#70625B]">
+                    {cat.count}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================================
+          6. ABOUT / OUR STORY (Sarab #about split image-stack style)
+          ============================================================ */}
+      <section id="about" className="py-20 px-4 sm:px-6 lg:px-8 bg-white border-y border-[#EFE8DE] scroll-mt-16">
+        <div className="mx-auto max-w-7xl">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+            {/* Left Image Stack (Sarab .astack) */}
+            <div className="lg:col-span-5">
+              <div className="relative mx-auto max-w-md lg:max-w-none">
+                <div className="rounded-3xl overflow-hidden shadow-soft-lg border border-[#EFE8DE]">
+                  <img
+                    src={`${SARAB_BASE_IMG}/about1.jpg`}
+                    alt="Ambiente e Gastronomia MeuBotequim"
+                    className="w-full h-[420px] object-cover block"
+                  />
+                </div>
+
+                {/* Experience Badge (Sarab .aexp) */}
+                <div className="absolute top-6 -left-3 sm:-left-5 rounded-2xl bg-[#C87A5B] text-white px-5 py-4 text-center shadow-soft-lg">
+                  <span className="block text-3xl font-black leading-none">
+                    100%
                   </span>
+                  <small className="text-[11px] font-semibold opacity-95 block mt-1">
+                    Estoque &amp; Balcão<br />Sincronizados
+                  </small>
+                </div>
+
+                {/* Secondary Overlapping Image (Sarab .asm) */}
+                <div className="hidden sm:block absolute -bottom-6 -right-6 w-44 h-44 rounded-2xl overflow-hidden border-4 border-white shadow-soft-lg">
+                  <img
+                    src={`${SARAB_BASE_IMG}/about2.jpg`}
+                    alt="Prato preparado na hora"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Right Story & 3 Pillar Rows */}
+            <div className="lg:col-span-7 space-y-6">
+              <div>
+                <span className="text-xs font-bold uppercase tracking-widest text-[#C87A5B]">
+                  Por Que o MeuBotequim?
+                </span>
+                <h2 className="text-2xl sm:text-4xl font-black text-[#2C221E] mt-1 leading-tight">
+                  Da Cozinha ao Balcão,{' '}
+                  <span className="text-[#C87A5B]">Zero Furo no Estoque</span>
+                </h2>
+                <div className="h-1 w-14 bg-[#C87A5B] rounded-full my-3" />
+                <p className="text-xs sm:text-sm text-[#70625B] leading-relaxed">
+                  Não adianta lotar a casa na sexta e no sábado se o lucro escorre pelo ralo em compras de emergência, chopp sem registro de sangria e anotações em papel. O MeuBotequim conecta seu cardápio ao saldo real de garrafas, barris e insumos.
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-start gap-4">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#C87A5B]/15 text-[#C87A5B]">
+                    <Leaf className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-extrabold text-[#2C221E]">
+                      Insumos Frescos &amp; Ficha Técnica Automática
+                    </h3>
+                    <p className="text-xs text-[#70625B] leading-relaxed mt-0.5">
+                      Saiba exatamente quanto custa cada drink ou hambúrguer e receba alertas antecipados quando o estoque atingir o ponto de pedido.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#DDA76A]/20 text-[#D97706]">
+                    <Award className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-extrabold text-[#2C221E]">
+                      Balanço Cego de Balcão em 3 Minutos
+                    </h3>
+                    <p className="text-xs text-[#70625B] leading-relaxed mt-0.5">
+                      O bartender conta as garrafas na troca de turno sem ver o saldo esperado pelo sistema. Divergências são calculadas na hora para o proprietário.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#5B8A62]/15 text-[#5B8A62]">
+                    <Zap className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-extrabold text-[#2C221E]">
+                      Atendimento Blip Chat + Gemini Function Calling
+                    </h3>
+                    <p className="text-xs text-[#70625B] leading-relaxed mt-0.5">
+                      Nosso assistente conversacional responde clientes no Blip Chat consultando preços e estoque disponível em tempo real no MongoDB.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-2 flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={onNavigateToDashboard}
+                  className="inline-flex items-center gap-2 rounded-full bg-[#C87A5B] hover:bg-[#B2684B] px-7 py-3.5 text-xs sm:text-sm font-extrabold text-white shadow-soft transition-all active:scale-95"
+                >
+                  <Store className="h-4 w-4" />
+                  <span>Abrir Demonstração do Painel</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => openBlipChatWidget()}
+                  className="inline-flex items-center gap-2 rounded-full border border-[#EFE8DE] bg-[#FAF6F0] hover:bg-[#EFE8DE] px-6 py-3.5 text-xs sm:text-sm font-bold text-[#2C221E] transition-colors"
+                >
+                  <MessageSquare className="h-4 w-4 text-[#D97706]" />
+                  <span>Conversar com o Bot Blip</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================================
+          7. INTERACTIVE MENU & LIVE STOCK CATALOG (Sarab #menu style)
+          ============================================================ */}
+      <section id="menu" className="py-20 px-4 sm:px-6 lg:px-8 bg-[#FAF6F0] scroll-mt-16">
+        <div className="mx-auto max-w-7xl">
+          <div className="text-center max-w-2xl mx-auto mb-10">
+            <span className="text-xs font-bold uppercase tracking-widest text-[#C87A5B]">
+              Vitrine Conectada ao PostgreSQL + Prisma
+            </span>
+            <h2 className="text-2xl sm:text-4xl font-black text-[#2C221E] mt-1">
+              Nosso Cardápio &amp; <span className="text-[#C87A5B]">Estoque Ao Vivo</span>
+            </h2>
+            <div className="h-1 w-14 bg-[#C87A5B] rounded-full mx-auto my-3" />
+            <p className="text-xs sm:text-sm text-[#70625B]">
+              Cada card abaixo exibe o preço Diurno, a tarifa Noturna (pós-00h) e o saldo real disponível. Clique em qualquer item ou no botão <strong className="text-[#2C221E]">+</strong> para inspecionar os detalhes.
+            </p>
+          </div>
+
+          {/* Accessible Category Filter Tablist (modern-web-guidance tabs pattern) */}
+          <div
+            role="tablist"
+            aria-label="Filtrar itens por categoria"
+            className="flex items-center justify-start sm:justify-center gap-2 overflow-x-auto pb-3 mb-8"
+          >
+            {CATEGORIES.map((cat) => {
+              const isSelected = selectedCategory === cat.key;
+              return (
+                <button
+                  key={cat.key}
+                  type="button"
+                  role="tab"
+                  aria-selected={isSelected}
+                  onClick={() => setSelectedCategory(cat.key)}
+                  className={`relative shrink-0 rounded-full px-5 py-2.5 text-xs font-bold border-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C87A5B] ${
+                    isSelected
+                      ? 'bg-[#C87A5B] border-[#C87A5B] text-white shadow-soft after:content-[""] after:absolute after:-bottom-1.5 after:left-4 after:right-4 after:border-b-[3px] after:border-[#2C221E]'
+                      : 'bg-white border-[#EFE8DE] text-[#70625B] hover:border-[#C87A5B] hover:text-[#2C221E]'
+                  }`}
+                >
+                  {cat.name}
+                </button>
+              );
+            })}
+          </div>
+
+          {searchQuery && (
+            <div className="mb-6 flex items-center justify-between rounded-2xl bg-white border border-[#EFE8DE] px-4 py-2.5 text-xs">
+              <span>
+                Exibindo resultados para: <strong className="text-[#C87A5B]">&ldquo;{searchQuery}&rdquo;</strong>
+              </span>
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="font-bold text-[#C24E48] hover:underline"
+              >
+                Limpar filtro
+              </button>
+            </div>
+          )}
+
+          {/* Menu Cards Grid (Sarab #mgrid / .mcard) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredMenuItems.map((item) => {
+              const isLiked = likedIds.has(item.id);
+              const badgeColor =
+                item.badge?.variant === 'new'
+                  ? 'bg-[#5B8A62] text-white'
+                  : item.badge?.variant === 'hot'
+                  ? 'bg-[#DDA76A] text-[#2C221E]'
+                  : 'bg-[#C87A5B] text-white';
+
+              return (
+                <article
+                  key={item.id}
+                  onClick={() => {
+                    setDetailItem(item);
+                    setDetailQty(1);
+                  }}
+                  className="group rounded-3xl bg-white border border-[#EFE8DE] overflow-hidden shadow-soft hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-1.5 cursor-pointer flex flex-col justify-between"
+                >
+                  <div>
+                    {/* Image Header */}
+                    <div className="relative h-52 bg-[#F4EDE4] overflow-hidden">
+                      <img
+                        src={item.image}
+                        alt={item.title}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+
+                      {item.badge && (
+                        <span
+                          className={`absolute top-3.5 left-3.5 inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] font-extrabold shadow-sm ${badgeColor}`}
+                        >
+                          <Star className="h-3 w-3 fill-current" />
+                          <span>{item.badge.text}</span>
+                        </span>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={(e) => toggleLike(item.id, e)}
+                        aria-label={isLiked ? 'Remover dos favoritos' : 'Favoritar item'}
+                        className={`absolute top-3.5 right-3.5 flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-soft transition-transform hover:scale-110 ${
+                          isLiked ? 'text-[#C24E48]' : 'text-stone-400 hover:text-[#C24E48]'
+                        }`}
+                      >
+                        <Heart className={`h-4 w-4 ${isLiked ? 'fill-current' : ''}`} />
+                      </button>
+
+                      {/* Real-time stock pill */}
+                      <span className="absolute bottom-3 left-3.5 rounded-full bg-[#161210]/85 backdrop-blur-sm px-3 py-1 text-[10px] font-bold text-white">
+                        Estoque: {item.stockCount} {item.unit}
+                      </span>
+                    </div>
+
+                    {/* Card Body */}
+                    <div className="p-5">
+                      <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-[#C87A5B] mb-1">
+                        <span>{item.categoryLabel}</span>
+                        <span className="text-[#70625B] font-mono">
+                          Noite: R$ {item.priceNight.toFixed(2).replace('.', ',')}
+                        </span>
+                      </div>
+
+                      <h3 className="text-base font-extrabold text-[#2C221E] group-hover:text-[#C87A5B] transition-colors mb-1.5">
+                        {item.title}
+                      </h3>
+
+                      <p className="text-xs text-[#70625B] leading-relaxed line-clamp-2">
+                        {item.shortDesc}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Card Footer */}
+                  <div className="px-5 pb-5 pt-2 flex items-center justify-between border-t border-[#EFE8DE]/60">
+                    <div>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-xl font-black text-[#C87A5B]">
+                          R$ {item.priceDay.toFixed(2).replace('.', ',')}
+                        </span>
+                        {item.oldPrice && (
+                          <small className="text-xs text-stone-400 line-through">
+                            R$ {item.oldPrice.toFixed(2).replace('.', ',')}
+                          </small>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1 text-xs text-[#D97706] font-bold mt-0.5">
+                        <Star className="h-3.5 w-3.5 fill-current" />
+                        <span>{item.rating}</span>
+                        <span className="text-[#70625B] font-normal text-[11px]">
+                          ({item.reviewsCount})
+                        </span>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDetailItem(item);
+                        setDetailQty(1);
+                      }}
+                      title="Ver ficha completa e estoque"
+                      className="flex h-10 w-10 items-center justify-center rounded-full bg-[#C87A5B] hover:bg-[#B2684B] text-white shadow-soft transition-transform group-hover:rotate-90"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+
+          <div className="text-center mt-10">
+            <button
+              type="button"
+              onClick={onNavigateToDashboard}
+              className="inline-flex items-center gap-2 rounded-full bg-[#2C221E] hover:bg-[#C87A5B] px-8 py-4 text-xs sm:text-sm font-extrabold text-white shadow-soft-lg transition-all active:scale-95"
+            >
+              <Store className="h-4 w-4" />
+              <span>Gerenciar Todos os Produtos e Preços no Painel</span>
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================================
+          MENU DETAIL POPUP MODAL (Sarab #menuPop style)
+          ============================================================ */}
+      {detailItem && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={detailItem.title}
+          onClick={() => setDetailItem(null)}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#161210]/80 backdrop-blur-sm p-4 animate-in fade-in duration-150"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full max-w-lg rounded-3xl bg-white border border-[#EFE8DE] overflow-hidden shadow-soft-lg"
+          >
+            <button
+              type="button"
+              onClick={() => setDetailItem(null)}
+              aria-label="Fechar detalhes"
+              className="absolute top-4 right-4 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-[#2C221E] hover:bg-[#C87A5B] hover:text-white shadow-soft transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
+
+            <div className="h-56 bg-[#F4EDE4] relative">
+              <img
+                src={detailItem.image}
+                alt={detailItem.title}
+                className="w-full h-full object-cover"
+              />
+              <span className="absolute bottom-3 left-4 rounded-full bg-[#161210]/85 px-3 py-1 text-xs font-bold text-white">
+                Saldo no Balcão: {detailItem.stockCount} {detailItem.unit}
+              </span>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div>
+                <span className="text-xs font-bold uppercase tracking-wider text-[#C87A5B]">
+                  {detailItem.categoryLabel}
+                </span>
+                <h3 className="text-xl font-black text-[#2C221E] mt-0.5">
+                  {detailItem.title}
+                </h3>
+                <div className="flex items-center gap-3 text-xs text-[#70625B] mt-1">
+                  <span className="inline-flex items-center gap-1 font-bold text-[#D97706]">
+                    <Star className="h-3.5 w-3.5 fill-current" />
+                    {detailItem.rating} ({detailItem.reviewsCount} avaliações)
+                  </span>
+                  <span>•</span>
+                  <span>Preparo: {detailItem.prepTimeMinutes} min</span>
+                  <span>•</span>
+                  <span>{detailItem.caloriesOrAbv}</span>
+                </div>
+              </div>
+
+              <p className="text-xs sm:text-sm text-[#70625B] leading-relaxed">
+                {detailItem.fullDesc}
+              </p>
+
+              {/* Price Diurno vs Noturno & Quantity */}
+              <div className="rounded-2xl bg-[#FAF6F0] border border-[#EFE8DE] p-4 flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <span className="block text-[11px] font-bold text-[#70625B]">
+                    Total Estimado ({detailQty}x)
+                  </span>
+                  <div className="flex items-baseline gap-2.5">
+                    <span className="text-2xl font-black text-[#C87A5B]">
+                      R$ {(detailItem.priceDay * detailQty).toFixed(2).replace('.', ',')}
+                    </span>
+                    <span className="text-xs font-bold text-[#70625B]">
+                      (Pós-00h: R$ {(detailItem.priceNight * detailQty).toFixed(2).replace('.', ',')})
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 bg-white rounded-xl border border-[#EFE8DE] p-1">
+                  <button
+                    type="button"
+                    onClick={() => setDetailQty((q) => Math.max(1, q - 1))}
+                    className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-[#FAF6F0] text-[#2C221E]"
+                  >
+                    <Minus className="h-3.5 w-3.5" />
+                  </button>
+                  <span className="w-7 text-center text-xs font-extrabold text-[#2C221E]">
+                    {detailQty}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setDetailQty((q) => q + 1)}
+                    className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-[#FAF6F0] text-[#2C221E]"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Tags */}
+              <div className="flex flex-wrap gap-1.5">
+                {detailItem.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="rounded-lg bg-[#FAF6F0] border border-[#EFE8DE] px-2.5 py-1 text-[11px] font-semibold text-[#70625B]"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDetailItem(null);
+                    openBlipChatWidget();
+                  }}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#D97706] bg-[#D97706]/10 hover:bg-[#D97706] hover:text-white py-3 text-xs font-extrabold text-[#D97706] transition-colors"
+                >
+                  <MessageSquare className="h-4 w-4" />
+                  <span>Perguntar no Blip Chat</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDetailItem(null);
+                    onNavigateToDashboard();
+                  }}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#C87A5B] hover:bg-[#B2684B] py-3 text-xs font-extrabold text-white shadow-soft transition-colors"
+                >
+                  <Store className="h-4 w-4" />
+                  <span>Auditar no Painel</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================
+          8. SPECIAL OFFER / NIGHT PRICING COUNTDOWN (Sarab #special style)
+          ============================================================ */}
+      <section
+        id="special"
+        className="py-20 px-4 sm:px-6 lg:px-8 bg-[#1C1210] text-white relative overflow-hidden scroll-mt-16"
+      >
+        <div className="mx-auto max-w-7xl relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+            <div className="lg:col-span-6 space-y-5">
+              <span className="inline-flex items-center gap-1.5 rounded-lg bg-[#DDA76A] px-3.5 py-1 text-xs font-extrabold uppercase tracking-wider text-[#1C1210]">
+                <Zap className="h-3.5 w-3.5" />
+                <span>Automação Exclusiva Pós-Meia-Noite</span>
+              </span>
+
+              <h2 className="text-3xl sm:text-5xl font-black leading-[1.1] tracking-tight">
+                Virada Automática de{' '}
+                <span className="text-[#DDA76A]">Tarifa Noturna</span> &amp; Giro de Fim de Semana
+              </h2>
+
+              <p className="text-xs sm:text-sm text-stone-300 leading-relaxed max-w-xl">
+                Configure o acréscimo padrão (+20% entre 00h e 06h) e deixe o MeuBotequim atualizar os preços de balcão e as respostas do assistente Blip IA automaticamente no horário de pico da madrugada.
+              </p>
+
+              {/* Countdown boxes (Sarab .cdwrap) */}
+              <div className="pt-2">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-[#DDA76A] mb-2.5">
+                  Contagem para abertura do Turno Noturno de Pico:
+                </p>
+                <div className="flex items-center gap-3.5">
+                  {[
+                    { value: String(countdown.hours).padStart(2, '0'), label: 'Horas' },
+                    { value: String(countdown.minutes).padStart(2, '0'), label: 'Minutos' },
+                    { value: String(countdown.seconds).padStart(2, '0'), label: 'Segundos' },
+                  ].map((box) => (
+                    <div
+                      key={box.label}
+                      className="min-w-[78px] rounded-2xl bg-white/10 border border-white/15 px-4 py-3 text-center"
+                    >
+                      <span className="block text-2xl sm:text-3xl font-black font-mono text-white leading-none">
+                        {box.value}
+                      </span>
+                      <span className="block text-[10px] font-bold uppercase tracking-wider text-stone-300 mt-1">
+                        {box.label}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="pt-3">
+                <button
+                  type="button"
+                  onClick={onNavigateToDashboard}
+                  className="inline-flex items-center gap-2 rounded-full bg-[#C87A5B] hover:bg-[#B2684B] px-8 py-4 text-xs sm:text-sm font-extrabold text-white shadow-soft-lg transition-all active:scale-95"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  <span>Configurar Preço Noturno no Painel</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="lg:col-span-6 flex justify-center">
+              <div className="relative max-w-md w-full text-center">
+                {/* Circular Price Badge (Sarab .sppbdg) */}
+                <div className="absolute top-4 left-4 z-20 flex h-24 w-24 flex-col items-center justify-center rounded-full bg-[#C87A5B] text-white shadow-soft-lg border-4 border-[#1C1210]">
+                  <span className="text-[11px] line-through opacity-75">R$ 48,00</span>
+                  <span className="text-lg font-black leading-tight">R$ 38,90</span>
+                  <span className="text-[9px] font-bold uppercase">Combo Dia</span>
+                </div>
+
+                <img
+                  src={`${SARAB_BASE_IMG}/off-img.jpg`}
+                  alt="Combo Especial MeuBotequim"
+                  className="w-full max-w-[420px] mx-auto rounded-3xl shadow-soft-lg border border-white/10"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================================
+          9. BENTO FOOD & OPERATION SHOWCASE GALLERY (Sarab #gallery style)
+          ============================================================ */}
+      <section id="gallery" className="py-20 px-4 sm:px-6 lg:px-8 bg-[#FAF6F0] scroll-mt-16">
+        <div className="mx-auto max-w-7xl">
+          <div className="text-center max-w-xl mx-auto mb-12">
+            <span className="text-xs font-bold uppercase tracking-widest text-[#C87A5B]">
+              Bastidores do Bar
+            </span>
+            <h2 className="text-2xl sm:text-4xl font-black text-[#2C221E] mt-1">
+              Galeria da <span className="text-[#C87A5B]">Operação</span>
+            </h2>
+            <div className="h-1 w-14 bg-[#C87A5B] rounded-full mx-auto my-3" />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 lg:grid-rows-2 gap-4 lg:h-[460px]">
+            {GALLERY_ITEMS.map((gItem, idx) => (
+              <div
+                key={gItem.id}
+                onClick={() => setActiveGalleryIndex(idx)}
+                className={`group relative rounded-2xl overflow-hidden cursor-pointer border border-[#EFE8DE] shadow-soft ${
+                  idx === 0 ? 'lg:row-span-2 h-72 lg:h-full' : 'h-56 lg:h-full'
+                }`}
+              >
+                <img
+                  src={gItem.image}
+                  alt={gItem.title}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#161210]/90 via-[#161210]/30 to-transparent opacity-90 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-5">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#DDA76A]">
+                    {gItem.subtitle}
+                  </span>
+                  <h3 className="text-sm sm:text-base font-extrabold text-white">
+                    {gItem.title}
+                  </h3>
                 </div>
               </div>
             ))}
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* 7. TABELA DE PLANOS DE ASSINATURA (Automark Pricing com Paleta MeuBotequim) */}
-        <section id="planos" className="px-4 sm:px-6 lg:px-8 scroll-mt-28">
-          <div className="mx-auto max-w-5xl text-center mb-12">
-            <h2 className="text-2xl sm:text-4xl font-extrabold text-[#2C221E] mb-3">
-              Planos Transparentes para o Tamanho do Seu Bar
-            </h2>
-            <p className="text-sm text-[#70625B] mb-8">
-              Comece com 14 dias de teste grátis. Cancele quando quiser, sem fidelidade.
-            </p>
-
-            {/* Switch Mensal / Anual */}
-            <div className="inline-flex items-center gap-3 rounded-full border border-[#EFE8DE] bg-[#FFFFFF] shadow-soft p-1.5 text-xs font-bold text-[#70625B]">
-              <button
-                type="button"
-                onClick={() => setIsAnnual(false)}
-                className={`rounded-full px-4 py-1.5 transition-all ${
-                  !isAnnual ? 'bg-[#C87A5B] text-white font-extrabold shadow-soft' : 'hover:text-[#2C221E]'
-                }`}
-              >
-                Mensal
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsAnnual(true)}
-                className={`rounded-full px-4 py-1.5 transition-all flex items-center gap-1.5 ${
-                  isAnnual ? 'bg-[#C87A5B] text-white font-extrabold shadow-soft' : 'hover:text-[#2C221E]'
-                }`}
-              >
-                <span>Anual</span>
-                <span className="rounded-full bg-[#5B8A62]/15 text-[#5B8A62] text-[10px] px-1.5 py-0.2 border border-[#5B8A62]/30">
-                  20% OFF
+      {/* Gallery Lightbox Modal (Sarab #galPop) */}
+      {activeGalleryIndex !== null && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Visualização da galeria"
+          onClick={() => setActiveGalleryIndex(null)}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#161210]/85 backdrop-blur-sm p-4 animate-in fade-in duration-150"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full max-w-xl rounded-3xl bg-white border border-[#EFE8DE] overflow-hidden shadow-soft-lg"
+          >
+            <button
+              type="button"
+              onClick={() => setActiveGalleryIndex(null)}
+              className="absolute top-4 right-4 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-[#2C221E] hover:bg-[#C87A5B] hover:text-white"
+            >
+              <X className="h-4 w-4" />
+            </button>
+            <img
+              src={GALLERY_ITEMS[activeGalleryIndex].image}
+              alt={GALLERY_ITEMS[activeGalleryIndex].title}
+              className="w-full h-72 object-cover"
+            />
+            <div className="p-6 space-y-3">
+              <span className="text-xs font-bold uppercase tracking-wider text-[#C87A5B]">
+                {GALLERY_ITEMS[activeGalleryIndex].subtitle}
+              </span>
+              <h4 className="text-lg font-black text-[#2C221E]">
+                {GALLERY_ITEMS[activeGalleryIndex].title}
+              </h4>
+              <p className="text-xs sm:text-sm text-[#70625B] leading-relaxed">
+                {GALLERY_ITEMS[activeGalleryIndex].description}
+              </p>
+              <div className="flex items-center justify-between pt-3 border-t border-[#EFE8DE]">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setActiveGalleryIndex(
+                      (activeGalleryIndex - 1 + GALLERY_ITEMS.length) %
+                        GALLERY_ITEMS.length,
+                    )
+                  }
+                  className="inline-flex items-center gap-1 rounded-xl border border-[#EFE8DE] bg-[#FAF6F0] px-4 py-2 text-xs font-bold text-[#2C221E] hover:bg-[#EFE8DE]"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  <span>Anterior</span>
+                </button>
+                <span className="text-xs font-semibold text-[#70625B]">
+                  {activeGalleryIndex + 1} / {GALLERY_ITEMS.length}
                 </span>
-              </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setActiveGalleryIndex(
+                      (activeGalleryIndex + 1) % GALLERY_ITEMS.length,
+                    )
+                  }
+                  className="inline-flex items-center gap-1 rounded-xl border border-[#EFE8DE] bg-[#FAF6F0] px-4 py-2 text-xs font-bold text-[#2C221E] hover:bg-[#EFE8DE]"
+                >
+                  <span>Próximo</span>
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
             </div>
           </div>
+        </div>
+      )}
 
-          <div className="mx-auto max-w-5xl grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Plano 1: Botequim Starter */}
-            <div className="rounded-3xl border border-[#EFE8DE] bg-[#FFFFFF] p-7 flex flex-col justify-between shadow-soft">
-              <div>
-                <h3 className="text-lg font-bold text-[#2C221E] mb-1">Botequim Starter</h3>
-                <p className="text-xs text-[#70625B] mb-6">Para botecos e quiosques iniciando o controle digital.</p>
-                <div className="mb-6">
-                  <span className="text-3xl font-black text-[#2C221E]">
-                    {isAnnual ? 'R$ 71' : 'R$ 89'}
-                  </span>
-                  <span className="text-xs text-[#70625B]"> /mês</span>
+      {/* ============================================================
+          10. ALTERNATING VERTICAL TIMELINE (Sarab #history style)
+          ============================================================ */}
+      <section
+        id="history"
+        className="py-20 px-4 sm:px-6 lg:px-8 bg-white border-t border-[#EFE8DE] scroll-mt-16"
+      >
+        <div className="mx-auto max-w-5xl">
+          <div className="text-center max-w-xl mx-auto mb-14">
+            <span className="text-xs font-bold uppercase tracking-widest text-[#C87A5B]">
+              Fluxo Operacional
+            </span>
+            <h2 className="text-2xl sm:text-4xl font-black text-[#2C221E] mt-1">
+              Como Funciona a <span className="text-[#C87A5B]">Rotina do Bar</span>
+            </h2>
+            <div className="h-1 w-14 bg-[#C87A5B] rounded-full mx-auto my-3" />
+            <p className="text-xs sm:text-sm text-[#70625B]">
+              Da chegada do caminhão de bebidas até o fechamento do caixa e atendimento via Blip IA.
+            </p>
+          </div>
+
+          <div className="relative">
+            {/* Vertical center line */}
+            <div className="hidden md:block absolute left-1/2 top-0 bottom-0 -translate-x-1/2 w-0.5 bg-[#EFE8DE]" />
+
+            <div className="space-y-10">
+              {TIMELINE_STEPS.map((item, idx) => {
+                const isOdd = idx % 2 === 0;
+                return (
+                  <div
+                    key={item.year}
+                    className="grid grid-cols-1 md:grid-cols-11 items-start gap-4"
+                  >
+                    {/* Left Side */}
+                    <div
+                      className={`md:col-span-5 ${
+                        isOdd ? 'md:text-right' : 'hidden md:block md:invisible'
+                      }`}
+                    >
+                      <div className="rounded-2xl border border-[#EFE8DE] bg-[#FAF6F0] p-5 shadow-soft">
+                        <span className="text-xs font-extrabold uppercase tracking-wider text-[#C87A5B]">
+                          {item.year}
+                        </span>
+                        <h3 className="text-base font-extrabold text-[#2C221E] mt-1 mb-1.5">
+                          {item.title}
+                        </h3>
+                        <p className="text-xs text-[#70625B] leading-relaxed">
+                          {item.description}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Center Dot */}
+                    <div className="hidden md:flex md:col-span-1 justify-center pt-5">
+                      <span className="h-4 w-4 rounded-full bg-[#C87A5B] ring-4 ring-[#FAF6F0] border-2 border-white shadow-sm" />
+                    </div>
+
+                    {/* Right Side */}
+                    <div
+                      className={`md:col-span-5 ${
+                        !isOdd ? 'md:text-left' : 'md:invisible'
+                      }`}
+                    >
+                      <div className="rounded-2xl border border-[#EFE8DE] bg-[#FAF6F0] p-5 shadow-soft">
+                        <span className="text-xs font-extrabold uppercase tracking-wider text-[#C87A5B]">
+                          {item.year}
+                        </span>
+                        <h3 className="text-base font-extrabold text-[#2C221E] mt-1 mb-1.5">
+                          {item.title}
+                        </h3>
+                        <p className="text-xs text-[#70625B] leading-relaxed">
+                          {item.description}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================================
+          11. OPERATIONAL TEAM & PROFILES (Sarab #chefs style)
+          ============================================================ */}
+      <section id="chefs" className="py-20 px-4 sm:px-6 lg:px-8 bg-[#FAF6F0] border-t border-[#EFE8DE]">
+        <div className="mx-auto max-w-7xl">
+          <div className="text-center max-w-xl mx-auto mb-12">
+            <span className="text-xs font-bold uppercase tracking-widest text-[#C87A5B]">
+              Multi-Perfil Isolado
+            </span>
+            <h2 className="text-2xl sm:text-4xl font-black text-[#2C221E] mt-1">
+              Feito para Toda a <span className="text-[#C87A5B]">Equipe do Bar</span>
+            </h2>
+            <div className="h-1 w-14 bg-[#C87A5B] rounded-full mx-auto my-3" />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {TEAM_ROLES.map((member) => (
+              <div
+                key={member.name}
+                className="group rounded-3xl bg-white border border-[#EFE8DE] overflow-hidden shadow-soft hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-1.5"
+              >
+                <div className="h-64 bg-[#F4EDE4] overflow-hidden relative">
+                  <img
+                    src={member.image}
+                    alt={member.name}
+                    className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                  />
                 </div>
-                <ul className="space-y-3 text-xs text-[#2C221E] mb-8">
-                  <li className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-[#5B8A62]" /> Até 100 SKUs monitorados
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-[#5B8A62]" /> 2 Usuários (Dono + Gerente)
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-[#5B8A62]" /> Alertas de estoque crítico
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-[#5B8A62]" /> Lista de compras rápida
-                  </li>
-                  <li className="flex items-center gap-2 text-[#70625B]/50">
-                    <span className="h-4 w-4 block text-center">-</span> Balanço cego ilimitado
-                  </li>
-                </ul>
+                <div className="p-5 text-center">
+                  <h3 className="text-base font-extrabold text-[#2C221E]">
+                    {member.name}
+                  </h3>
+                  <p className="text-xs font-bold uppercase tracking-wider text-[#C87A5B] mt-0.5">
+                    {member.role}
+                  </p>
+                  <p className="text-[11px] text-[#70625B] mt-1.5">
+                    {member.experience}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================================
+          12. OPENING HOURS & TRANSPARENT PLANS (Sarab #hours emerald section)
+          ============================================================ */}
+      <section
+        id="hours"
+        className="py-20 px-4 sm:px-6 lg:px-8 bg-[#1F4E3B] text-white relative overflow-hidden scroll-mt-16"
+      >
+        <div className="mx-auto max-w-7xl relative z-10">
+          <div className="text-center max-w-xl mx-auto mb-12">
+            <span className="text-xs font-bold uppercase tracking-widest text-[#A5D6BC]">
+              Turnos &amp; Assinatura SaaS
+            </span>
+            <h2 className="text-2xl sm:text-4xl font-black text-white mt-1">
+              Horários de Operação &amp; <span className="text-[#DDA76A]">Planos</span>
+            </h2>
+            <div className="h-1 w-14 bg-[#DDA76A] rounded-full mx-auto my-3" />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+            {/* Left (5 cols): Shifts & Opening Hours (Sarab .hrscard) */}
+            <div className="lg:col-span-5 rounded-3xl bg-white/10 border border-white/15 p-6 sm:p-7 flex flex-col justify-between">
+              <div>
+                <h3 className="text-base font-extrabold text-white mb-4 flex items-center gap-2">
+                  <CalendarCheck className="h-5 w-5 text-[#DDA76A]" />
+                  <span>Turnos Monitorados no Balcão</span>
+                </h3>
+                <div className="divide-y divide-white/10 text-xs sm:text-sm">
+                  <div className="py-3.5 flex items-center justify-between">
+                    <span className="text-white/80">Segunda-feira (Balanço Geral)</span>
+                    <span className="inline-flex items-center gap-2 font-bold text-[#FF8A8A]">
+                      <span className="h-2 w-2 rounded-full bg-[#FF8A8A]" />
+                      Interno
+                    </span>
+                  </div>
+                  <div className="py-3.5 flex items-center justify-between">
+                    <span className="text-white/80">Terça a Quinta-feira</span>
+                    <span className="inline-flex items-center gap-2 font-bold text-white">
+                      <span className="h-2 w-2 rounded-full bg-[#4ADE80]" />
+                      17:00 - 01:00
+                    </span>
+                  </div>
+                  <div className="py-3.5 flex items-center justify-between">
+                    <span className="text-white/80">Sexta e Sábado (Pico + Noturno)</span>
+                    <span className="inline-flex items-center gap-2 font-bold text-[#DDA76A]">
+                      <span className="h-2 w-2 rounded-full bg-[#4ADE80]" />
+                      16:00 - 04:00
+                    </span>
+                  </div>
+                  <div className="py-3.5 flex items-center justify-between">
+                    <span className="text-white/80">Domingos &amp; Feriados</span>
+                    <span className="inline-flex items-center gap-2 font-bold text-white">
+                      <span className="h-2 w-2 rounded-full bg-[#4ADE80]" />
+                      12:00 - 23:00
+                    </span>
+                  </div>
+                  <div className="py-3.5 flex items-center justify-between">
+                    <span className="text-white/80">Assistente Blip Chat + IA</span>
+                    <span className="inline-flex items-center gap-2 font-bold text-[#A5D6BC]">
+                      <span className="h-2 w-2 rounded-full bg-[#4ADE80]" />
+                      24h Online
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 pt-4 border-t border-white/15 flex items-center justify-between text-xs text-white/80">
+                <span>Suporte WhatsApp Prioritário</span>
+                <strong className="text-white">(11) 98765-4321</strong>
+              </div>
+            </div>
+
+            {/* Center (3 cols): Highlight CTA Card (Sarab .hrscta) */}
+            <div className="lg:col-span-3 rounded-3xl bg-[#C87A5B] p-7 text-center flex flex-col items-center justify-center shadow-soft-lg">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15 text-white mb-4">
+                <Store className="h-7 w-7" />
+              </div>
+              <span className="rounded-full bg-white/20 px-3 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-white mb-2">
+                Mais Escolhido
+              </span>
+              <h3 className="text-xl font-black text-white">
+                Plano Bar Pro
+              </h3>
+              <p className="text-xs text-white/85 mt-1 mb-4">
+                SKUs ilimitados, Balanço Cego em 3 min, Preço Noturno e Bot Blip IA.
+              </p>
+              <div className="mb-5">
+                <span className="text-3xl font-black text-white">
+                  {isAnnualPlan ? 'R$ 119' : 'R$ 149'}
+                </span>
+                <span className="text-xs text-white/80">/mês</span>
               </div>
               <button
                 type="button"
                 onClick={() => handleOpenAuth('register')}
-                className="w-full rounded-xl border border-[#EFE8DE] bg-[#FAF6F0] py-3 text-xs font-bold text-[#2C221E] hover:bg-[#EFE8DE]/60 transition-all"
+                className="w-full rounded-full bg-white text-[#C87A5B] hover:bg-[#FAF6F0] py-3 text-xs font-extrabold shadow-soft transition-transform active:scale-95"
               >
                 Testar 14 Dias Grátis
               </button>
             </div>
 
-            {/* Plano 2: Bar Pro (Destaque Automark em Terracota) */}
-            <div className="rounded-3xl border-2 border-[#C87A5B] bg-[#FFFFFF] p-7 flex flex-col justify-between relative shadow-soft-lg">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[#C87A5B] px-3.5 py-0.5 text-[10px] font-extrabold text-white uppercase tracking-wider shadow-soft">
-                Mais Escolhido
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-[#2C221E] mb-1">Bar Pro</h3>
-                <p className="text-xs text-[#70625B] mb-6">Para bares, pubs e casas noturnas com alta rotatividade.</p>
-                <div className="mb-6">
-                  <span className="text-3xl font-black text-[#2C221E]">
-                    {isAnnual ? 'R$ 119' : 'R$ 149'}
-                  </span>
-                  <span className="text-xs text-[#70625B]"> /mês</span>
+            {/* Right (4 cols): Plan Comparison & Switch */}
+            <div className="lg:col-span-4 rounded-3xl bg-white/10 border border-white/15 p-6 sm:p-7 flex flex-col justify-between">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-base font-extrabold text-white">
+                    Todos os Planos
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => setIsAnnualPlan(!isAnnualPlan)}
+                    className="rounded-full bg-white/15 hover:bg-white/25 px-3 py-1 text-[11px] font-bold text-[#DDA76A] transition-colors"
+                  >
+                    {isAnnualPlan ? 'Anual (-20% OFF)' : 'Ver Desconto Anual'}
+                  </button>
                 </div>
-                <ul className="space-y-3 text-xs text-[#2C221E] mb-8">
-                  <li className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-[#C87A5B]" /> <strong>Produtos & SKUs Ilimitados</strong>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-[#C87A5B]" /> <strong>Usuários Ilimitados</strong> (Dono, Gerente, Balcão)
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-[#C87A5B]" /> <strong>Balanço Cego de Balcão (3 Minutos)</strong>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-[#C87A5B]" /> Previsão de Giro para Fim de Semana
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-[#C87A5B]" /> Controle de Perdas & Sangrias de Chopp
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-[#C87A5B]" /> Suporte Prioritário no WhatsApp
-                  </li>
-                </ul>
-              </div>
-              <button
-                type="button"
-                onClick={() => handleOpenAuth('register')}
-                className="w-full rounded-xl bg-[#C87A5B] hover:bg-[#B2684B] py-3.5 text-xs font-black text-white active:scale-95 transition-all shadow-soft"
-              >
-                Começar Teste Pro Grátis
-              </button>
-            </div>
 
-            {/* Plano 3: Redes & Franquias */}
-            <div className="rounded-3xl border border-[#EFE8DE] bg-[#FFFFFF] p-7 flex flex-col justify-between shadow-soft">
-              <div>
-                <h3 className="text-lg font-bold text-[#2C221E] mb-1">Redes & Multi-Bares</h3>
-                <p className="text-xs text-[#70625B] mb-6">Para grupos gastronômicos com 2 ou mais filiais/unidades.</p>
-                <div className="mb-6">
-                  <span className="text-3xl font-black text-[#2C221E]">
-                    {isAnnual ? 'R$ 239' : 'R$ 299'}
-                  </span>
-                  <span className="text-xs text-[#70625B]"> /mês</span>
-                </div>
-                <ul className="space-y-3 text-xs text-[#2C221E] mb-8">
-                  <li className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-[#5B8A62]" /> Múltiplas Unidades / Filiais
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-[#5B8A62]" /> Visão consolidada de estoques
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-[#5B8A62]" /> Transferência de insumos entre bares
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-[#5B8A62]" /> Relatórios executivos de DRE/Perdas
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-[#5B8A62]" /> Onboarding dedicado com consultor
-                  </li>
-                </ul>
-              </div>
-              <button
-                type="button"
-                onClick={() => handleOpenAuth('register')}
-                className="w-full rounded-xl border border-[#EFE8DE] bg-[#FAF6F0] py-3 text-xs font-bold text-[#2C221E] hover:bg-[#EFE8DE]/60 transition-all"
-              >
-                Falar com Especialista
-              </button>
-            </div>
-          </div>
-        </section>
-
-        {/* 8. FAQ INTERATIVO */}
-        <section id="faq" className="px-4 sm:px-6 lg:px-8 max-w-3xl mx-auto scroll-mt-28">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#2C221E] mb-2">Dúvidas Frequentes</h2>
-            <p className="text-xs text-[#70625B]">Tudo o que você precisa saber antes de começar.</p>
-          </div>
-
-          <div className="space-y-3">
-            {[
-              {
-                q: 'Como funciona o teste grátis de 14 dias?',
-                a: 'Você cadastra o seu bar em menos de 1 minuto, sem precisar colocar cartão de crédito. Tem acesso total ao sistema durante 14 dias para auditar seu estoque e testar no dia a dia com sua equipe.',
-              },
-              {
-                q: 'Preciso instalar algum aplicativo no computador ou celular?',
-                a: 'Não! O MeuBotequim é 100% web na nuvem. Você e sua equipe podem acessar direto pelo navegador do celular, tablet ou computador pelo endereço meubotequim.com.br.',
-              },
-              {
-                q: 'Como funciona o Balanço Cego de Balcão?',
-                a: 'O funcionário abre a tela de contagem e digita quantos itens ou barris contou fisicamente. O sistema NÃO mostra a quantidade esperada, evitando que o operador simplesmente repita o número do sistema. O relatório de divergência é enviado direto para o dono.',
-              },
-              {
-                q: 'Consigo cadastrar outros funcionários com permissões diferentes?',
-                a: 'Sim! Você pode criar acessos para Gerentes (que acompanham compras e entradas) e Bartenders/Garçons (que só realizam contagens e baixas rápidas), sem que eles tenham acesso a dados de lucro ou faturamento.',
-              },
-              {
-                q: 'Posso cancelar a qualquer momento?',
-                a: 'Sim, sem nenhuma multa ou contrato de fidelidade. Você tem total controle da sua assinatura.',
-              },
-            ].map((faq, idx) => (
-              <div
-                key={idx}
-                className="rounded-2xl border border-[#EFE8DE] bg-[#FFFFFF] shadow-soft overflow-hidden transition-all"
-              >
-                <button
-                  type="button"
-                  onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
-                  className="w-full flex items-center justify-between p-4 sm:p-5 text-left text-xs sm:text-sm font-bold text-[#2C221E]"
-                >
-                  <span>{faq.q}</span>
-                  <ChevronDown
-                    className={`h-4 w-4 text-[#C87A5B] transition-transform ${
-                      openFaq === idx ? 'rotate-180' : ''
-                    }`}
-                  />
-                </button>
-                {openFaq === idx && (
-                  <div className="px-4 pb-4 sm:px-5 sm:pb-5 text-xs text-[#70625B] leading-relaxed border-t border-[#EFE8DE] pt-3">
-                    {faq.a}
+                <div className="space-y-3 text-xs">
+                  <div className="rounded-2xl bg-white/10 p-3.5 border border-white/10 flex items-center justify-between">
+                    <div>
+                      <p className="font-extrabold text-white">Botequim Starter</p>
+                      <p className="text-[11px] text-white/75">Até 100 SKUs • 2 Usuários</p>
+                    </div>
+                    <span className="text-base font-black text-[#DDA76A]">
+                      {isAnnualPlan ? 'R$ 71' : 'R$ 89'}/mês
+                    </span>
                   </div>
-                )}
+
+                  <div className="rounded-2xl bg-white/15 p-3.5 border border-[#DDA76A] flex items-center justify-between">
+                    <div>
+                      <p className="font-extrabold text-white">Bar Pro (Completo)</p>
+                      <p className="text-[11px] text-white/80">SKUs Ilimitados + Blip IA</p>
+                    </div>
+                    <span className="text-base font-black text-[#DDA76A]">
+                      {isAnnualPlan ? 'R$ 119' : 'R$ 149'}/mês
+                    </span>
+                  </div>
+
+                  <div className="rounded-2xl bg-white/10 p-3.5 border border-white/10 flex items-center justify-between">
+                    <div>
+                      <p className="font-extrabold text-white">Redes &amp; Multi-Bares</p>
+                      <p className="text-[11px] text-white/75">Múltiplas Filiais &amp; DRE</p>
+                    </div>
+                    <span className="text-base font-black text-[#DDA76A]">
+                      {isAnnualPlan ? 'R$ 239' : 'R$ 299'}/mês
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-[11px] text-white/75 mt-4 flex items-center gap-1.5">
+                <Check className="h-4 w-4 text-[#4ADE80] shrink-0" />
+                <span>Sem fidelidade e sem necessidade de cartão no teste.</span>
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================================
+          13. CUSTOMER TESTIMONIALS (Sarab #testimonials style)
+          ============================================================ */}
+      <section id="testimonials" className="py-20 px-4 sm:px-6 lg:px-8 bg-white border-b border-[#EFE8DE]">
+        <div className="mx-auto max-w-7xl">
+          <div className="text-center max-w-xl mx-auto mb-12">
+            <span className="text-xs font-bold uppercase tracking-widest text-[#C87A5B]">
+              Quem Usa no Balcão
+            </span>
+            <h2 className="text-2xl sm:text-4xl font-black text-[#2C221E] mt-1">
+              Avaliação dos <span className="text-[#C87A5B]">Donos de Bares</span>
+            </h2>
+            <div className="h-1 w-14 bg-[#C87A5B] rounded-full mx-auto my-3" />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {TESTIMONIALS.map((t) => (
+              <div
+                key={t.name}
+                className="rounded-3xl bg-[#FAF6F0] border border-[#EFE8DE] p-7 shadow-soft flex flex-col justify-between space-y-5"
+              >
+                <div className="space-y-3">
+                  <div className="flex items-center gap-1 text-[#D97706]">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="h-4 w-4 fill-current" />
+                    ))}
+                  </div>
+                  <p className="text-xs sm:text-sm text-[#2C221E] leading-relaxed">
+                    &ldquo;{t.quote}&rdquo;
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-3 pt-3 border-t border-[#EFE8DE]">
+                  <img
+                    src={t.avatar}
+                    alt={t.name}
+                    className="h-11 w-11 rounded-full object-cover border-2 border-white shadow-sm"
+                  />
+                  <div>
+                    <div className="text-xs font-extrabold text-[#2C221E]">
+                      {t.name}
+                    </div>
+                    <div className="text-[11px] font-semibold text-[#70625B]">
+                      {t.role}
+                    </div>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* 9. BANNER FINAL CTA (Estilo Automark em Tom Espresso e Terracota) */}
-        <section className="px-4 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-5xl rounded-3xl border border-[#EFE8DE] bg-gradient-to-br from-[#2C221E] via-[#241B18] to-[#1A1310] p-8 sm:p-14 text-center text-white relative overflow-hidden shadow-soft-lg">
-            <div
-              className="pointer-events-none absolute inset-0 -z-10 rounded-3xl opacity-30 blur-3xl"
-              style={{
-                background:
-                  'radial-gradient(circle at center, rgba(200, 122, 91, 0.4) 0%, transparent 70%)',
-              }}
-            />
-            <h2 className="text-2xl sm:text-4xl font-extrabold mb-4">
-              Pronto para colocar o estoque do seu bar no piloto automático?
-            </h2>
-            <p className="mx-auto max-w-xl text-xs sm:text-sm text-[#FAF6F0]/85 mb-8 font-normal">
-              Junte-se a donos de bares que pararam de perder dinheiro com quebras, chopp vencido e furos de caixa no fim de semana.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <button
-                type="button"
-                onClick={() => handleOpenAuth('register')}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-2xl bg-[#C87A5B] hover:bg-[#B2684B] px-8 py-4 text-xs sm:text-sm font-black text-white shadow-soft transition-all active:scale-95"
-              >
-                <Sparkles className="h-4 w-4" />
-                <span>Começar Teste Grátis de 14 Dias</span>
-              </button>
-              <button
-                type="button"
-                onClick={onNavigateToDashboard}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-6 py-4 text-xs sm:text-sm font-bold text-white hover:bg-white/15 transition-all"
-              >
-                <span>Acessar Demonstração</span>
-              </button>
-            </div>
-          </div>
-        </section>
-      </main>
-
-      {/* 10. RODAPÉ INSTITUCIONAL COM O LOGO OFICIAL */}
-      <footer className="border-t border-[#EFE8DE] bg-[#FFFFFF] py-10 text-xs text-[#70625B]">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg border border-[#EFE8DE] bg-[#F4EDE4]">
-              <img
-                src="/logo.png"
-                alt="MeuBotequim"
-                className="h-full w-full object-cover"
-              />
-            </div>
-            <span className="font-extrabold text-[#2C221E]">
-              Meu<span className="text-[#C87A5B]">Botequim</span>
+      {/* ============================================================
+          14. RESERVATION / DEMO BOOKING FORM (Sarab #reservation style)
+          ============================================================ */}
+      <section id="reservation" className="py-20 px-4 sm:px-6 lg:px-8 bg-[#FAF6F0] scroll-mt-16">
+        <div className="mx-auto max-w-7xl">
+          <div className="text-center max-w-xl mx-auto mb-12">
+            <span className="text-xs font-bold uppercase tracking-widest text-[#C87A5B]">
+              Implantação &amp; Reservas
             </span>
-            <span className="text-[#EFE8DE]">|</span>
-            <span>© {new Date().getFullYear()} MeuBotequim — Sistema Especializado para Bares, Botecos & Restaurantes.</span>
+            <h2 className="text-2xl sm:text-4xl font-black text-[#2C221E] mt-1">
+              Agende uma <span className="text-[#C87A5B]">Demonstração ou Mesa</span>
+            </h2>
+            <div className="h-1 w-14 bg-[#C87A5B] rounded-full mx-auto my-3" />
+            <p className="text-xs sm:text-sm text-[#70625B]">
+              Quer implantar o MeuBotequim no seu estabelecimento ou reservar uma experiência gastronômica? Preencha abaixo.
+            </p>
           </div>
 
-          <div className="flex items-center gap-5 text-[#70625B]">
-            <a href="#recursos" className="hover:text-[#2C221E] transition-colors">Recursos</a>
-            <a href="#planos" className="hover:text-[#2C221E] transition-colors">Preços</a>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            {/* Left Dark Contact Card (4 cols) */}
+            <div className="lg:col-span-4 rounded-3xl bg-[#161210] text-white p-7 sm:p-8 space-y-6 shadow-soft-lg">
+              <div>
+                <h3 className="text-xl font-black text-white">
+                  Central de Atendimento
+                </h3>
+                <p className="text-xs text-stone-400 mt-1">
+                  Respondemos em menos de 15 minutos ou instantaneamente pelo Blip Chat.
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center gap-3.5">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#C87A5B]/20 text-[#C87A5B]">
+                    <Clock className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <strong className="block text-[11px] uppercase tracking-wider text-stone-400">
+                      Horário de Atendimento
+                    </strong>
+                    <span className="text-xs sm:text-sm font-bold text-white">
+                      Ter a Dom, 09:00 às 23:00
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3.5">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#C87A5B]/20 text-[#C87A5B]">
+                    <Phone className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <strong className="block text-[11px] uppercase tracking-wider text-stone-400">
+                      WhatsApp &amp; Comercial
+                    </strong>
+                    <span className="text-xs sm:text-sm font-bold text-white">
+                      (11) 98765-4321
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3.5">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#C87A5B]/20 text-[#C87A5B]">
+                    <Users className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <strong className="block text-[11px] uppercase tracking-wider text-stone-400">
+                      Grupos &amp; Franquias
+                    </strong>
+                    <span className="text-xs sm:text-sm font-bold text-white">
+                      Onboarding para redes com 2+ bares
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3.5">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#C87A5B]/20 text-[#C87A5B]">
+                    <MapPin className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <strong className="block text-[11px] uppercase tracking-wider text-stone-400">
+                      Localização
+                    </strong>
+                    <span className="text-xs sm:text-sm font-bold text-white">
+                      Rua dos Boêmios, 142 - Vila Madalena, SP
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => openBlipChatWidget()}
+                className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#D97706] hover:bg-[#B45309] py-3 text-xs font-extrabold text-white transition-colors"
+              >
+                <MessageSquare className="h-4 w-4" />
+                <span>Chamar Atendente no Blip Chat</span>
+              </button>
+            </div>
+
+            {/* Right Form Card (8 cols) */}
+            <div className="lg:col-span-8 rounded-3xl bg-white border border-[#EFE8DE] p-6 sm:p-8 shadow-soft">
+              <form onSubmit={handleReservationSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label
+                      htmlFor="res-name"
+                      className="block text-xs font-bold text-[#2C221E] mb-1.5"
+                    >
+                      Nome Completo *
+                    </label>
+                    <input
+                      id="res-name"
+                      type="text"
+                      required
+                      value={resForm.fullName}
+                      onChange={(e) =>
+                        setResForm({ ...resForm, fullName: e.target.value })
+                      }
+                      placeholder="Ex: Rafael Brandão"
+                      className="w-full rounded-xl border border-[#EFE8DE] bg-[#FAF6F0] px-3.5 py-2.5 text-xs text-[#2C221E] focus:border-[#C87A5B] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C87A5B]"
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="res-phone"
+                      className="block text-xs font-bold text-[#2C221E] mb-1.5"
+                    >
+                      Telefone / WhatsApp *
+                    </label>
+                    <input
+                      id="res-phone"
+                      type="tel"
+                      required
+                      value={resForm.phone}
+                      onChange={(e) =>
+                        setResForm({ ...resForm, phone: e.target.value })
+                      }
+                      placeholder="(11) 99999-9999"
+                      className="w-full rounded-xl border border-[#EFE8DE] bg-[#FAF6F0] px-3.5 py-2.5 text-xs text-[#2C221E] focus:border-[#C87A5B] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C87A5B]"
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="res-email"
+                      className="block text-xs font-bold text-[#2C221E] mb-1.5"
+                    >
+                      E-mail Corporativo *
+                    </label>
+                    <input
+                      id="res-email"
+                      type="email"
+                      required
+                      value={resForm.email}
+                      onChange={(e) =>
+                        setResForm({ ...resForm, email: e.target.value })
+                      }
+                      placeholder="voce@seubar.com.br"
+                      className="w-full rounded-xl border border-[#EFE8DE] bg-[#FAF6F0] px-3.5 py-2.5 text-xs text-[#2C221E] focus:border-[#C87A5B] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C87A5B]"
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="res-size"
+                      className="block text-xs font-bold text-[#2C221E] mb-1.5"
+                    >
+                      Porte do Estabelecimento / Mesa *
+                    </label>
+                    <select
+                      id="res-size"
+                      value={resForm.barSize}
+                      onChange={(e) =>
+                        setResForm({ ...resForm, barSize: e.target.value })
+                      }
+                      className="w-full rounded-xl border border-[#EFE8DE] bg-[#FAF6F0] px-3.5 py-2.5 text-xs font-semibold text-[#2C221E] focus:border-[#C87A5B] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C87A5B]"
+                    >
+                      <option>Boteco / Quiosque (até 50 lugares)</option>
+                      <option>Bar Médio (50 a 150 lugares)</option>
+                      <option>Choperia / Casa Noturna (150+ lugares)</option>
+                      <option>Rede / Grupo Gastronômico (2+ filiais)</option>
+                      <option>Reserva de Mesa para Clientes</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="res-date"
+                      className="block text-xs font-bold text-[#2C221E] mb-1.5"
+                    >
+                      Data Preferencial
+                    </label>
+                    <input
+                      id="res-date"
+                      type="date"
+                      value={resForm.date}
+                      onChange={(e) =>
+                        setResForm({ ...resForm, date: e.target.value })
+                      }
+                      className="w-full rounded-xl border border-[#EFE8DE] bg-[#FAF6F0] px-3.5 py-2.5 text-xs text-[#2C221E] focus:border-[#C87A5B] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C87A5B]"
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="res-time"
+                      className="block text-xs font-bold text-[#2C221E] mb-1.5"
+                    >
+                      Horário Preferencial
+                    </label>
+                    <select
+                      id="res-time"
+                      value={resForm.time}
+                      onChange={(e) =>
+                        setResForm({ ...resForm, time: e.target.value })
+                      }
+                      className="w-full rounded-xl border border-[#EFE8DE] bg-[#FAF6F0] px-3.5 py-2.5 text-xs font-semibold text-[#2C221E] focus:border-[#C87A5B] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C87A5B]"
+                    >
+                      <option>10:00</option>
+                      <option>14:00</option>
+                      <option>16:00</option>
+                      <option>18:00</option>
+                      <option>19:00</option>
+                      <option>20:30</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="res-notes"
+                    className="block text-xs font-bold text-[#2C221E] mb-1.5"
+                  >
+                    Observações ou Necessidades do Bar
+                  </label>
+                  <textarea
+                    id="res-notes"
+                    rows={3}
+                    value={resForm.notes}
+                    onChange={(e) =>
+                      setResForm({ ...resForm, notes: e.target.value })
+                    }
+                    placeholder="Conte se você deseja priorizar balanço cego, controle de chopp ou integração com WhatsApp/Blip..."
+                    className="w-full rounded-xl border border-[#EFE8DE] bg-[#FAF6F0] px-3.5 py-2.5 text-xs text-[#2C221E] focus:border-[#C87A5B] focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C87A5B]"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-[#C87A5B] hover:bg-[#B2684B] py-3.5 text-xs sm:text-sm font-extrabold text-white shadow-soft transition-all active:scale-95"
+                >
+                  <CalendarCheck className="h-4 w-4" />
+                  <span>Confirmar Agendamento</span>
+                </button>
+
+                {resSubmitted && (
+                  <div
+                    role="status"
+                    className="rounded-2xl bg-[#5B8A62]/15 border border-[#5B8A62]/30 p-3.5 text-xs font-bold text-[#5B8A62] flex items-center gap-2"
+                  >
+                    <Check className="h-4 w-4 shrink-0" />
+                    <span>
+                      Solicitação registrada com sucesso! Nossa equipe entrará em contato pelo WhatsApp informado.
+                    </span>
+                  </div>
+                )}
+              </form>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================================
+          15. NEWSLETTER BANNER (Sarab #newsletter style)
+          ============================================================ */}
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-[#2C221E] text-white">
+        <div className="mx-auto max-w-3xl text-center space-y-4">
+          <span className="text-xs font-bold uppercase tracking-widest text-[#DDA76A]">
+            Boletim de Gestão de Bares
+          </span>
+          <h2 className="text-2xl sm:text-3xl font-black text-white">
+            Receba Planilhas de Ficha Técnica &amp;{' '}
+            <span className="text-[#DDA76A]">Dicas de Giro</span>
+          </h2>
+          <p className="text-xs sm:text-sm text-stone-300">
+            Cadastre seu e-mail para receber alertas de tendências para bares, restaurantes e automação com IA.
+          </p>
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (newsletterEmail.trim()) {
+                setNewsletterSubmitted(true);
+                setNewsletterEmail('');
+              }
+            }}
+            className="mx-auto max-w-lg flex flex-col sm:flex-row gap-2 pt-2"
+          >
+            <input
+              type="email"
+              required
+              value={newsletterEmail}
+              onChange={(e) => setNewsletterEmail(e.target.value)}
+              placeholder="Digite seu melhor e-mail..."
+              className="flex-1 rounded-full bg-white/10 border border-white/20 px-5 py-3 text-xs text-white placeholder:text-stone-400 focus:border-[#DDA76A] focus:outline-none"
+            />
             <button
-              type="button"
-              onClick={() => handleOpenAuth('login')}
-              className="hover:text-[#2C221E] transition-colors"
+              type="submit"
+              className="inline-flex items-center justify-center gap-1.5 rounded-full bg-[#C87A5B] hover:bg-[#B2684B] px-6 py-3 text-xs font-extrabold text-white transition-colors"
             >
-              Entrar
+              <Send className="h-3.5 w-3.5" />
+              <span>Inscrever-se</span>
             </button>
+          </form>
+
+          {newsletterSubmitted ? (
+            <p className="text-xs font-bold text-[#4ADE80]">
+              Inscrição confirmada! Obrigado por acompanhar o MeuBotequim.
+            </p>
+          ) : (
+            <p className="text-[11px] text-stone-400 inline-flex items-center gap-1">
+              <Lock className="h-3 w-3" />
+              <span>Zero spam. Cancele quando quiser.</span>
+            </p>
+          )}
+        </div>
+      </section>
+
+      {/* ============================================================
+          16. 4-COLUMN FOOTER (Sarab footer style)
+          ============================================================ */}
+      <footer className="bg-[#14110F] text-stone-300 pt-16 pb-10 px-4 sm:px-6 lg:px-8 border-t border-white/10 text-xs">
+        <div className="mx-auto max-w-7xl">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-10 pb-12 border-b border-white/10">
+            {/* Col 1: Brand */}
+            <div className="lg:col-span-4 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#C87A5B] overflow-hidden">
+                  <img
+                    src="/logo.png"
+                    alt="MeuBotequim"
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <span className="text-xl font-black text-white">
+                  Meu<span className="text-[#C87A5B]">Botequim</span>
+                </span>
+              </div>
+              <p className="text-xs text-stone-400 leading-relaxed max-w-sm">
+                Plataforma completa de gestão de estoque, balanço cego em 3 minutos, precificação noturna e atendimento inteligente integrado ao Blip Chat com Gemini IA.
+              </p>
+            </div>
+
+            {/* Col 2: Quick Links */}
+            <div className="lg:col-span-2 space-y-3">
+              <h4 className="text-xs font-extrabold uppercase tracking-wider text-white">
+                Navegação
+              </h4>
+              <ul className="space-y-2 text-stone-400">
+                <li>
+                  <a href="#hero" className="hover:text-[#DDA76A] transition-colors">
+                    Início
+                  </a>
+                </li>
+                <li>
+                  <a href="#about" className="hover:text-[#DDA76A] transition-colors">
+                    Sobre o Sistema
+                  </a>
+                </li>
+                <li>
+                  <a href="#menu" className="hover:text-[#DDA76A] transition-colors">
+                    Cardápio &amp; Estoque
+                  </a>
+                </li>
+                <li>
+                  <a href="#hours" className="hover:text-[#DDA76A] transition-colors">
+                    Horários &amp; Planos
+                  </a>
+                </li>
+                <li>
+                  <a href="#reservation" className="hover:text-[#DDA76A] transition-colors">
+                    Agendar Demo
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            {/* Col 3: Categories */}
+            <div className="lg:col-span-2 space-y-3">
+              <h4 className="text-xs font-extrabold uppercase tracking-wider text-white">
+                Categorias
+              </h4>
+              <ul className="space-y-2 text-stone-400">
+                {CATEGORIES.slice(1).map((cat) => (
+                  <li key={cat.key}>
+                    <button
+                      type="button"
+                      onClick={() => handleCategorySelect(cat.key, true)}
+                      className="hover:text-[#DDA76A] transition-colors text-left"
+                    >
+                      {cat.name}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Col 4: Contact Info */}
+            <div className="lg:col-span-4 space-y-3">
+              <h4 className="text-xs font-extrabold uppercase tracking-wider text-white">
+                Contato &amp; Acesso Rápido
+              </h4>
+              <div className="space-y-2.5 text-stone-400">
+                <p className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-[#C87A5B] shrink-0" />
+                  <span>Rua dos Boêmios, 142 - Vila Madalena, São Paulo - SP</span>
+                </p>
+                <p className="flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-[#C87A5B] shrink-0" />
+                  <span>(11) 98765-4321</span>
+                </p>
+                <p className="flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-[#C87A5B] shrink-0" />
+                  <span>contato@meubotequim.com.br</span>
+                </p>
+              </div>
+              <div className="pt-2 flex gap-2">
+                <button
+                  type="button"
+                  onClick={onNavigateToDashboard}
+                  className="rounded-xl bg-[#C87A5B] hover:bg-[#B2684B] px-4 py-2 text-xs font-bold text-white transition-colors"
+                >
+                  Acessar Painel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleOpenAuth('login')}
+                  className="rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 px-4 py-2 text-xs font-bold text-white transition-colors"
+                >
+                  Login SaaS
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-stone-500">
+            <p>
+              © {new Date().getFullYear()} MeuBotequim. Todos os direitos reservados.
+            </p>
+            <p>
+              Arquitetura Full-Stack NestJS + PostgreSQL (Prisma) + React 19 + Blip Chat IA
+            </p>
           </div>
         </div>
       </footer>

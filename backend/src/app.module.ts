@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { MongooseModule } from '@nestjs/mongoose';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
+import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { CategoriesModule } from './categories/categories.module';
@@ -22,9 +22,7 @@ import { AiAssistantModule } from './ai-assistant/ai-assistant.module';
         limit: 120, // 120 requisições por minuto por IP globalmente
       },
     ]),
-    MongooseModule.forRoot(
-      process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/meu-botequim',
-    ),
+    PrismaModule,
     TenantsModule,
     AuthModule,
     UsersModule,

@@ -1,16 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
 import {
   Content,
   FunctionDeclaration,
   GoogleGenAI,
   Type,
 } from '@google/genai';
-import { Model, Types } from 'mongoose';
-import {
-  Product,
-  ProductDocument,
-} from '../products/schemas/product.schema';
+import { Prisma } from '@prisma/client';
+import { PrismaService } from '../prisma/prisma.service';
 import {
   BlipIntent,
   BlipWebhookDto,
@@ -45,7 +41,7 @@ Regras obrigatórias de conduta:
   private readonly consultarEstoqueDeclaration: FunctionDeclaration = {
     name: 'consultarEstoqueDisponivel',
     description:
-      'Consulta o banco de dados MongoDB do MeuBotequim para listar produtos ativos com estoque disponível (> 0) e seus respectivos preços.',
+      'Consulta o banco de dados PostgreSQL do MeuBotequim para listar produtos ativos com estoque disponível (> 0) e seus respectivos preços.',
     parameters: {
       type: Type.OBJECT,
       properties: {
@@ -58,10 +54,7 @@ Regras obrigatórias de conduta:
     },
   };
 
-  constructor(
-    @InjectModel(Product.name)
-    private readonly productModel: Model<ProductDocument>,
-  ) {
+  constructor(private readonly prisma: PrismaService) {
     this.ai = new GoogleGenAI({
       apiKey: process.env.GEMINI_API_KEY || 'MISSING_GEMINI_API_KEY',
     });
@@ -96,39 +89,36 @@ Regras obrigatórias de conduta:
     termoBusca?: string,
     establishmentId?: string,
   ): Promise<StockItemSummary[]> {
-    const filter: Record<string, unknown> = {
-      isActive: true,
-      currentStock: { $gt: 0 },
-    };
+    const andConditions: Prisma.ProductWhereInput[] = [
+      { isActive: true },
+      { currentStock: { gt: 0 } },
+    ];
 
-    if (
-      establishmentId &&
-      establishmentId !== 'demo' &&
-      Types.ObjectId.isValid(establishmentId)
-    ) {
-      filter.tenantId = {
-        $in: [new Types.ObjectId(establishmentId), null],
-      };
+    if (establishmentId && establishmentId !== 'demo') {
+      andConditions.push({
+        OR: [{ tenantId: establishmentId }, { tenantId: null }],
+      });
     }
 
     if (termoBusca && termoBusca.trim().length > 0) {
-      const escapedTerm = termoBusca
-        .trim()
-        .replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const regex = new RegExp(escapedTerm, 'i');
-      filter.$or = [{ name: regex }, { brand: regex }];
+      const term = termoBusca.trim();
+      andConditions.push({
+        OR: [
+          { name: { contains: term, mode: 'insensitive' } },
+          { brand: { contains: term, mode: 'insensitive' } },
+        ],
+      });
     }
 
-    const products = await this.productModel
-      .find(filter)
-      .populate('category')
-      .sort({ currentStock: -1, name: 1 })
-      .limit(10)
-      .exec();
+    const products = await this.prisma.product.findMany({
+      where: { AND: andConditions },
+      include: { category: true },
+      orderBy: [{ currentStock: 'desc' }, { name: 'asc' }],
+      take: 10,
+    });
 
     return products.map((prod) => {
-      const categoryName =
-        (prod.category as unknown as { name?: string })?.name || 'Geral';
+      const categoryName = prod.category?.name || 'Geral';
       const nightPrice =
         prod.nightPrice && prod.nightPrice > 0
           ? prod.nightPrice
@@ -175,7 +165,7 @@ Regras obrigatórias de conduta:
           .slice(0, 5)
           .map(
             (i) =>
-              `• ${i.nome} — R$ ${i.precoDiurno.toFixed(2)} (${i.quantidadeDisponivel} ${i.unidade} disp.)`,
+              `• ${i.nome} - R$ ${i.precoDiurno.toFixed(2)} (${i.quantidadeDisponivel} ${i.unidade} disp.)`,
           )
           .join('\n');
         return {
@@ -212,7 +202,6 @@ Regras obrigatórias de conduta:
         },
       });
 
-      // Execução iterativa caso o modelo solicite a tool consultarEstoqueDisponivel
       let maxToolTurns = 3;
       while (
         response.functionCalls &&
@@ -233,7 +222,6 @@ Regras obrigatórias de conduta:
             establishmentId,
           );
 
-          // Caso a busca específica retorne vazio, também busca sugestões gerais em estoque para o modelo sugerir alternativas
           let alternativasDisponiveis: StockItemSummary[] = [];
           if (itensEncontrados.length === 0 && args.termoBusca) {
             alternativasDisponiveis = await this.consultarEstoqueDisponivel(

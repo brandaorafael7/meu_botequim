@@ -2,7 +2,6 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsEnum,
   IsInt,
-  IsMongoId,
   IsNotEmpty,
   IsOptional,
   IsPositive,
@@ -11,8 +10,8 @@ import {
 import { MovementType } from '../schemas/stock-movement.schema';
 
 export class CreateStockMovementDto {
-  @ApiProperty({ example: '65f... (ID do Produto)' })
-  @IsMongoId({ message: 'O ID do produto deve ser válido.' })
+  @ApiProperty({ example: 'uuid-do-produto' })
+  @IsString({ message: 'O ID do produto deve ser válido.' })
   @IsNotEmpty({ message: 'O produto é obrigatório.' })
   productId: string;
 
@@ -35,7 +34,7 @@ export class CreateStockMovementDto {
   @IsString({ message: 'O motivo deve ser um texto.' })
   reason?: string;
 
-  @ApiPropertyOptional({ example: '6a8793259eb11f3117cb4c10' })
+  @ApiPropertyOptional({ example: 'uuid-do-tenant' })
   @IsOptional()
   @IsString()
   tenantId?: string;
