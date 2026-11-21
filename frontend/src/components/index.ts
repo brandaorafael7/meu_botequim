@@ -14,4 +14,6 @@ export * from './meubotequim/AuditTrailTable';
 export * from './meubotequim/EditPriceModal';
 export * from './meubotequim/NewProductModal';
 export * from './meubotequim/NotificationsPopover';
+export * from './BlipChatWidget';
+
 

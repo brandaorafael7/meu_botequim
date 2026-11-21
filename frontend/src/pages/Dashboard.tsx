@@ -34,6 +34,7 @@ import { DrinkRecipesManager } from '../components/meubotequim/DrinkRecipesManag
 import { AuditTrailTable } from '../components/meubotequim/AuditTrailTable';
 import { EditPriceModal } from '../components/meubotequim/EditPriceModal';
 import { NewProductModal } from '../components/meubotequim/NewProductModal';
+import { BlipChatWidget } from '../components/BlipChatWidget';
 import {
   authService,
   inventoryService,
@@ -1059,6 +1060,17 @@ export const MeuBotequimDashboard: React.FC<MeuBotequimDashboardProps> = ({
           <span>{toastMessage}</span>
         </aside>
       )}
+
+      {/* Assistente Virtual Blip Chat contextualizado com o estabelecimento ativo */}
+      <BlipChatWidget
+        establishmentId={
+          currentTenant?.id ||
+          profile.tenantId ||
+          (typeof window !== 'undefined'
+            ? localStorage.getItem('tenantId') || undefined
+            : undefined)
+        }
+      />
     </div>
   );
 };

@@ -18,6 +18,7 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import { AuthModal } from '../components/meubotequim/AuthModal';
+import { BlipChatWidget } from '../components/BlipChatWidget';
 
 interface LandingPageProps {
   onNavigateToDashboard: () => void;
@@ -843,6 +844,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         initialMode={authModalMode}
         onClose={() => setIsAuthModalOpen(false)}
         onSuccess={handleAuthSuccess}
+      />
+
+      {/* Assistente Virtual Blip Chat */}
+      <BlipChatWidget
+        establishmentId={
+          typeof window !== 'undefined'
+            ? localStorage.getItem('tenantId') || undefined
+            : undefined
+        }
       />
     </div>
   );

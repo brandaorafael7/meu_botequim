@@ -11,6 +11,7 @@ import { StockMovementsModule } from './stock-movements/stock-movements.module';
 import { SettingsModule } from './settings/settings.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { TenantsModule } from './tenants/tenants.module';
+import { AiAssistantModule } from './ai-assistant/ai-assistant.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { TenantsModule } from './tenants/tenants.module';
     StockMovementsModule,
     SettingsModule,
     DashboardModule,
+    AiAssistantModule,
   ],
   providers: [
     {
