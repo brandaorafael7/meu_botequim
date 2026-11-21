@@ -336,28 +336,29 @@ const TEAM_ROLES = [
     name: 'Moe Szyslak',
     role: 'Proprietário (Taverna do Moe)',
     experience: 'Visão de Lucro, DRE & Custos de Barris',
-    image:
-      'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=600&q=80',
+    image: '/characters/moe-szyslak.png',
+    imgClass: 'object-contain object-top p-3 bg-[#F4EDE4]',
   },
   {
     name: 'Thomas Shelby',
     role: 'Gerente (The Garrison Pub)',
     experience: 'Compras, Entradas & Fornecedores',
-    image:
-      'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=600&q=80',
+    image: '/characters/thomas-shelby.jpg',
+    imgClass: 'object-cover object-top',
   },
   {
     name: 'Sanji Vinsmoke',
     role: 'Chefe de Bar & Cozinha (Baratie)',
     experience: 'Balanço Cego, Fichas Técnicas & Chopp',
-    image:
-      'https://images.unsplash.com/photo-1574096079513-d8259312b785?auto=format&fit=crop&w=600&q=80',
+    image: '/characters/sanji-vinsmoke.jpg',
+    imgClass: 'object-cover object-center',
   },
   {
     name: 'J.A.R.V.I.S. (Blip IA)',
     role: 'Concierge Virtual 24h',
     experience: 'Consulta Estoque no Neon & Transbordo',
-    image: '/logo.png',
+    image: '/characters/jarvis-ai.png',
+    imgClass: 'object-cover object-center',
   },
 ];
 
@@ -365,24 +366,24 @@ const TESTIMONIALS = [
   {
     name: 'Tifa Lockhart',
     role: 'Sócia do 7th Heaven Bar (Setor 7)',
-    avatar:
-      'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80',
+    avatar: '/characters/tifa-lockhart.png',
+    avatarClass: 'object-cover object-top bg-[#F4EDE4]',
     quote:
       'Antes do MeuBotequim a gente perdia quase 2 barris de chopp por mês no 7th Heaven sem saber se era espuma, vazamento ou desvio. O balanço cego em 3 minutos mudou nossa rotina.',
   },
   {
     name: 'Ted Mosby & Barney Stinson',
     role: "Fundadores do Bar Puzzles & Clientes do MacLaren's",
-    avatar:
-      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80',
+    avatar: '/characters/ted-mosby.jpg',
+    avatarClass: 'object-cover object-top',
     quote:
       'Quando abrimos o Puzzles, nosso maior medo era o chopp acabar no meio de uma noite lendária. A tarifa noturna pós-meia-noite aumentou nossa margem e o bot da Blip já responde o preço certo.',
   },
   {
     name: 'Guinan',
     role: 'Gerente do Lounge Ten Forward',
-    avatar:
-      'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=400&q=80',
+    avatar: '/characters/guinan.jpg',
+    avatarClass: 'object-cover object-center',
     quote:
       'A lista de compras integrada ao WhatsApp economiza 2 horas toda quinta-feira. Em 2 cliques eu mando o pedido exato de destilados e insumos para a distribuidora antes do fim de semana.',
   },
@@ -1838,7 +1839,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   <img
                     src={member.image}
                     alt={member.name}
-                    className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                    className={`w-full h-full ${member.imgClass} transition-transform duration-500 group-hover:scale-105`}
                   />
                 </div>
                 <div className="p-5 text-center">
@@ -2052,7 +2053,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   <img
                     src={t.avatar}
                     alt={t.name}
-                    className="h-11 w-11 rounded-full object-cover border-2 border-white shadow-sm"
+                    className={`h-12 w-12 rounded-full ${t.avatarClass} border-2 border-white shadow-sm shrink-0`}
                   />
                   <div>
                     <div className="text-xs font-extrabold text-[#2C221E]">
