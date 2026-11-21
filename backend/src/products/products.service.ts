@@ -19,16 +19,46 @@ export class ProductsService {
     private readonly categoriesService: CategoriesService,
   ) {}
 
-  async create(createProductDto: CreateProductDto): Promise<Product> {
-    if (createProductDto.category) {
-      if (!Types.ObjectId.isValid(createProductDto.category)) {
-        throw new BadRequestException('ID de categoria inválido.');
-      }
-      await this.categoriesService.findOne(createProductDto.category);
+  private async resolveCategoryObjectId(
+    categoryInput: string | undefined,
+    tenantId?: string,
+  ): Promise<Types.ObjectId | null> {
+    if (!categoryInput || !categoryInput.trim()) {
+      return null;
     }
 
-    const createdProduct = new this.productModel(createProductDto);
-    return createdProduct.save();
+    const trimmed = categoryInput.trim();
+    if (Types.ObjectId.isValid(trimmed)) {
+      await this.categoriesService.findOne(trimmed, tenantId);
+      return new Types.ObjectId(trimmed);
+    }
+
+    const categoryDoc = await this.categoriesService.findOrCreateByName(
+      trimmed,
+      tenantId,
+    );
+    return categoryDoc._id;
+  }
+
+  async create(createProductDto: CreateProductDto): Promise<Product> {
+    const resolvedCategoryId = await this.resolveCategoryObjectId(
+      createProductDto.category,
+      createProductDto.tenantId,
+    );
+
+    const resolvedTenantId =
+      createProductDto.tenantId &&
+      Types.ObjectId.isValid(createProductDto.tenantId)
+        ? new Types.ObjectId(createProductDto.tenantId)
+        : null;
+
+    const createdProduct = new this.productModel({
+      ...createProductDto,
+      category: resolvedCategoryId,
+      tenantId: resolvedTenantId,
+    });
+    const saved = await createdProduct.save();
+    return saved.populate('category');
   }
 
   async findAll(tenantId?: string): Promise<Product[]> {
@@ -118,11 +148,10 @@ export class ProductsService {
       throw new NotFoundException(`Produto com ID ${id} não encontrado.`);
     }
 
-    // Validação estrita de Tenant
+    // Validação estrita de Tenant: produtos privados exigem autenticação do respectivo tenant
     if (
-      tenantId &&
       product.tenantId &&
-      product.tenantId.toString() !== tenantId
+      (!tenantId || product.tenantId.toString() !== tenantId)
     ) {
       throw new UnauthorizedException('Acesso não autorizado a este produto.');
     }
@@ -145,27 +174,29 @@ export class ProductsService {
       throw new NotFoundException(`Produto com ID ${id} não encontrado.`);
     }
 
-    // Verificação de autorização multi-tenant
+    // Verificação de autorização multi-tenant (protege também itens globais com tenantId: null contra alteração por tenants comuns)
     if (
       !isAdmin &&
-      tenantId &&
-      existingProduct.tenantId &&
-      existingProduct.tenantId.toString() !== tenantId
+      (!existingProduct.tenantId ||
+        !tenantId ||
+        existingProduct.tenantId.toString() !== tenantId)
     ) {
       throw new UnauthorizedException(
-        'Você não tem permissão para editar produtos de outro bar.',
+        'Você não tem permissão para editar este produto.',
       );
     }
 
+    const updatePayload: Record<string, unknown> = { ...updateProductDto };
+
     if (updateProductDto.category) {
-      if (!Types.ObjectId.isValid(updateProductDto.category)) {
-        throw new BadRequestException('ID de categoria inválido.');
-      }
-      await this.categoriesService.findOne(updateProductDto.category);
+      updatePayload.category = await this.resolveCategoryObjectId(
+        updateProductDto.category,
+        tenantId,
+      );
     }
 
     const updatedProduct = await this.productModel
-      .findByIdAndUpdate(id, updateProductDto, { new: true })
+      .findByIdAndUpdate(id, updatePayload, { new: true })
       .populate('category')
       .exec();
 
@@ -192,12 +223,12 @@ export class ProductsService {
 
     if (
       !isAdmin &&
-      tenantId &&
-      existingProduct.tenantId &&
-      existingProduct.tenantId.toString() !== tenantId
+      (!existingProduct.tenantId ||
+        !tenantId ||
+        existingProduct.tenantId.toString() !== tenantId)
     ) {
       throw new UnauthorizedException(
-        'Você não tem permissão para remover produtos de outro bar.',
+        'Você não tem permissão para remover este produto.',
       );
     }
 

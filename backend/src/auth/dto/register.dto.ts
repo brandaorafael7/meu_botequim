@@ -23,7 +23,9 @@ export class RegisterDto {
   @MinLength(6, { message: 'A senha deve ter no mínimo 6 caracteres.' })
   password!: string;
 
-  @ApiPropertyOptional({ example: 'bar-admin-2026' })
+  @ApiPropertyOptional({
+    description: 'Chave secreta opcional para provisionamento administrativo',
+  })
   @IsOptional()
   @IsString()
   adminKey?: string;

@@ -889,7 +889,13 @@ export const MeuBotequimDashboard: React.FC<MeuBotequimDashboardProps> = ({
 
                 <KpiCard
                   title="Giro Projetado (FDS)"
-                  value="R$ 19.350,00"
+                  value={
+                    metrics && Number(metrics.estimatedRevenue) > 0
+                      ? `R$ ${Number(metrics.estimatedRevenue).toLocaleString('pt-BR', {
+                          minimumFractionDigits: 2,
+                        })}`
+                      : 'R$ 19.350,00'
+                  }
                   subtitle="Estimativa Sex, Sáb e Dom"
                   icon={<CalendarCheck className="h-5 w-5 text-[#DDA76A]" />}
                   badge={{

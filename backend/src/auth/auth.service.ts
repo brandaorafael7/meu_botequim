@@ -143,10 +143,12 @@ export class AuthService {
       throw new ConflictException('Já existe um usuário com este e-mail.');
     }
 
-    // Chave para definir se a conta é de Administrador
-    const validAdminKey =
-      process.env.ADMIN_REGISTRATION_KEY || 'bar-admin-2026';
-    const role = dto.adminKey === validAdminKey ? Role.ADMIN : Role.EMPLOYEE;
+    // Chave para definir se a conta é de Administrador (apenas se configurada via variável de ambiente)
+    const validAdminKey = process.env.ADMIN_REGISTRATION_KEY;
+    const role =
+      validAdminKey && dto.adminKey && dto.adminKey === validAdminKey
+        ? Role.ADMIN
+        : Role.EMPLOYEE;
 
     const newUser = await this.usersService.create({
       name: dto.name,

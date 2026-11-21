@@ -40,45 +40,77 @@ export class StockMovementsService {
       throw new NotFoundException('Produto não encontrado ou inativo.');
     }
 
-    // Se o usuário está logado em um bar, previne movimentar produtos de outros bares
+    // Validação multi-tenant estrita: impede movimentar produtos de outro bar
     if (
-      tenantId &&
       product.tenantId &&
-      product.tenantId.toString() !== tenantId
+      (!tenantId || product.tenantId.toString() !== tenantId)
     ) {
       throw new UnauthorizedException(
         'Você não tem permissão para movimentar estoque deste estabelecimento.',
       );
     }
 
-    const previousStock = product.currentStock;
+    let updatedProduct: ProductDocument | null = null;
+    let previousStock = product.currentStock;
     let newStock = previousStock;
 
+    // Atualização atômica no MongoDB para evitar race conditions em baixas concorrentes
     switch (dto.type) {
       case MovementType.ENTRADA:
-        newStock += dto.quantity;
+        updatedProduct = await this.productModel
+          .findOneAndUpdate(
+            { _id: product._id, isActive: true },
+            { $inc: { currentStock: dto.quantity } },
+            { new: true },
+          )
+          .exec();
+        if (!updatedProduct) {
+          throw new NotFoundException('Produto não encontrado ou inativo.');
+        }
+        newStock = updatedProduct.currentStock;
+        previousStock = newStock - dto.quantity;
         break;
 
       case MovementType.SAIDA:
       case MovementType.PERDA:
-        if (previousStock < dto.quantity) {
+        updatedProduct = await this.productModel
+          .findOneAndUpdate(
+            {
+              _id: product._id,
+              isActive: true,
+              currentStock: { $gte: dto.quantity },
+            },
+            { $inc: { currentStock: -dto.quantity } },
+            { new: true },
+          )
+          .exec();
+        if (!updatedProduct) {
           throw new BadRequestException(
-            `Estoque insuficiente para esta operação. Estoque atual: ${previousStock}`,
+            `Estoque insuficiente para esta operação. Estoque atual: ${product.currentStock}`,
           );
         }
-        newStock -= dto.quantity;
+        newStock = updatedProduct.currentStock;
+        previousStock = newStock + dto.quantity;
         break;
 
       case MovementType.AJUSTE:
+        updatedProduct = await this.productModel
+          .findOneAndUpdate(
+            { _id: product._id, isActive: true },
+            { $set: { currentStock: dto.quantity } },
+            { new: false },
+          )
+          .exec();
+        if (!updatedProduct) {
+          throw new NotFoundException('Produto não encontrado ou inativo.');
+        }
+        previousStock = updatedProduct.currentStock;
         newStock = dto.quantity;
         break;
 
       default:
         throw new BadRequestException('Tipo de movimentação inválido.');
     }
-
-    product.currentStock = newStock;
-    await product.save();
 
     let userObjectId: Types.ObjectId | null = null;
     if (userId && isValidObjectId(userId)) {
@@ -144,9 +176,8 @@ export class StockMovementsService {
     }
 
     if (
-      tenantId &&
       product.tenantId &&
-      product.tenantId.toString() !== tenantId
+      (!tenantId || product.tenantId.toString() !== tenantId)
     ) {
       throw new UnauthorizedException(
         'Acesso não autorizado às movimentações deste produto.',

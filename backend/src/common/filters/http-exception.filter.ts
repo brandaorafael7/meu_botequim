@@ -36,12 +36,11 @@ export class AllExceptionsFilter implements ExceptionFilter {
         error = exception.name;
       }
     } else if (exception instanceof Error) {
+      // Registra detalhes técnicos apenas no log interno do servidor sem expor ao cliente
       this.logger.error(
-        `Exceção não tratada: ${exception.message}`,
+        `Exceção não tratada em ${request.method} ${request.url}: ${exception.message}`,
         exception.stack,
       );
-      message = exception.message;
-      error = exception.name;
     }
 
     response.status(status).json({

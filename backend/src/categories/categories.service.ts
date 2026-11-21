@@ -11,6 +11,10 @@ import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { Category, CategoryDocument } from './schemas/category.schema';
 
+function escapeRegex(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 @Injectable()
 export class CategoriesService {
   constructor(
@@ -21,9 +25,10 @@ export class CategoriesService {
   async create(
     createCategoryDto: CreateCategoryDto,
     tenantId?: string,
-  ): Promise<Category> {
+  ): Promise<CategoryDocument> {
+    const escapedName = escapeRegex(createCategoryDto.name.trim());
     const filter: Record<string, unknown> = {
-      name: { $regex: new RegExp(`^${createCategoryDto.name.trim()}$`, 'i') },
+      name: { $regex: new RegExp(`^${escapedName}$`, 'i') },
       isActive: true,
     };
 
@@ -32,6 +37,8 @@ export class CategoriesService {
         { tenantId: new Types.ObjectId(tenantId) },
         { tenantId: null },
       ];
+    } else {
+      filter.tenantId = null;
     }
 
     const existingCategory = await this.categoryModel.findOne(filter);
@@ -43,6 +50,7 @@ export class CategoriesService {
 
     const categoryData = {
       ...createCategoryDto,
+      name: createCategoryDto.name.trim(),
       tenantId:
         tenantId && isValidObjectId(tenantId)
           ? new Types.ObjectId(tenantId)
@@ -51,6 +59,41 @@ export class CategoriesService {
 
     const createdCategory = new this.categoryModel(categoryData);
     return createdCategory.save();
+  }
+
+  async findOrCreateByName(
+    name: string,
+    tenantId?: string,
+  ): Promise<CategoryDocument> {
+    const escapedName = escapeRegex(name.trim());
+    const filter: Record<string, unknown> = {
+      name: { $regex: new RegExp(`^${escapedName}$`, 'i') },
+      isActive: true,
+    };
+
+    if (tenantId && isValidObjectId(tenantId)) {
+      filter.$or = [
+        { tenantId: new Types.ObjectId(tenantId) },
+        { tenantId: null },
+      ];
+    } else {
+      filter.tenantId = null;
+    }
+
+    const existing = await this.categoryModel.findOne(filter).exec();
+    if (existing) {
+      return existing;
+    }
+
+    const created = new this.categoryModel({
+      name: name.trim(),
+      tenantId:
+        tenantId && isValidObjectId(tenantId)
+          ? new Types.ObjectId(tenantId)
+          : null,
+      isActive: true,
+    });
+    return created.save();
   }
 
   async findAll(tenantId?: string): Promise<Category[]> {
@@ -79,9 +122,8 @@ export class CategoriesService {
     }
 
     if (
-      tenantId &&
       category.tenantId &&
-      category.tenantId.toString() !== tenantId
+      (!tenantId || category.tenantId.toString() !== tenantId)
     ) {
       throw new UnauthorizedException(
         'Acesso não autorizado a esta categoria.',
@@ -110,9 +152,9 @@ export class CategoriesService {
 
     if (
       !isAdmin &&
-      tenantId &&
-      existing.tenantId &&
-      existing.tenantId.toString() !== tenantId
+      (!existing.tenantId ||
+        !tenantId ||
+        existing.tenantId.toString() !== tenantId)
     ) {
       throw new UnauthorizedException(
         'Você não tem permissão para editar esta categoria.',
@@ -147,9 +189,9 @@ export class CategoriesService {
 
     if (
       !isAdmin &&
-      tenantId &&
-      existing.tenantId &&
-      existing.tenantId.toString() !== tenantId
+      (!existing.tenantId ||
+        !tenantId ||
+        existing.tenantId.toString() !== tenantId)
     ) {
       throw new UnauthorizedException(
         'Você não tem permissão para remover esta categoria.',

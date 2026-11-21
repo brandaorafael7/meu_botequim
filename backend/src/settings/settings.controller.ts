@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Patch, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { SettingsService } from './settings.service';
+import { UpdateSettingDto } from './dto/update-setting.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -17,14 +18,12 @@ export class SettingsController {
     return this.settingsService.getSettings();
   }
 
-  // Apenas Administrador altera a identidade
+  // Apenas Administrador ou Proprietário altera a identidade
   @Patch()
   @ApiBearerAuth('JWT-auth')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
-  updateSettings(
-    @Body() data: { storeName?: string; logoUrl?: string; phone?: string },
-  ) {
+  @Roles(Role.ADMIN, Role.OWNER)
+  updateSettings(@Body() data: UpdateSettingDto) {
     return this.settingsService.updateSettings(data);
   }
 }

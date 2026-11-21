@@ -34,8 +34,9 @@ export class StockMovementsController {
   constructor(private readonly stockMovementsService: StockMovementsService) {}
 
   @Post()
-  @Public()
-  @ApiOperation({ summary: 'Registra uma nova movimentação de estoque' })
+  @ApiOperation({
+    summary: 'Registra uma nova movimentação de estoque (Requer Autenticação)',
+  })
   @ApiResponse({
     status: 201,
     description: 'Movimentação registrada com sucesso.',

@@ -29,7 +29,9 @@ export const NewProductModal: React.FC<NewProductModalProps> = ({
 }) => {
   const [name, setName] = useState('');
   const [brand, setBrand] = useState('');
-  const [category, setCategory] = useState(categories[0]?.name || 'Chopp & Cervejas');
+  const [category, setCategory] = useState(
+    categories[0]?._id || categories[0]?.id || categories[0]?.name || 'Chopp & Cervejas',
+  );
   const [unit, setUnit] = useState('un');
   const [currentStock, setCurrentStock] = useState('10');
   const [minStock, setMinStock] = useState('5');
@@ -161,11 +163,14 @@ export const NewProductModal: React.FC<NewProductModalProps> = ({
                 onChange={(e) => setCategory(e.target.value)}
                 className="w-full rounded-xl border border-[#EFE8DE] bg-[#FAF6F0] px-3 py-2.5 text-xs text-[#2C221E] font-medium focus:border-[#C87A5B] focus:bg-white focus:outline-none"
               >
-                {categories.map((c) => (
-                  <option key={c._id || c.id || c.name} value={c.name}>
-                    {c.name}
-                  </option>
-                ))}
+                {categories.map((c) => {
+                  const optionValue = c._id || c.id || c.name;
+                  return (
+                    <option key={optionValue} value={optionValue}>
+                      {c.name}
+                    </option>
+                  );
+                })}
               </select>
             </div>
 
