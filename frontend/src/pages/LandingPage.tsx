@@ -542,47 +542,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   return (
     <div className="min-h-dvh bg-[#FAF6F0] text-[#2C221E] font-sans selection:bg-[#C87A5B]/20 selection:text-[#2C221E] relative overflow-x-hidden">
       {/* ============================================================
-          1. TOP BAR (Sarab #topbar style)
-          ============================================================ */}
-      <div
-        id="topbar"
-        className="bg-[#161210] text-stone-300 py-2 px-4 sm:px-6 lg:px-8 text-xs border-b border-white/10"
-      >
-        <div className="mx-auto max-w-7xl flex flex-wrap items-center justify-between gap-2">
-          <div className="flex flex-wrap items-center gap-4 sm:gap-6">
-            <span className="inline-flex items-center gap-1.5">
-              <Phone className="h-3.5 w-3.5 text-[#DDA76A]" />
-              <span>(11) 98765-4321</span>
-            </span>
-            <span className="hidden sm:inline-flex items-center gap-1.5">
-              <Mail className="h-3.5 w-3.5 text-[#DDA76A]" />
-              <span>contato@meubotequim.com.br</span>
-            </span>
-            <span className="hidden md:inline-flex items-center gap-1.5">
-              <MapPin className="h-3.5 w-3.5 text-[#DDA76A]" />
-              <span>Rua dos Boêmios, 142 - Vila Madalena, SP</span>
-            </span>
-          </div>
-
-          <div className="flex items-center gap-3 ml-auto sm:ml-0">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#C87A5B] px-3 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white">
-              <Flame className="h-3 w-3" />
-              <span>Balanço Cego 3 min + Blip Chat IA</span>
-            </span>
-            <button
-              type="button"
-              onClick={() => openBlipChatWidget()}
-              className="hidden sm:inline-flex items-center gap-1 text-[11px] font-semibold text-[#DDA76A] hover:text-white transition-colors"
-            >
-              <MessageSquare className="h-3 w-3" />
-              <span>Chat Ao Vivo</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* ============================================================
-          2. STICKY NAVBAR (Sarab #nav style + accessible aria-current)
+          1. STICKY NAVBAR (Sarab #nav style + accessible aria-current)
           ============================================================ */}
       <header
         id="nav"

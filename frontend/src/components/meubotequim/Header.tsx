@@ -53,30 +53,6 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-[#EFE8DE] bg-[#FFFFFF]/95 backdrop-blur-md transition-all shadow-soft">
-      {/* Barra Utilitária Superior Estilo Sarab */}
-      <div className="bg-[#161210] text-stone-300 px-4 py-1.5 text-[11px] border-b border-white/10">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-2">
-          <div className="flex items-center gap-3">
-            <span className="inline-flex items-center gap-1.5 font-semibold text-white">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#4ADE80]" />
-              <span>Turno Ativo: {profile.name} ({profile.branch})</span>
-            </span>
-            <span className="hidden md:inline text-stone-500">|</span>
-            <span className="hidden md:inline text-stone-400">
-              Tarifa Noturna Pós-00h &amp; Bot Blip IA Ativos
-            </span>
-          </div>
-          {onNavigateToLanding && (
-            <button
-              type="button"
-              onClick={onNavigateToLanding}
-              className="text-[11px] font-bold text-[#DDA76A] hover:text-white transition-colors"
-            >
-              ← Voltar para Vitrine &amp; Cardápio
-            </button>
-          )}
-        </div>
-      </div>
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Lado Esquerdo: Logotipo MeuBotequim */}
         <div
