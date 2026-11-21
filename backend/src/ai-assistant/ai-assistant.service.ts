@@ -23,6 +23,69 @@ interface StockItemSummary {
   unidade: string;
 }
 
+const PORTUGUESE_STOPWORDS = new Set([
+  'o',
+  'a',
+  'os',
+  'as',
+  'um',
+  'uma',
+  'de',
+  'do',
+  'da',
+  'dos',
+  'das',
+  'em',
+  'no',
+  'na',
+  'nos',
+  'nas',
+  'por',
+  'para',
+  'com',
+  'sem',
+  'que',
+  'qual',
+  'quais',
+  'quanto',
+  'custa',
+  'ta',
+  'esta',
+  'tem',
+  'têm',
+  'voces',
+  'vocês',
+  'voce',
+  'hoje',
+  'agora',
+  'ai',
+  'aí',
+  'disponivel',
+  'disponível',
+  'disponiveis',
+  'estoque',
+  'cardapio',
+  'cardápio',
+  'bar',
+  'balcao',
+  'balcão',
+  'valor',
+  'preco',
+  'preço',
+  'quero',
+  'queria',
+  'gostaria',
+  'boa',
+  'noite',
+  'tarde',
+  'dia',
+  'ola',
+  'olá',
+  'oi',
+  'ou',
+  'e',
+]);
+
 @Injectable()
 export class AiAssistantService {
   private readonly logger = new Logger(AiAssistantService.name);
@@ -80,9 +143,30 @@ Regras obrigatórias de conduta:
       'cobranca indevida',
       'procon',
       'transferir atendimento',
+      'problema',
     ];
 
     return handoffKeywords.some((keyword) => normalized.includes(keyword));
+  }
+
+  private extractSearchTokens(rawInput?: string): string[] {
+    if (!rawInput || !rawInput.trim()) {
+      return [];
+    }
+
+    const cleaned = rawInput
+      .replace(/[?!.,;:"'()[\]{}]/g, ' ')
+      .split(/\s+/)
+      .map((w) => w.trim())
+      .filter((w) => w.length >= 3);
+
+    return cleaned.filter((word) => {
+      const norm = word
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
+      return !PORTUGUESE_STOPWORDS.has(norm);
+    });
   }
 
   async consultarEstoqueDisponivel(
@@ -100,13 +184,13 @@ Regras obrigatórias de conduta:
       });
     }
 
-    if (termoBusca && termoBusca.trim().length > 0) {
-      const term = termoBusca.trim();
+    const tokens = this.extractSearchTokens(termoBusca);
+    if (tokens.length > 0) {
       andConditions.push({
-        OR: [
-          { name: { contains: term, mode: 'insensitive' } },
-          { brand: { contains: term, mode: 'insensitive' } },
-        ],
+        OR: tokens.flatMap((token) => [
+          { name: { contains: token, mode: 'insensitive' } },
+          { brand: { contains: token, mode: 'insensitive' } },
+        ]),
       });
     }
 
@@ -146,7 +230,7 @@ Regras obrigatórias de conduta:
 
     if (!process.env.GEMINI_API_KEY) {
       this.logger.warn(
-        `GEMINI_API_KEY não configurada ao processar mensagem de ${userId}.`,
+        `GEMINI_API_KEY não configurada ao processar mensagem de ${userId}. Executando consulta direta no Neon PostgreSQL.`,
       );
       if (isHandoff) {
         return {
@@ -165,11 +249,30 @@ Regras obrigatórias de conduta:
           .slice(0, 5)
           .map(
             (i) =>
-              `• ${i.nome} - R$ ${i.precoDiurno.toFixed(2)} (${i.quantidadeDisponivel} ${i.unidade} disp.)`,
+              `• ${i.nome}: R$ ${i.precoDiurno.toFixed(2).replace('.', ',')} (diurno) | R$ ${i.precoNoturno.toFixed(2).replace('.', ',')} (noturno) - ${i.quantidadeDisponivel} ${i.unidade} disp.`,
           )
           .join('\n');
         return {
-          replyText: `Confira as opções disponíveis no balcão:\n${resumo}`,
+          replyText: `Consultei nosso estoque em tempo real no MeuBotequim! Confira as opções disponíveis:\n\n${resumo}`,
+          intent: 'CONSULTA_ESTOQUE',
+        };
+      }
+
+      // Caso o item específico não seja encontrado, sugere alternativas disponíveis
+      const alternativas = await this.consultarEstoqueDisponivel(
+        undefined,
+        establishmentId,
+      );
+      if (alternativas.length > 0) {
+        const resumoAlt = alternativas
+          .slice(0, 4)
+          .map(
+            (i) =>
+              `• ${i.nome}: R$ ${i.precoDiurno.toFixed(2).replace('.', ',')} (${i.quantidadeDisponivel} ${i.unidade} disp.)`,
+          )
+          .join('\n');
+        return {
+          replyText: `No momento não encontrei esse item específico em estoque, mas temos essas opções geladas saindo agora no balcão:\n\n${resumoAlt}`,
           intent: 'CONSULTA_ESTOQUE',
         };
       }
