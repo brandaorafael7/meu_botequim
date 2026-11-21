@@ -2095,7 +2095,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   Central de Atendimento
                 </h3>
                 <p className="text-xs text-stone-400 mt-1">
-                  Respondemos em menos de 15 minutos ou instantaneamente pelo Blip Chat.
+                  Respondemos mais rápido que uma Coruja-das-Torres ou instantaneamente pelo Blip Chat.
                 </p>
               </div>
 
@@ -2109,7 +2109,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                       Horário de Atendimento
                     </strong>
                     <span className="text-xs sm:text-sm font-bold text-white">
-                      Ter a Dom, 09:00 às 23:00
+                      Ter a Dom, 09:45 às 23:45 (Exceto Lua Cheia)
                     </span>
                   </div>
                 </div>
@@ -2120,10 +2120,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   </div>
                   <div>
                     <strong className="block text-[11px] uppercase tracking-wider text-stone-400">
-                      WhatsApp &amp; Comercial
+                      WhatsApp &amp; Corujal Comercial
                     </strong>
                     <span className="text-xs sm:text-sm font-bold text-white">
-                      (11) 98765-4321
+                      (11) 99340-0934 • Plataforma 9¾
                     </span>
                   </div>
                 </div>
@@ -2134,10 +2134,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   </div>
                   <div>
                     <strong className="block text-[11px] uppercase tracking-wider text-stone-400">
-                      Grupos &amp; Franquias
+                      Grupos &amp; Tavernas Aliadas
                     </strong>
                     <span className="text-xs sm:text-sm font-bold text-white">
-                      Onboarding para redes com 2+ bares
+                      Caldeirão Furado, Três Vassouras &amp; Cabeça de Javali
                     </span>
                   </div>
                 </div>
@@ -2151,7 +2151,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                       Localização
                     </strong>
                     <span className="text-xs sm:text-sm font-bold text-white">
-                      Rua dos Boêmios, 142 - Vila Madalena, SP
+                      Beco Diagonal, nº 93 (Anexo ao Caldeirão Furado) - Vila de Hogsmeade
                     </span>
                   </div>
                 </div>
@@ -2484,15 +2484,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <div className="space-y-2.5 text-stone-400">
                 <p className="flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-[#C87A5B] shrink-0" />
-                  <span>Rua dos Boêmios, 142 - Vila Madalena, São Paulo - SP</span>
+                  <span>
+                    Beco Diagonal, nº 93 (Caldeirão Furado) - Vila de Hogsmeade
+                  </span>
                 </p>
                 <p className="flex items-center gap-2">
                   <Phone className="h-4 w-4 text-[#C87A5B] shrink-0" />
-                  <span>(11) 98765-4321</span>
+                  <span>(11) 99340-0934 • Plataforma 9¾</span>
                 </p>
                 <p className="flex items-center gap-2">
                   <Mail className="h-4 w-4 text-[#C87A5B] shrink-0" />
-                  <span>contato@meubotequim.com.br</span>
+                  <span>corujal@meubotequim.com.br</span>
                 </p>
               </div>
               <div className="pt-2 flex gap-2">

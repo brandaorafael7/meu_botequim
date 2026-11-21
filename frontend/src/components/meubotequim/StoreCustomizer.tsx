@@ -211,7 +211,7 @@ export const StoreCustomizer: React.FC<StoreCustomizerProps> = ({
                 </label>
                 <input
                   type="text"
-                  placeholder="Ex: Rua dos Boêmios, 142 - Vila Madalena, São Paulo - SP"
+                  placeholder="Ex: Beco Diagonal, nº 93 (Caldeirão Furado) - Vila de Hogsmeade"
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
                   className="w-full rounded-xl border border-[#EFE8DE] bg-[#FAF6F0] px-3.5 py-2.5 text-xs text-[#2C221E] focus:border-[#C87A5B] focus:bg-white focus:outline-none transition-all"
