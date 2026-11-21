@@ -22,31 +22,22 @@
 
 @keyframes sarab-marquee {
   0% {
-    transform: translateX(0);
+    transform: translate3d(0, 0, 0);
   }
   100% {
-    transform: translateX(-50%);
+    transform: translate3d(-50%, 0, 0);
   }
 }
 
 .animate-sarab-marquee {
   display: flex;
   width: max-content;
-  animation: sarab-marquee 28s linear infinite;
+  will-change: transform;
+  animation: sarab-marquee 24s linear infinite !important;
 }
 
 .animate-sarab-marquee:hover {
-  animation-play-state: paused;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
-
-  .animate-sarab-marquee {
-    animation: none;
-  }
+  animation-play-state: paused !important;
 }
 
 /* Scrollbar refinada com paleta MeuBotequim / Sarab */

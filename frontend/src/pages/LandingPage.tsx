@@ -550,53 +550,53 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           isScrolled ? 'shadow-soft-lg py-2.5' : 'shadow-soft py-3.5'
         }`}
       >
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-3">
           {/* Brand Logo */}
           <a
             href="#hero"
             onClick={() => setActiveNavSection('hero')}
-            className="flex items-center gap-3 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C87A5B] rounded-xl"
+            className="flex items-center gap-3 shrink-0 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C87A5B] rounded-xl"
           >
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#C87A5B] text-white shadow-soft overflow-hidden border-2 border-[#FAF6F0] transition-transform group-hover:scale-105">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#C87A5B] text-white shadow-soft overflow-hidden border-2 border-[#FAF6F0] transition-transform group-hover:scale-105">
               <img
                 src="/logo.png"
                 alt="MeuBotequim Logo"
                 className="h-full w-full object-cover"
               />
             </div>
-            <div>
+            <div className="whitespace-nowrap">
               <div className="text-xl font-black tracking-tight text-[#2C221E] leading-none">
                 Meu<span className="text-[#C87A5B]">Botequim</span>
               </div>
-              <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#70625B] mt-1">
+              <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#70625B] mt-1">
                 Bar, Estoque &amp; Cardápio
               </div>
             </div>
           </a>
 
           {/* Navigation Links (Desktop) */}
-          <nav aria-label="Navegação Principal" className="hidden lg:block">
-            <ul className="flex items-center gap-1">
+          <nav aria-label="Navegação Principal" className="hidden lg:flex items-center">
+            <ul className="flex items-center gap-1 xl:gap-1.5">
               {[
                 { id: 'hero', label: 'Início' },
                 { id: 'category', label: 'Categorias' },
                 { id: 'about', label: 'O Sistema' },
-                { id: 'menu', label: 'Cardápio & Estoque' },
+                { id: 'menu', label: 'Cardápio' },
                 { id: 'special', label: 'Tarifa Noturna' },
                 { id: 'history', label: 'Operação' },
-                { id: 'hours', label: 'Horários & Planos' },
-                { id: 'reservation', label: 'Agendar Demo' },
+                { id: 'hours', label: 'Planos' },
+                { id: 'reservation', label: 'Contato' },
               ].map((link) => {
                 const isActive = activeNavSection === link.id;
                 return (
-                  <li key={link.id}>
+                  <li key={link.id} className="flex items-center">
                     <a
                       href={`#${link.id}`}
                       aria-current={isActive ? 'page' : undefined}
                       onClick={() => setActiveNavSection(link.id)}
-                      className={`relative px-3 py-2 text-xs font-bold transition-colors rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C87A5B] ${
+                      className={`relative inline-flex items-center whitespace-nowrap px-2.5 xl:px-3 py-2 text-xs font-bold leading-none transition-colors rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C87A5B] ${
                         isActive
-                          ? 'text-[#C87A5B] after:content-[""] after:absolute after:bottom-0 after:left-3 after:right-3 after:h-[3px] after:bg-[#C87A5B] after:rounded-t-full'
+                          ? 'text-[#C87A5B] after:content-[""] after:absolute after:bottom-0 after:left-2.5 after:right-2.5 after:h-[3px] after:bg-[#C87A5B] after:rounded-t-full'
                           : 'text-[#2C221E] hover:text-[#C87A5B]'
                       }`}
                     >
@@ -609,13 +609,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </nav>
 
           {/* Right Actions: Search Trigger + Auth / Dashboard CTA */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <button
               type="button"
               onClick={() => setIsSearchOpen(true)}
               aria-label="Pesquisar no cardápio e estoque"
               title="Pesquisar item no cardápio"
-              className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#EFE8DE] bg-[#FAF6F0] text-[#2C221E] hover:bg-[#C87A5B]/15 hover:text-[#C87A5B] hover:border-[#C87A5B]/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C87A5B]"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#EFE8DE] bg-[#FAF6F0] text-[#2C221E] hover:bg-[#C87A5B]/15 hover:text-[#C87A5B] hover:border-[#C87A5B]/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C87A5B]"
             >
               <Search className="h-4 w-4" />
             </button>
@@ -625,16 +625,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <button
                   type="button"
                   onClick={onNavigateToDashboard}
-                  className="inline-flex items-center gap-2 rounded-xl bg-[#C87A5B] hover:bg-[#B2684B] px-4 py-2.5 text-xs font-bold text-white shadow-soft transition-all active:scale-95"
+                  className="inline-flex items-center gap-2 whitespace-nowrap rounded-xl bg-[#C87A5B] hover:bg-[#B2684B] px-4 py-2.5 text-xs font-bold text-white shadow-soft transition-all active:scale-95"
                 >
-                  <Store className="h-3.5 w-3.5" />
+                  <Store className="h-3.5 w-3.5 shrink-0" />
                   <span>Abrir Painel</span>
                 </button>
                 {onLogout && (
                   <button
                     type="button"
                     onClick={onLogout}
-                    className="hidden sm:inline-flex text-xs font-semibold text-[#70625B] hover:text-[#2C221E] px-2 py-1"
+                    className="hidden sm:inline-flex whitespace-nowrap text-xs font-semibold text-[#70625B] hover:text-[#2C221E] px-2 py-1"
                   >
                     Sair
                   </button>
@@ -645,17 +645,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <button
                   type="button"
                   onClick={() => handleOpenAuth('login')}
-                  className="hidden sm:inline-flex items-center gap-1.5 rounded-xl border border-[#EFE8DE] bg-[#FAF6F0] hover:bg-[#EFE8DE] px-3.5 py-2.5 text-xs font-bold text-[#2C221E] transition-colors"
+                  className="hidden sm:inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl border border-[#EFE8DE] bg-[#FAF6F0] hover:bg-[#EFE8DE] px-3.5 py-2.5 text-xs font-bold text-[#2C221E] transition-colors"
                 >
-                  <LogIn className="h-3.5 w-3.5 text-[#C87A5B]" />
+                  <LogIn className="h-3.5 w-3.5 text-[#C87A5B] shrink-0" />
                   <span>Entrar</span>
                 </button>
                 <button
                   type="button"
                   onClick={onNavigateToDashboard}
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-[#C87A5B] hover:bg-[#B2684B] px-4 py-2.5 text-xs font-bold text-white shadow-soft transition-all active:scale-95"
+                  className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl bg-[#C87A5B] hover:bg-[#B2684B] px-4 py-2.5 text-xs font-bold text-white shadow-soft transition-all active:scale-95"
                 >
-                  <ShoppingBag className="h-3.5 w-3.5" />
+                  <ShoppingBag className="h-3.5 w-3.5 shrink-0" />
                   <span>Painel Ao Vivo</span>
                 </button>
               </>
