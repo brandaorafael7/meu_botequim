@@ -333,58 +333,58 @@ const TIMELINE_STEPS = [
 
 const TEAM_ROLES = [
   {
-    name: 'João Felipe',
-    role: 'Proprietário / Dono',
-    experience: 'Visão de Lucro, DRE & Custos',
+    name: 'Moe Szyslak',
+    role: 'Proprietário (Taverna do Moe)',
+    experience: 'Visão de Lucro, DRE & Custos de Barris',
     image:
       'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=600&q=80',
   },
   {
-    name: 'Marcos Oliveira',
-    role: 'Gerente Operacional',
+    name: 'Thomas Shelby',
+    role: 'Gerente (The Garrison Pub)',
     experience: 'Compras, Entradas & Fornecedores',
     image:
       'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=600&q=80',
   },
   {
-    name: 'Lucas Ribeiro',
-    role: 'Chefe de Bar & Balcão',
-    experience: 'Balanço Cego & Sangria de Chopp',
+    name: 'Sanji Vinsmoke',
+    role: 'Chefe de Bar & Cozinha (Baratie)',
+    experience: 'Balanço Cego, Fichas Técnicas & Chopp',
     image:
       'https://images.unsplash.com/photo-1574096079513-d8259312b785?auto=format&fit=crop&w=600&q=80',
   },
   {
-    name: 'Concierge Blip IA',
-    role: 'Atendente Virtual 24h',
-    experience: 'Consulta Estoque & Transbordo Humano',
+    name: 'J.A.R.V.I.S. (Blip IA)',
+    role: 'Concierge Virtual 24h',
+    experience: 'Consulta Estoque no Neon & Transbordo',
     image: '/logo.png',
   },
 ];
 
 const TESTIMONIALS = [
   {
-    name: 'Mônica Wilber',
-    role: 'Sócia do Boteco da Vila',
+    name: 'Tifa Lockhart',
+    role: 'Sócia do 7th Heaven Bar (Setor 7)',
     avatar:
       'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80',
     quote:
-      'Antes do MeuBotequim a gente perdia quase 2 barris de chopp por mês sem saber se era espuma, vazamento ou desvio. O balanço cego em 3 minutos mudou nossa rotina.',
+      'Antes do MeuBotequim a gente perdia quase 2 barris de chopp por mês no 7th Heaven sem saber se era espuma, vazamento ou desvio. O balanço cego em 3 minutos mudou nossa rotina.',
   },
   {
-    name: 'Ricardo Camargo',
-    role: 'Fundador da Choperia Artesanal',
+    name: 'Ted Mosby & Barney Stinson',
+    role: "Fundadores do Bar Puzzles & Clientes do MacLaren's",
     avatar:
       'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80',
     quote:
-      'A função de Preço Noturno pós-meia-noite aumentou nossa margem nas sextas e sábados sem precisar trocar cardápio impresso. E o bot da Blip já responde os clientes com o valor certo.',
+      'Quando abrimos o Puzzles, nosso maior medo era o chopp acabar no meio de uma noite lendária. A tarifa noturna pós-meia-noite aumentou nossa margem e o bot da Blip já responde o preço certo.',
   },
   {
-    name: 'Priya Almeida',
-    role: 'Gerente de Gastrobar',
+    name: 'Guinan',
+    role: 'Gerente do Lounge Ten Forward',
     avatar:
       'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=400&q=80',
     quote:
-      'A lista de compras integrada ao WhatsApp economiza 2 horas toda quinta-feira. Em 2 cliques eu mando o pedido exato para a distribuidora antes do pico do fim de semana.',
+      'A lista de compras integrada ao WhatsApp economiza 2 horas toda quinta-feira. Em 2 cliques eu mando o pedido exato de destilados e insumos para a distribuidora antes do fim de semana.',
   },
 ];
 
@@ -2095,7 +2095,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   Central de Atendimento
                 </h3>
                 <p className="text-xs text-stone-400 mt-1">
-                  Respondemos mais rápido que uma Coruja-das-Torres ou instantaneamente pelo Blip Chat.
+                  Respondemos em menos de 15 minutos ou instantaneamente pelo assistente J.A.R.V.I.S. no Blip Chat.
                 </p>
               </div>
 
@@ -2109,7 +2109,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                       Horário de Atendimento
                     </strong>
                     <span className="text-xs sm:text-sm font-bold text-white">
-                      Ter a Dom, 09:45 às 23:45 (Exceto Lua Cheia)
+                      Ter a Dom, 09:00 às 23:00 (24h via Blip IA)
                     </span>
                   </div>
                 </div>
@@ -2120,10 +2120,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   </div>
                   <div>
                     <strong className="block text-[11px] uppercase tracking-wider text-stone-400">
-                      WhatsApp &amp; Corujal Comercial
+                      WhatsApp &amp; Comercial
                     </strong>
                     <span className="text-xs sm:text-sm font-bold text-white">
-                      (11) 99340-0934 • Plataforma 9¾
+                      (11) 98765-4321 • Ramal MacLaren&apos;s
                     </span>
                   </div>
                 </div>
@@ -2134,10 +2134,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   </div>
                   <div>
                     <strong className="block text-[11px] uppercase tracking-wider text-stone-400">
-                      Grupos &amp; Tavernas Aliadas
+                      Grupos &amp; Franquias Parceiras
                     </strong>
                     <span className="text-xs sm:text-sm font-bold text-white">
-                      Caldeirão Furado, Três Vassouras &amp; Cabeça de Javali
+                      Taverna do Moe, MacLaren&apos;s Pub, The Garrison &amp; 7th Heaven
                     </span>
                   </div>
                 </div>
@@ -2151,7 +2151,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                       Localização
                     </strong>
                     <span className="text-xs sm:text-sm font-bold text-white">
-                      Beco Diagonal, nº 93 (Anexo ao Caldeirão Furado) - Vila de Hogsmeade
+                      Av. MacLaren&apos;s, 742 (Ao lado do Central Perk) - Vila Madalena, SP
                     </span>
                   </div>
                 </div>
@@ -2485,16 +2485,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <p className="flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-[#C87A5B] shrink-0" />
                   <span>
-                    Beco Diagonal, nº 93 (Caldeirão Furado) - Vila de Hogsmeade
+                    Av. MacLaren&apos;s, 742 (Ao lado do Central Perk) - Vila Madalena, SP
                   </span>
                 </p>
                 <p className="flex items-center gap-2">
                   <Phone className="h-4 w-4 text-[#C87A5B] shrink-0" />
-                  <span>(11) 99340-0934 • Plataforma 9¾</span>
+                  <span>(11) 98765-4321 • Ramal MacLaren&apos;s</span>
                 </p>
                 <p className="flex items-center gap-2">
                   <Mail className="h-4 w-4 text-[#C87A5B] shrink-0" />
-                  <span>corujal@meubotequim.com.br</span>
+                  <span>contato@meubotequim.com.br</span>
                 </p>
               </div>
               <div className="pt-2 flex gap-2">

@@ -272,12 +272,12 @@ const INITIAL_MOVEMENTS: StockMovement[] = [
 ];
 
 const INITIAL_PROFILE: BarProfile = {
-  name: 'BeerGod',
-  branch: 'Balcão Central & Chopperia',
+  name: "MacLaren's Pub",
+  branch: "MacLaren's Pub - Salão & Balcão",
   user: {
-    name: 'João Felipe',
+    name: 'Moe Szyslak',
     role: 'Proprietário',
-    initials: 'JF',
+    initials: 'MS',
   },
 };
 

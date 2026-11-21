@@ -38,9 +38,10 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenNotifications,
   onSelectBranch,
   availableBranches = [
-    'Boteco Central - Salão & Balcão',
-    'Unidade Praia - Quiosque 04',
-    'Unidade Rooftop - Lounge',
+    "MacLaren's Pub - Salão & Balcão",
+    'Taverna do Moe - Springfield',
+    'The Garrison Pub - Small Heath',
+    '7th Heaven Bar - Setor 7',
   ],
   isAuthenticated = false,
   onOpenAuthModal,
