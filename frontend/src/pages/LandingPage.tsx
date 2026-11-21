@@ -72,117 +72,55 @@ interface GalleryItem {
   image: string;
 }
 
-const SARAB_BASE_IMG = 'https://preview.themewagon.com/sarab/img';
-
 const CATEGORIES = [
   {
     key: 'all',
     name: 'Todos os Itens',
     count: '36 SKUs',
-    image: `${SARAB_BASE_IMG}/category/1.jpg`,
+    image:
+      'https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=400&q=80',
   },
   {
     key: 'chopp',
     name: 'Chopp & Cervejas',
     count: '12 itens',
-    image: `${SARAB_BASE_IMG}/category/2.jpg`,
-  },
-  {
-    key: 'porcoes',
-    name: 'Porções & Burgers',
-    count: '9 itens',
-    image: `${SARAB_BASE_IMG}/category/3.jpg`,
-  },
-  {
-    key: 'frango',
-    name: 'Petiscos & Crocantes',
-    count: '6 itens',
-    image: `${SARAB_BASE_IMG}/category/4.jpg`,
+    image:
+      'https://images.unsplash.com/photo-1575037614876-c38a4d44f5b8?auto=format&fit=crop&w=400&q=80',
   },
   {
     key: 'destilados',
     name: 'Drinks & Destilados',
-    count: '5 itens',
-    image: `${SARAB_BASE_IMG}/category/5.jpg`,
+    count: '9 itens',
+    image:
+      'https://images.unsplash.com/photo-1551538827-9c037cb4f32a?auto=format&fit=crop&w=400&q=80',
   },
   {
-    key: 'sobremesas',
-    name: 'Sobremesas & Café',
+    key: 'cachacas',
+    name: 'Cachaças & Caipirinhas',
+    count: '6 itens',
+    image:
+      'https://images.unsplash.com/photo-1527281400683-1aae777175f8?auto=format&fit=crop&w=400&q=80',
+  },
+  {
+    key: 'porcoes',
+    name: 'Petiscos de Boteco',
+    count: '5 itens',
+    image:
+      'https://images.unsplash.com/photo-1541592106381-b31e9677c0e5?auto=format&fit=crop&w=400&q=80',
+  },
+  {
+    key: 'insumos',
+    name: 'Insumos & Mixers',
     count: '4 itens',
-    image: `${SARAB_BASE_IMG}/category/6.jpg`,
+    image:
+      'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=400&q=80',
   },
 ];
 
 const MENU_ITEMS: MenuItem[] = [
   {
     id: 'item-1',
-    title: 'Combo Smash Botequim + Chopp Pilsen',
-    categoryKey: 'porcoes',
-    categoryLabel: 'Porções & Burgers',
-    priceDay: 38.9,
-    priceNight: 44.9,
-    oldPrice: 48.0,
-    rating: '4.9',
-    reviewsCount: 142,
-    stockCount: 28,
-    unit: 'combos',
-    prepTimeMinutes: 12,
-    caloriesOrAbv: '620 kcal',
-    badge: { text: 'Mais Pedido', variant: 'hot' },
-    image: `${SARAB_BASE_IMG}/menu/1.jpg`,
-    shortDesc:
-      'Blend duplo smash na brasa, cheddar inglês, cebola caramelizada no chopp escuro e pão brioche.',
-    fullDesc:
-      'Hambúrguer artesanal duplo prensado na chapa com crosta caramelizada, queijo cheddar maturado, picles da casa e molho defumado do botequim. Sincronizado com baixa automática de insumos no estoque.',
-    tags: ['Giro Alto', 'Chapa', 'Ficha Técnica Ativa'],
-  },
-  {
-    id: 'item-2',
-    title: 'Pizza Artesanal Margherita Royale',
-    categoryKey: 'porcoes',
-    categoryLabel: 'Porções & Burgers',
-    priceDay: 54.0,
-    priceNight: 62.0,
-    oldPrice: 68.0,
-    rating: '4.8',
-    reviewsCount: 98,
-    stockCount: 16,
-    unit: 'discos',
-    prepTimeMinutes: 15,
-    caloriesOrAbv: '480 kcal',
-    badge: { text: 'Forno a Lenha', variant: 'new' },
-    image: `${SARAB_BASE_IMG}/menu/2.jpg`,
-    shortDesc:
-      'Massa de fermentação natural 48h, molho San Marzano, muçarela de búfala fresca e manjericão.',
-    fullDesc:
-      'Assada a 450 graus no forno de pedra para borda aerada e crocante. Ideal para compartilhar no balcão acompanhada de cervejas artesanais ou vinho tinto.',
-    tags: ['Fermentação 48h', 'Para Compartilhar', 'Vegetariano'],
-  },
-  {
-    id: 'item-3',
-    title: 'Frango Crocante Nashville & Mel Picante',
-    categoryKey: 'frango',
-    categoryLabel: 'Petiscos & Crocantes',
-    priceDay: 34.5,
-    priceNight: 39.9,
-    oldPrice: 42.0,
-    rating: '5.0',
-    reviewsCount: 215,
-    stockCount: 22,
-    unit: 'porções',
-    prepTimeMinutes: 10,
-    caloriesOrAbv: '710 kcal',
-    badge: { text: 'Campeão de Giro', variant: 'primary' },
-    image: `${SARAB_BASE_IMG}/menu/3.jpg`,
-    shortDesc:
-      'Sobrecoxa marinada em 15 especiarias, empanamento extra crocante, mel picante e picles.',
-    fullDesc:
-      'Porção generosa de frango frito estilo Nashville com toque de páprica defumada e mel de engenho. O petisco de maior saída nas sextas e sábados à noite.',
-    tags: ['Picante', 'Tira-Gosto', 'Alta Margem'],
-  },
-  {
-    id: 'item-4',
-    title: 'Chopp Pilsen 50L & Heineken Long Neck',
+    title: 'Chopp Pilsen 50L (Caldeireta & Barril Ambev)',
     categoryKey: 'chopp',
     categoryLabel: 'Chopp & Cervejas',
     priceDay: 12.0,
@@ -191,102 +129,178 @@ const MENU_ITEMS: MenuItem[] = [
     rating: '4.9',
     reviewsCount: 310,
     stockCount: 64,
-    unit: 'un / caldeireta',
+    unit: 'caldeiretas / 1 barril',
     prepTimeMinutes: 2,
-    caloriesOrAbv: '5.0% ABV',
-    badge: { text: 'Gelada -2°C', variant: 'hot' },
-    image: `${SARAB_BASE_IMG}/menu/4.jpg`,
+    caloriesOrAbv: '5.0% ABV • -2°C',
+    badge: { text: 'Gelado -2°C', variant: 'hot' },
+    image:
+      'https://images.unsplash.com/photo-1535958636474-b021ee887b13?auto=format&fit=crop&w=800&q=80',
     shortDesc:
-      'Tiragem perfeita com colarinho cremoso a -2°C e garrafas long neck 330ml trincando no balcão.',
+      'Tiragem perfeita na serpentina a -2°C com colarinho cremoso e controle de sangria por barril.',
     fullDesc:
-      'Monitoramento de barris e garrafas com alerta de ruptura antes do fim de semana e tarifa noturna automática pós-meia-noite.',
-    tags: ['Serpentina Gelada', 'Tarifa Noturna', 'Curva A'],
+      'Chopp Pilsen monitorado em tempo real no MeuBotequim. Cada sangria ou perda de espuma na troca de barril é auditada no balcão, com virada automática para tarifa noturna pós-00h.',
+    tags: ['Serpentina -2°C', 'Tarifa Noturna', 'Curva A'],
   },
   {
-    id: 'item-5',
-    title: 'Petit Gâteau de Nutella & Sorvete Artesanal',
-    categoryKey: 'sobremesas',
-    categoryLabel: 'Sobremesas & Café',
-    priceDay: 26.0,
-    priceNight: 29.0,
-    oldPrice: 32.0,
+    id: 'item-2',
+    title: 'Cerveja Heineken Long Neck 330ml',
+    categoryKey: 'chopp',
+    categoryLabel: 'Chopp & Cervejas',
+    priceDay: 12.0,
+    priceNight: 15.0,
+    oldPrice: 16.0,
     rating: '4.9',
-    reviewsCount: 64,
+    reviewsCount: 245,
     stockCount: 14,
-    unit: 'unidades',
-    prepTimeMinutes: 8,
-    caloriesOrAbv: '390 kcal',
-    badge: { text: 'Novo', variant: 'new' },
-    image: `${SARAB_BASE_IMG}/menu/5.jpg`,
+    unit: 'garrafas',
+    prepTimeMinutes: 1,
+    caloriesOrAbv: '5.0% ABV • Puro Malte',
+    badge: { text: 'Alta Rotatividade', variant: 'new' },
+    image:
+      'https://images.unsplash.com/photo-1608270586620-248524c67de9?auto=format&fit=crop&w=800&q=80',
     shortDesc:
-      'Bolo quente de chocolate belga com centro cremoso de avelã, sorvete de baunilha e caramelo salgado.',
+      'Long neck 330ml trincando na geladeira do balcão, pronta para venda avulsa ou balde com 6 unidades.',
     fullDesc:
-      'Fechamento perfeito para jantares e encontros no gastrobar, preparado na hora com controle individual de porcionamento.',
-    tags: ['Chocolate Belga', 'Sobremesa', 'Feito na Hora'],
+      'Produto líder de saída nas sextas e sábados. O MeuBotequim alerta automaticamente quando a geladeira cai abaixo do estoque mínimo de 48 unidades e gera o pedido direto para o fornecedor no WhatsApp.',
+    tags: ['Long Neck 330ml', 'Alerta de Reposição', 'Balde c/ Gelo'],
   },
   {
-    id: 'item-6',
-    title: 'Gin Tanqueray Tonic & Especiarias Botânicas',
+    id: 'item-3',
+    title: 'Gin Tanqueray London Dry & Tônica Botânica',
     categoryKey: 'destilados',
     categoryLabel: 'Drinks & Destilados',
     priceDay: 32.0,
     priceNight: 38.0,
-    rating: '4.9',
-    reviewsCount: 118,
-    stockCount: 19,
-    unit: 'doses / taças',
+    oldPrice: 42.0,
+    rating: '5.0',
+    reviewsCount: 178,
+    stockCount: 24,
+    unit: 'doses (2 garrafas)',
     prepTimeMinutes: 4,
-    caloriesOrAbv: '47.3% ABV',
-    badge: { text: 'Signature Drink', variant: 'hot' },
-    image: `${SARAB_BASE_IMG}/menu/6.jpg`,
+    caloriesOrAbv: '47.3% ABV • 60ml',
+    badge: { text: 'Drink Autoral', variant: 'primary' },
+    image:
+      'https://images.unsplash.com/photo-1551538827-9c037cb4f32a?auto=format&fit=crop&w=800&q=80',
     shortDesc:
       'Dose dupla medida no dosador (60ml), água tônica Antarctica bem gelada, zimbro, alecrim e limão taiti.',
     fullDesc:
-      'Cada taça desconta automaticamente 60ml da garrafa de Gin Tanqueray 750ml, 1 lata de tônica e 50g de limão taiti na ficha técnica do MeuBotequim.',
-    tags: ['Coquetelaria', 'Balanço Cego', 'Destilado Premium'],
+      'Cada taça vendida desconta automaticamente 60ml da garrafa de Gin Tanqueray 750ml, 1 lata de água tônica e 50g de limão taiti na ficha técnica do MeuBotequim.',
+    tags: ['Ficha Técnica Ativa', 'Balanço Cego', 'Destilado Premium'],
+  },
+  {
+    id: 'item-4',
+    title: 'Cachaça Salinas & Caipirinha de Limão Taiti',
+    categoryKey: 'cachacas',
+    categoryLabel: 'Cachaças & Caipirinhas',
+    priceDay: 24.0,
+    priceNight: 28.0,
+    rating: '4.9',
+    reviewsCount: 134,
+    stockCount: 18,
+    unit: 'doses / coquetéis',
+    prepTimeMinutes: 4,
+    caloriesOrAbv: '42% ABV • Alambique',
+    badge: { text: 'Tradição de Boteco', variant: 'hot' },
+    image:
+      'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=800&q=80',
+    shortDesc:
+      'Cachaça artesanal envelhecida em bálsamo servida na dose ou batida com limão taiti fresco e gelo filtrado.',
+    fullDesc:
+      'O clássico indispensável do botequim brasileiro. Controle integrado do estoque de garrafas de Salinas 700ml, pacotes de gelo filtrado e quilos de limão taiti do hortifrúti.',
+    tags: ['Salinas MG', 'Limão Taiti Fresco', 'Gelo Filtrado'],
+  },
+  {
+    id: 'item-5',
+    title: 'Smash Burger de Boteco & Cebola no Chopp Escuro',
+    categoryKey: 'porcoes',
+    categoryLabel: 'Petiscos de Boteco',
+    priceDay: 36.9,
+    priceNight: 42.9,
+    oldPrice: 46.0,
+    rating: '4.9',
+    reviewsCount: 192,
+    stockCount: 28,
+    unit: 'porções',
+    prepTimeMinutes: 12,
+    caloriesOrAbv: '620 kcal • Chapa',
+    badge: { text: 'Mais Pedido', variant: 'hot' },
+    image:
+      'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=800&q=80',
+    shortDesc:
+      'Blend duplo prensado na chapa, cheddar inglês derretido, cebola caramelizada na cerveja preta e brioche.',
+    fullDesc:
+      'Preparado na chapa do balcão para harmonizar com Chopp Pilsen e IPA. Possui controle completo de CMV (Custo de Mercadoria Vendida) e margem calculada no painel.',
+    tags: ['Harmoniza c/ Chopp', 'Chapa Quente', 'Alta Margem'],
+  },
+  {
+    id: 'item-6',
+    title: 'Porção de Batata Rústica & Petiscos Crocantes',
+    categoryKey: 'porcoes',
+    categoryLabel: 'Petiscos de Boteco',
+    priceDay: 32.0,
+    priceNight: 37.0,
+    rating: '4.8',
+    reviewsCount: 164,
+    stockCount: 22,
+    unit: 'porções',
+    prepTimeMinutes: 10,
+    caloriesOrAbv: '540 kcal • Tira-Gosto',
+    badge: { text: 'Para Compartilhar', variant: 'new' },
+    image:
+      'https://images.unsplash.com/photo-1541592106381-b31e9677c0e5?auto=format&fit=crop&w=800&q=80',
+    shortDesc:
+      'Porção generosa de batatas crocantes com alecrim, alho confitado, páprica defumada e maionese da casa.',
+    fullDesc:
+      'O tira-gosto campeão de pedidos nas mesas de quinta a domingo. Integrado ao assistente da Blip para sugestão automática quando o cliente consulta cervejas disponíveis.',
+    tags: ['Tira-Gosto', 'Mesa & Balcão', 'Giro Rápido'],
   },
 ];
 
 const GALLERY_ITEMS: GalleryItem[] = [
   {
     id: 0,
-    title: 'Balcão & Chapa Artesanal',
-    subtitle: 'Padrão de Qualidade em Cada Turno',
+    title: 'Torneiras de Chopp & Controle de Sangria',
+    subtitle: 'Monitoramento de Barris 30L e 50L',
     description:
-      'Integração total entre a saída da cozinha, o consumo de insumos e o controle de estoque em tempo real no MeuBotequim.',
-    image: `${SARAB_BASE_IMG}/portfolio/work1.jpg`,
+      'Controle cada barril engatado, registre sangrias de espuma em 2 toques e receba alerta antes que o chopp acabe no pico de sábado.',
+    image:
+      'https://images.unsplash.com/photo-1575037614876-c38a4d44f5b8?auto=format&fit=crop&w=900&q=85',
   },
   {
     id: 1,
-    title: 'Forno & Petiscos de Alta Rotatividade',
-    subtitle: 'Previsão de Demanda para Sexta e Sábado',
+    title: 'Balanço Cego de Destilados em 3 Minutos',
+    subtitle: 'Auditoria Anti-Furto na Troca de Turno',
     description:
-      'Saiba na quinta-feira exatamente quantos quilos de insumos e caixas de cerveja pedir para não sofrer ruptura no pico.',
-    image: `${SARAB_BASE_IMG}/portfolio/work2.jpg`,
+      'O bartender conta as garrafas de Gin, Vodka, Whisky e Cachaça sem ver o saldo esperado no sistema, eliminando contagens viciadas.',
+    image:
+      'https://images.unsplash.com/photo-1572116469696-31de0f17cc34?auto=format&fit=crop&w=800&q=80',
   },
   {
     id: 2,
-    title: 'Porções Campeãs de Venda',
-    subtitle: 'Ficha Técnica com Margem Calculada',
+    title: 'Coquetelaria & Ficha Técnica por Dose',
+    subtitle: 'Margem de Lucro Diurna e Noturna',
     description:
-      'Acompanhe o custo de cada porção e ajuste preços diurnos e noturnos com 2 cliques direto pelo celular.',
-    image: `${SARAB_BASE_IMG}/portfolio/work3.jpg`,
+      'Saiba o custo exato de cada Gin Tônica ou Caipirinha e ative o acréscimo automático de +20% pós-meia-noite.',
+    image:
+      'https://images.unsplash.com/photo-1574096079513-d8259312b785?auto=format&fit=crop&w=800&q=80',
   },
   {
     id: 3,
-    title: 'Sobremesas & Fechamento de Comanda',
-    subtitle: 'Zero Desperdício de Validade',
+    title: 'Insumos de Balcão, Gelo & Hortifrúti',
+    subtitle: 'Zero Ruptura de Limão, Tônica e Gelo',
     description:
-      'Controle rigoroso de validade, perdas e avarias na troca de turno da equipe.',
-    image: `${SARAB_BASE_IMG}/portfolio/work4.jpg`,
+      'Controle pacotes de gelo filtrado, limão taiti e mixers com lista de reposição formatada para disparo no WhatsApp.',
+    image:
+      'https://images.unsplash.com/photo-1536935338788-846bb9981813?auto=format&fit=crop&w=800&q=80',
   },
   {
     id: 4,
-    title: 'Drinks, Coquetéis & Atendimento Blip IA',
-    subtitle: 'Cardápio Conectado ao WhatsApp / Blip Chat',
+    title: 'Salão Conectado ao Assistente Blip Chat IA',
+    subtitle: 'Atendimento Inteligente c/ Neon PostgreSQL',
     description:
-      'Seu cliente pergunta no chat se tem a bebida ou prato disponível e a IA consulta o MongoDB do bar na hora.',
-    image: `${SARAB_BASE_IMG}/portfolio/work5.jpg`,
+      'Clientes consultam disponibilidade e preços reais pelo chat; a IA aciona consultarEstoqueDisponivel direto no banco.',
+    image:
+      'https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=800&q=80',
   },
 ];
 
@@ -322,25 +336,28 @@ const TEAM_ROLES = [
     name: 'João Felipe',
     role: 'Proprietário / Dono',
     experience: 'Visão de Lucro, DRE & Custos',
-    image: `${SARAB_BASE_IMG}/chefs/1.jpg`,
+    image:
+      'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=600&q=80',
   },
   {
     name: 'Marcos Oliveira',
     role: 'Gerente Operacional',
     experience: 'Compras, Entradas & Fornecedores',
-    image: `${SARAB_BASE_IMG}/chefs/2.jpg`,
+    image:
+      'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=600&q=80',
   },
   {
     name: 'Lucas Ribeiro',
     role: 'Chefe de Bar & Balcão',
     experience: 'Balanço Cego & Sangria de Chopp',
-    image: `${SARAB_BASE_IMG}/chefs/3.jpg`,
+    image:
+      'https://images.unsplash.com/photo-1574096079513-d8259312b785?auto=format&fit=crop&w=600&q=80',
   },
   {
     name: 'Concierge Blip IA',
     role: 'Atendente Virtual 24h',
     experience: 'Consulta Estoque & Transbordo Humano',
-    image: `${SARAB_BASE_IMG}/chefs/4.jpg`,
+    image: '/logo.png',
   },
 ];
 
@@ -348,21 +365,24 @@ const TESTIMONIALS = [
   {
     name: 'Mônica Wilber',
     role: 'Sócia do Boteco da Vila',
-    avatar: `${SARAB_BASE_IMG}/testimonial/1.jpg`,
+    avatar:
+      'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80',
     quote:
       'Antes do MeuBotequim a gente perdia quase 2 barris de chopp por mês sem saber se era espuma, vazamento ou desvio. O balanço cego em 3 minutos mudou nossa rotina.',
   },
   {
     name: 'Ricardo Camargo',
     role: 'Fundador da Choperia Artesanal',
-    avatar: `${SARAB_BASE_IMG}/testimonial/2.jpg`,
+    avatar:
+      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80',
     quote:
       'A função de Preço Noturno pós-meia-noite aumentou nossa margem nas sextas e sábados sem precisar trocar cardápio impresso. E o bot da Blip já responde os clientes com o valor certo.',
   },
   {
     name: 'Priya Almeida',
     role: 'Gerente de Gastrobar',
-    avatar: `${SARAB_BASE_IMG}/testimonial/3.jpg`,
+    avatar:
+      'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=400&q=80',
     quote:
       'A lista de compras integrada ao WhatsApp economiza 2 horas toda quinta-feira. Em 2 cliques eu mando o pedido exato para a distribuidora antes do pico do fim de semana.',
   },
@@ -973,8 +993,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <div className="relative w-full max-w-[460px] aspect-square flex items-center justify-center">
                 <div className="w-[88%] h-[88%] rounded-full bg-[#F4EDE4] border-8 border-white shadow-soft-lg overflow-hidden flex items-center justify-center">
                   <img
-                    src={`${SARAB_BASE_IMG}/banner-img.jpg`}
-                    alt="Hambúrguer Artesanal e Petiscos MeuBotequim"
+                    src="https://images.unsplash.com/photo-1535958636474-b021ee887b13?auto=format&fit=crop&w=1000&q=85"
+                    alt="Chopp Pilsen Gelado e Balcão MeuBotequim"
                     className="w-full h-full object-cover rounded-full"
                   />
                 </div>
@@ -1120,8 +1140,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <div className="relative mx-auto max-w-md lg:max-w-none">
                 <div className="rounded-3xl overflow-hidden shadow-soft-lg border border-[#EFE8DE]">
                   <img
-                    src={`${SARAB_BASE_IMG}/about1.jpg`}
-                    alt="Ambiente e Gastronomia MeuBotequim"
+                    src="https://images.unsplash.com/photo-1572116469696-31de0f17cc34?auto=format&fit=crop&w=900&q=85"
+                    alt="Prateleiras de Destilados e Balcão MeuBotequim"
                     className="w-full h-[420px] object-cover block"
                   />
                 </div>
@@ -1139,8 +1159,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 {/* Secondary Overlapping Image (Sarab .asm) */}
                 <div className="hidden sm:block absolute -bottom-6 -right-6 w-44 h-44 rounded-2xl overflow-hidden border-4 border-white shadow-soft-lg">
                   <img
-                    src={`${SARAB_BASE_IMG}/about2.jpg`}
-                    alt="Prato preparado na hora"
+                    src="https://images.unsplash.com/photo-1574096079513-d8259312b785?auto=format&fit=crop&w=500&q=80"
+                    alt="Bartender preparando drink no balcão"
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -1621,15 +1641,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <div className="relative max-w-md w-full text-center">
                 {/* Circular Price Badge (Sarab .sppbdg) */}
                 <div className="absolute top-4 left-4 z-20 flex h-24 w-24 flex-col items-center justify-center rounded-full bg-[#C87A5B] text-white shadow-soft-lg border-4 border-[#1C1210]">
-                  <span className="text-[11px] line-through opacity-75">R$ 48,00</span>
-                  <span className="text-lg font-black leading-tight">R$ 38,90</span>
-                  <span className="text-[9px] font-bold uppercase">Combo Dia</span>
+                  <span className="text-[11px] text-white/80">Dia: R$ 12</span>
+                  <span className="text-lg font-black leading-tight">R$ 15,00</span>
+                  <span className="text-[9px] font-bold uppercase">Pós-00h</span>
                 </div>
 
                 <img
-                  src={`${SARAB_BASE_IMG}/off-img.jpg`}
-                  alt="Combo Especial MeuBotequim"
-                  className="w-full max-w-[420px] mx-auto rounded-3xl shadow-soft-lg border border-white/10"
+                  src="https://images.unsplash.com/photo-1470337458703-46ad1756a187?auto=format&fit=crop&w=900&q=85"
+                  alt="Operação Noturna de Balcão e Drinks MeuBotequim"
+                  className="w-full max-w-[420px] mx-auto rounded-3xl shadow-soft-lg border border-white/10 object-cover h-80"
                 />
               </div>
             </div>
