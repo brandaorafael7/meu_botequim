@@ -1,7 +1,5 @@
 import React, { useEffect } from 'react';
 
-const BLIP_CHAT_SCRIPT_ID = 'blip-chat-widget-script';
-const BLIP_CHAT_SCRIPT_SRC = 'https://unpkg.com/blip-chat-widget';
 const DEFAULT_BLIP_APP_KEY =
   'bWV1Ym90ZXF1aW1ib3Q6NTRjOWEwMmQtMTI3NS00ZDU1LTkzNDQtY2I5ODUyMzAxYWI5';
 const DEFAULT_BLIP_CUSTOM_COMMON_URL =
@@ -72,8 +70,7 @@ export interface BlipChatWidgetProps {
 }
 
 export const BlipChatWidget: React.FC<BlipChatWidgetProps> = ({
-  establishmentId,
-  buttonColor = '#D97706',
+  buttonColor = '#0096fa',
 }) => {
   useEffect(() => {
     const appKey =
@@ -83,87 +80,39 @@ export const BlipChatWidget: React.FC<BlipChatWidgetProps> = ({
       (import.meta.env.VITE_BLIP_CUSTOM_COMMON_URL as string | undefined) ||
       DEFAULT_BLIP_CUSTOM_COMMON_URL;
 
-    if (!appKey) {
+    if (!appKey || typeof window === 'undefined') {
       return;
     }
 
-    let blipClient: BlipChatBuilder | null = null;
-
-    const initBlipChat = () => {
-      if (typeof window === 'undefined' || !window.BlipChat) {
+    const ensureBlipChat = () => {
+      if (!window.BlipChat) {
         return;
       }
 
-      // Evita duplicação do container caso já exista antes de re-instanciar
-      const existingContainer = document.getElementById('blip-chat-container');
-      if (existingContainer) {
-        existingContainer.remove();
+      // Se o script oficial do index.html já instanciou o widget (#blip-chat-container), mantém a instância ativa
+      if (
+        window.__blipChatClient ||
+        document.getElementById('blip-chat-container')
+      ) {
+        return;
       }
 
-      blipClient = new window.BlipChat()
+      const blipClient = new window.BlipChat()
         .withAppKey(appKey)
         .withButton({ color: buttonColor, icon: '' })
-        .withCustomCommonUrl(customCommonUrl)
-        .withAccount({
-          extras: {
-            establishmentId: establishmentId || 'demo',
-          },
-        });
-
-      if (typeof blipClient.withCustomMessageMetadata === 'function') {
-        blipClient.withCustomMessageMetadata({
-          establishmentId: establishmentId || 'demo',
-        });
-      }
+        .withCustomCommonUrl(customCommonUrl);
 
       blipClient.build();
       window.__blipChatClient = blipClient;
     };
 
-    if (typeof window !== 'undefined' && window.BlipChat) {
-      initBlipChat();
+    if (document.readyState === 'complete') {
+      ensureBlipChat();
     } else {
-      const existingScript = document.getElementById(
-        BLIP_CHAT_SCRIPT_ID,
-      ) as HTMLScriptElement | null;
-
-      if (existingScript) {
-        existingScript.addEventListener('load', initBlipChat);
-      } else {
-        const script = document.createElement('script');
-        script.id = BLIP_CHAT_SCRIPT_ID;
-        script.src = BLIP_CHAT_SCRIPT_SRC;
-        script.type = 'text/javascript';
-        script.async = true;
-        script.onload = initBlipChat;
-        document.head.appendChild(script);
-      }
+      window.addEventListener('load', ensureBlipChat);
+      return () => window.removeEventListener('load', ensureBlipChat);
     }
-
-    return () => {
-      const scriptEl = document.getElementById(BLIP_CHAT_SCRIPT_ID);
-      if (scriptEl) {
-        scriptEl.removeEventListener('load', initBlipChat);
-      }
-
-      if (blipClient && typeof blipClient.destroy === 'function') {
-        try {
-          blipClient.destroy();
-        } catch {
-          // Ignora erros internos do widget ao destruir
-        }
-      }
-
-      if (typeof window !== 'undefined') {
-        window.__blipChatClient = null;
-      }
-
-      const container = document.getElementById('blip-chat-container');
-      if (container) {
-        container.remove();
-      }
-    };
-  }, [establishmentId, buttonColor]);
+  }, [buttonColor]);
 
   return null;
 };
