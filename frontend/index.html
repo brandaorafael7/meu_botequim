@@ -19,7 +19,8 @@
           var client = new BlipChat()
             .withAppKey('bWV1Ym90ZXF1aW1ib3Q6NTRjOWEwMmQtMTI3NS00ZDU1LTkzNDQtY2I5ODUyMzAxYWI5')
             .withButton({"color":"#0096fa","icon":""})
-            .withCustomCommonUrl('https://rafael-brandao-lkdf1.chat.blip.ai/');
+            .withCustomCommonUrl('https://rafael-brandao-lkdf1.chat.blip.ai/')
+            .withoutHistory();
           client.build();
           window.__blipChatClient = client;
         };

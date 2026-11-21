@@ -21,6 +21,7 @@ export interface BlipChatBuilder {
   withCustomMessageMetadata?: (
     metadata: Record<string, string | undefined>,
   ) => BlipChatBuilder;
+  withoutHistory: () => BlipChatBuilder;
   build: () => void;
   toogleChat?: () => void;
   destroy?: () => void;
@@ -100,7 +101,8 @@ export const BlipChatWidget: React.FC<BlipChatWidgetProps> = ({
       const blipClient = new window.BlipChat()
         .withAppKey(appKey)
         .withButton({ color: buttonColor, icon: '' })
-        .withCustomCommonUrl(customCommonUrl);
+        .withCustomCommonUrl(customCommonUrl)
+        .withoutHistory();
 
       blipClient.build();
       window.__blipChatClient = blipClient;
