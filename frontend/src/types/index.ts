@@ -165,3 +165,16 @@ export interface DashboardMetrics {
   lossRate: string;
   chartData: Array<{ dia: string; vendas: number }>;
 }
+
+export type BlipIntent = 'CONSULTA_ESTOQUE' | 'TRANSBORDO_HUMANO' | 'GERAL';
+
+export interface BlipWebhookRequest {
+  userId: string;
+  message: string;
+  establishmentId?: string;
+}
+
+export interface BlipWebhookResponse {
+  replyText: string;
+  intent: BlipIntent;
+}

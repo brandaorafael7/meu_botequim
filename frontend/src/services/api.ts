@@ -7,6 +7,8 @@ import type {
   AuthSession,
   Tenant,
   Category,
+  BlipWebhookRequest,
+  BlipWebhookResponse,
 } from '../types';
 
 export const api = axios.create({
@@ -170,6 +172,13 @@ export const inventoryService = {
 
   async getStoreSettings() {
     const res = await api.get('/settings');
+    return res.data;
+  },
+};
+
+export const blipAssistantService = {
+  async simulateChat(dto: BlipWebhookRequest): Promise<BlipWebhookResponse> {
+    const res = await api.post<BlipWebhookResponse>('/webhooks/blip/simulate', dto);
     return res.data;
   },
 };

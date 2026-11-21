@@ -15,6 +15,7 @@ import {
   Wine,
   Store,
   History,
+  MessageSquare,
 } from 'lucide-react';
 import { Header } from '../components/meubotequim/Header';
 import { KpiCard } from '../components/meubotequim/KpiCard';
@@ -34,6 +35,7 @@ import { DrinkRecipesManager } from '../components/meubotequim/DrinkRecipesManag
 import { AuditTrailTable } from '../components/meubotequim/AuditTrailTable';
 import { EditPriceModal } from '../components/meubotequim/EditPriceModal';
 import { NewProductModal } from '../components/meubotequim/NewProductModal';
+import { BlipAiPlayground } from '../components/meubotequim/BlipAiPlayground';
 import { BlipChatWidget } from '../components/BlipChatWidget';
 import {
   authService,
@@ -60,7 +62,8 @@ type DashboardTab =
   | 'categories'
   | 'recipes'
   | 'customization'
-  | 'audit';
+  | 'audit'
+  | 'blip-ai';
 
 // Mock de dados representativos para Bar & Botequim (fallback inicial)
 const INITIAL_PRODUCTS: ReplenishmentProduct[] = [
@@ -837,6 +840,22 @@ export const MeuBotequimDashboard: React.FC<MeuBotequimDashboardProps> = ({
             <History className="h-4 w-4" />
             <span>Auditoria & Perdas</span>
           </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('blip-ai')}
+            className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all whitespace-nowrap ${
+              activeTab === 'blip-ai'
+                ? 'bg-[#C87A5B] text-white shadow-soft'
+                : 'bg-white border border-[#C87A5B]/30 text-[#2C221E] hover:bg-[#FAF6F0]'
+            }`}
+          >
+            <MessageSquare className="h-4 w-4 text-[#D97706]" />
+            <span>Assistente Blip & IA</span>
+            <span className="rounded-full bg-[#D97706]/15 text-[#D97706] px-1.5 py-0.2 text-[10px] font-extrabold border border-[#D97706]/30">
+              NOVO
+            </span>
+          </button>
         </nav>
 
         {/* 3. Renderização Condicional da Aba Ativa */}
@@ -961,6 +980,22 @@ export const MeuBotequimDashboard: React.FC<MeuBotequimDashboardProps> = ({
 
         {activeTab === 'audit' && (
           <AuditTrailTable movements={movements} onRefresh={loadData} />
+        )}
+
+        {activeTab === 'blip-ai' && (
+          <BlipAiPlayground
+            products={products}
+            establishmentId={
+              currentTenant?.id ||
+              profile.tenantId ||
+              (typeof window !== 'undefined'
+                ? localStorage.getItem('tenantId') || undefined
+                : undefined)
+            }
+            establishmentName={profile.name}
+            isApiConnected={isApiConnected}
+            onShowToast={showToast}
+          />
         )}
       </main>
 

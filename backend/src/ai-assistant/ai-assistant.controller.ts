@@ -13,6 +13,7 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { Public } from '../auth/decorators/public.decorator';
 import { AiAssistantService } from './ai-assistant.service';
 import {
@@ -30,7 +31,7 @@ export class AiAssistantController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary:
-      'Webhook de integração com o Blip Builder para atendimento inteligente com IA & Function Calling',
+      'Webhook oficial de integração com o Blip Builder para atendimento inteligente com IA & Function Calling',
   })
   @ApiHeader({
     name: 'x-blip-secret',
@@ -58,6 +59,25 @@ export class AiAssistantController {
       );
     }
 
+    return this.aiAssistantService.processBlipMessage(dto);
+  }
+
+  @Post('simulate')
+  @Public()
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary:
+      'Endpoint de simulação interativa do Assistente Blip no painel de demonstração do MeuBotequim',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Resposta simulada com consulta real ao estoque e Gemini IA.',
+    type: BlipWebhookResponseDto,
+  })
+  async simulateBlipChat(
+    @Body() dto: BlipWebhookDto,
+  ): Promise<BlipWebhookResponseDto> {
     return this.aiAssistantService.processBlipMessage(dto);
   }
 }

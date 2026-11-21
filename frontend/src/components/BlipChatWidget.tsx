@@ -22,13 +22,40 @@ export interface BlipChatBuilder {
   withCustomCommonUrl: (url: string) => BlipChatBuilder;
   withAccount: (account: BlipChatAccountConfig) => BlipChatBuilder;
   build: () => void;
+  toogleChat?: () => void;
   destroy?: () => void;
 }
 
 declare global {
   interface Window {
     BlipChat?: new () => BlipChatBuilder;
+    __blipChatClient?: BlipChatBuilder | null;
   }
+}
+
+/**
+ * Abre ou alterna a janela do widget flutuante oficial do Blip Chat
+ */
+export function openBlipChatWidget(): boolean {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  if (
+    window.__blipChatClient &&
+    typeof window.__blipChatClient.toogleChat === 'function'
+  ) {
+    window.__blipChatClient.toogleChat();
+    return true;
+  }
+
+  const openBtn = document.getElementById('blip-chat-open-iframe');
+  if (openBtn) {
+    openBtn.click();
+    return true;
+  }
+
+  return false;
 }
 
 export interface BlipChatWidgetProps {
@@ -82,6 +109,7 @@ export const BlipChatWidget: React.FC<BlipChatWidgetProps> = ({
         });
 
       blipClient.build();
+      window.__blipChatClient = blipClient;
     };
 
     const existingScript = document.getElementById(
@@ -115,6 +143,10 @@ export const BlipChatWidget: React.FC<BlipChatWidgetProps> = ({
         } catch {
           // Ignora erros internos do widget ao destruir
         }
+      }
+
+      if (typeof window !== 'undefined') {
+        window.__blipChatClient = null;
       }
 
       const container = document.getElementById('blip-chat-container');
